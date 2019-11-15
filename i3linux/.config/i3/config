@@ -206,3 +206,6 @@ bindsym $mod+F11 exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spot
 # Start compton
 exec_always --no-startup-id compton -b
 
+# Set desktop background
+feh --bg-fill --no-xinerama $HOME/Desktop/bg5.jpg
+
