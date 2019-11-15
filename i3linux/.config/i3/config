@@ -194,12 +194,15 @@ bindsym Print exec maim -s --format=png /dev/stdout | xclip -selection clipboard
 # Configure gaps
 for_window [class=".*"] border pixel 0
 
-gaps inner 10
-gaps outer 10
+gaps inner 8
+gaps outer 7 
 
 # Set mouse speed
-exec rxinput --set-prop 14 'libinput Accel Speed' -1
+exec_always rxinput --set-prop 14 'libinput Accel Speed' -1
 
 # Set media (spotify) control key to media key
 bindsym $mod+F11 exec dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPau
+
+# Start compton
+exec_always --no-startup-id compton -b
 
