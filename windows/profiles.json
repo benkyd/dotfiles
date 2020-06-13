@@ -26,7 +26,7 @@
     "profiles" : 
     [
         {
-            "acrylicOpacity" : 0.60000002384185791,
+            "acrylicOpacity" : 0.8,
             "closeOnExit" : false,
             "colorScheme" : "Campbell",
             "commandline" : "powershell.exe",
@@ -42,7 +42,7 @@
             "useAcrylic" : true
         },
         {
-            "acrylicOpacity" : 0.60000002384185791,
+            "acrylicOpacity" : 0.8,
             "closeOnExit" : false,
             "colorScheme" : "Campbell",
             "commandline" : "wsl.exe",
@@ -58,7 +58,7 @@
             "useAcrylic" : true
         },
         {
-            "acrylicOpacity" : 0.60000002384185791,
+            "acrylicOpacity" : 0.8,
             "closeOnExit" : false,
             "colorScheme" : "Campbell",
             "commandline" : "ssh root@vps734990.ovh.net",
@@ -68,7 +68,7 @@
             "fontSize" : 10,
             "guid" : "{d2f8e693-20d4-4940-986c-bca51e71bec9}",
             "historySize" : 9001,
-            "name" : "Server00wwwwwwwwwwwwww",
+            "name" : "server00",
             "padding" : "0, 0, 0, 0",
             "snapOnInput" : true,
             "useAcrylic" : true
@@ -78,6 +78,12 @@
             "hidden": false,
             "name": "Azure Cloud Shell",
             "source": "Windows.Terminal.Azure"
+        },
+        {
+            "guid": "{07b52e3e-de2c-5db4-bd2d-ba144ed6c273}",
+            "hidden": false,
+            "name": "Ubuntu-20.04",
+            "source": "Windows.Terminal.Wsl"
         }
     ],
 
