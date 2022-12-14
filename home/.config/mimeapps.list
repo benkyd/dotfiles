@@ -1,0 +1,5 @@
+[Added Associations]
+application/x-extension-html=google-chrome-unstable
+
+[Default Applications]
+application/x-extension-html=google-chrome-unstable
