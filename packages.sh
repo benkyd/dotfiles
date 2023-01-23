@@ -6,7 +6,8 @@
 yay -S nvm
 
 # Manjaro/i3 visuals with Yay
-yay -S ttf-twemoji xidlehook sysstat i3blocks mpris-ctl flameshot perl
+yay -S ttf-twemoji xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
+
 
 # Manjaro/i3 audio with Yay
 yay -S pulseaudio-equalizer-ladspa mpris-ctl

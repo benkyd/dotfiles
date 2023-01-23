@@ -38,8 +38,7 @@ bindsym $mod+Return exec terminal
 bindsym $mod+Shift+q kill
 
 # start program launcher
-bindsym $mod+d exec --no-startup-id rofi -show drun -modes drun,window,ssh,filebrowser
-bindsym $mod+Shift+d exec --no-startup-id rofi -show filebrowser -modes drun,window,ssh,filebrowser
+bindsym $mod+d exec --no-startup-id rofi -show drun
 
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
@@ -70,7 +69,7 @@ bindsym $mod+Shift+F3 exec pcmanfm_pkexec
 bindsym $mod+F5 exec terminal -e 'mocp'
 bindsym $mod+t exec --no-startup-id pkill picom
 bindsym $mod+Ctrl+t exec --no-startup-id picom -b
-#bindsym $mod+Shift+d --release exec "killall dunst; exec notify-send 'restart dunst'"
+bindsym $mod+Shift+d --release exec "killall dunst; exec notify-send 'restart dunst'"
 #bindsym Print exec maim -s --format=png /dev/stdout | xclip -selection clipboard -t image/png -i
 bindsym Print exec flameshot gui
 bindsym $mod+Print --release exec --no-startup-id i3-scrot -w
