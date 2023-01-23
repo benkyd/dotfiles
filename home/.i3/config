@@ -32,14 +32,14 @@ for_window [class="^.*"] border pixel 1
 floating_modifier $mod
 
 # start a terminal
-bindsym $mod+Return exec terminal 
+bindsym $mod+Return exec terminal
 
 # kill focused window
 bindsym $mod+Shift+q kill
 
 # start program launcher
-bindsym $mod+d exec --no-startup-id rofi -show drun -modes drun,window,ssh,filebrowser
-bindsym $mod+Shift+d exec --no-startup-id rofi -show filebrowser -modes drun,window,ssh,filebrowser
+bindsym $mod+d exec --no-startup-id "rofi -show drun -modes drun,window,filebrowser"
+bindsym $mod+Shift+d exec --no-startup-id "rofi -show filebrowser -modes filebrowser,window"
 
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
