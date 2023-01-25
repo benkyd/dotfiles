@@ -104,6 +104,9 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
   exec tmux
 fi
 
+#keybindings
+keybind '^H' backward-kill-word
+
 export QSYS_ROOTDIR="/home/benk/.cache/yay/quartus-free/pkg/quartus-free-quartus/opt/intelFPGA/21.1/quartus/sopc_builder/bin"
 
 source "/home/ben/dprog/Resources/zephyr_master/zephyr/zephyr-env.sh"
