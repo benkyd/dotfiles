@@ -105,7 +105,7 @@ if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] &&
 fi
 
 #keybindings
-keybind '^H' backward-kill-word
+bindkey '^H' backward-kill-word
 
 export QSYS_ROOTDIR="/home/benk/.cache/yay/quartus-free/pkg/quartus-free-quartus/opt/intelFPGA/21.1/quartus/sopc_builder/bin"
 
