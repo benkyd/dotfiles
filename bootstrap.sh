@@ -14,8 +14,9 @@ curl -fLo "Droid Sans Mono for Powerline Nerd Font Complete.otf" https://github.
 cd ~
 
 # Tmux
-yay -S tmux 
+yay -S tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+tmux source ~/.tmux.conf
 
 # Manjaro/i3 audio with Yay
 yay -S pulseaudio-equalizer-ladspa mpris-ctl
