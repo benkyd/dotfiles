@@ -6,7 +6,7 @@
 yay -S neovim-git nvm
 
 # Manjaro/i3 visuals with Yay
-yay -S ttf-twemoji nerd-fonts-complete-starship xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
+yay -S ttf-twemoji xotf-nerd-fonts-monacob-mono xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
 
 
 # Manjaro/i3 audio with Yay
