@@ -38,8 +38,7 @@ bindsym $mod+Return exec kitty
 bindsym $mod+Shift+q kill
 
 # start program launcher
-bindsym $mod+d exec --no-startup-id "rofi -show drun -modes drun,window,filebrowser"
-bindsym $mod+Shift+d exec --no-startup-id "rofi -show filebrowser -modes filebrowser,window"
+bindsym $mod+d exec --no-startup-id "sh $HOME/.config/rofi/bin/launcher"
 
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
