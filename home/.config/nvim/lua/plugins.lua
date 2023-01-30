@@ -35,8 +35,14 @@ local packer = require('packer').startup(function(use)
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
 
   -- gorbit's codewindow 
-  use 'gorbit99/codewindow.nvim'
-
+  use {
+    'gorbit99/codewindow.nvim',
+    config = function()
+      local codewindow = require('codewindow')
+      codewindow.setup()
+      codewindow.apply_default_keybinds()
+    end,
+  }
   -- surround vim
   use 'tpope/vim-surround'
 
