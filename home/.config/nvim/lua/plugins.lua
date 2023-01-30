@@ -22,7 +22,10 @@ local packer = require('packer').startup(function(use)
       'nvim-lua/plenary.nvim'
     }
   }
-
+  
+  -- gorbit's codewindow 
+  use 'gorbit99/codewindow.nvim'
+  
   -- surround vim
   use 'tpope/vim-surround'
 
@@ -66,25 +69,11 @@ local packer = require('packer').startup(function(use)
   -- better highlighting
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
 
-  use {
-    'kyazdani42/nvim-tree.lua',
-    requires = 'kyazdani42/nvim-web-devicons',
-    config = function() require'nvim-tree'.setup {} end
-  }
-
-  -- which-key
-  use {
-    "folke/which-key.nvim",
-    config = function()
-      vim.o.timeout = true
-      vim.o.timeoutlen = 300
-      require("which-key").setup {
-        -- your configuration comes here
-        -- or leave it empty to use the default settings
-        -- refer to the configuration section below
-      }
-    end
-  }
+  -- use {
+  --   'kyazdani42/nvim-tree.lua',
+  --   requires = 'kyazdani42/nvim-web-devicons',
+  --   config = function() require'nvim-tree'.setup {} end
+  -- }
 
   -- prettier tabs
   use 'romgrk/barbar.nvim'
@@ -114,7 +103,7 @@ end)
 -- plugin specific configs go here
 require('plugin-config/nvim-cmp')
 require('plugin-config/telescope')
-require('plugin-config/nvim-tree')
+-- require('plugin-config/nvim-tree')
 require('plugin-config/nvim-treesitter')
 require('plugin-config/barbar')
 require('plugin-config/lsp-colors')
