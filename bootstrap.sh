@@ -3,7 +3,7 @@
 # Install the packages that the dotfiles need to function properly
 
 # Dev utils
-yay -S neovim-git nvm neovim kitty ranger
+yay -S neovim-git nvm neovim kitty ranger ripgrep
 
 # Manjaro/i3 visuals with Yay
 yay -S ttf-twemoji xotf-nerd-fonts-monacob-mono xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
