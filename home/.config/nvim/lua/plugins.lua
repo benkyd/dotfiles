@@ -22,6 +22,9 @@ local packer = require('packer').startup(function(use)
     }
   }
 
+  -- speedy searching
+  use 'ggandor/leap.nvim'
+
   -- telescope - searching / navigation
   use {
     'nvim-telescope/telescope.nvim',
@@ -56,11 +59,19 @@ local packer = require('packer').startup(function(use)
   use 'folke/lsp-colors.nvim'
 
   -- better LSP UI (for code actions, rename etc.)
-  use 'tami5/lspsaga.nvim'
+  use({
+    "glepnir/lspsaga.nvim",
+    branch = "main",
+    config = function()
+      require("lspsaga").setup({})
+    end,
+    requires = { {"nvim-tree/nvim-web-devicons"} }
+  })
 
   -- better find and replace
   use 'nvim-lua/plenary.nvim'
   use 'windwp/nvim-spectre'
+
 
   -- VISUAL CHANGES
 
@@ -80,7 +91,6 @@ local packer = require('packer').startup(function(use)
   -- show startup time
   use 'dstein64/vim-startuptime'
 
-  use 'kyazdani42/nvim-web-devicons'
 
   -- UX improvements
   use({
@@ -90,7 +100,6 @@ local packer = require('packer').startup(function(use)
       "rcarriga/nvim-notify",
     }
   })
-
   use 'stevearc/dressing.nvim'
 
   use 'rcarriga/nvim-notify'
@@ -124,7 +133,7 @@ local packer = require('packer').startup(function(use)
   end
 end)
 
--- small plugin pre-init goes here
+require('leap').add_default_mappings()-- small plugin pre-init goes here
 require("indent_blankline").setup {
   char = "│",
   filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
