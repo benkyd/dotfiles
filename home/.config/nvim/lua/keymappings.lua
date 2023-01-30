@@ -10,6 +10,9 @@ local opts = { noremap = true, silent = true }
 -- paste in insert mode
 --vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 
+-- better tree
+vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR> :vertical resize 30<CR>", { noremap = true })
+
 -- make the cursor stay on the same character when leaving insert mode
 vim.api.nvim_set_keymap('i', 'ć', '<Esc>l', opts)
 vim.api.nvim_set_keymap('i', 'Ć', '<Esc>l', opts)
