@@ -77,7 +77,7 @@ local packer = require('packer').startup(function(use)
   -- }
 
   -- prettier tabs
-  use 'romgrk/barbar.nvim'
+  --use 'romgrk/barbar.nvim'
 
   -- nice diagnostic pane on the bottom
   use 'folke/lsp-trouble.nvim'
@@ -106,7 +106,7 @@ require('plugin-config/nvim-cmp')
 require('plugin-config/telescope')
 -- require('plugin-config/nvim-tree')
 require('plugin-config/nvim-treesitter')
-require('plugin-config/barbar')
+--require('plugin-config/,c barbar')
 require('plugin-config/lsp-colors')
 require('plugin-config/lsp-trouble')
 require('plugin-config/lspsaga')
