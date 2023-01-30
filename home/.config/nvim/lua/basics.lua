@@ -7,6 +7,9 @@ vim.g.mapleader = ','
 
 -- ================= File management ================= --
 
+-- better tree
+vim.api.nvim_set_keymap('n', '<C-B>', ":Lexplore<CR> :vertical resize 30<CR>", { noremap = true })
+
 -- swapfile has global & local config, eventhough help says otherwise
 vim.o.swapfile = false -- can open already open files
 vim.bo.swapfile = false
