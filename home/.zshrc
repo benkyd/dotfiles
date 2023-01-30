@@ -124,3 +124,7 @@ alias vi="nvim"
 alias v="nvim"
 alias oldvim="vim"
 eval $(thefuck --alias)
+
+export VISUAL=nvim;
+export EDITOR=nvim;
+
