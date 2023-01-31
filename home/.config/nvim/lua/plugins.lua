@@ -37,6 +37,9 @@ local packer = require('packer').startup(function(use)
   -- better highlighting
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
 
+  -- better split navigation
+  use 'mrjones2014/smart-splits.nvim'
+
   -- gorbit's codewindow 
   use {
     'gorbit99/codewindow.nvim',
@@ -157,5 +160,6 @@ require('plugin-config/indent-guide-lines')
 require('plugin-config/dressing')
 require('plugin-config/noice')
 require('plugin-config/ministarter')
+require('plugin-config/smart-splits')
 
 return packer
