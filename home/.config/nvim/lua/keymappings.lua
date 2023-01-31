@@ -1,14 +1,14 @@
 -- defaults
 local opts = { noremap = true, silent = true }
--- TODO: disabled since trying out "clipboard = unnamedplus" option
+
 -- copy
---vim.api.nvim_set_keymap('', '<C-c>', '"+y', opts)
+vim.api.nvim_set_keymap('', '<C-c>', '"+y', opts)
 -- paste
---vim.api.nvim_set_keymap('', '<C-v>', '"+p', opts)
+vim.api.nvim_set_keymap('', '<C-v>', '"+p', opts)
 -- cut
---vim.api.nvim_set_keymap('', '<C-x>', '"+d', opts)
+vim.api.nvim_set_keymap('', '<C-x>', '"+d', opts)
 -- paste in insert mode
---vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
+vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 
 -- better tree
 vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR> :vertical resize 30<CR>", { noremap = true })
@@ -17,11 +17,17 @@ vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR> :vertical resize 30<CR>", {
 vim.api.nvim_set_keymap('i', 'ć', '<Esc>l', opts)
 vim.api.nvim_set_keymap('i', 'Ć', '<Esc>l', opts)
 
+-- make ctrl-shift arrows movement
+vim.api.nvim_set_keymap('n', '<C-A-Up>', 'ddkP', opts)
+vim.api.nvim_set_keymap('v', '<C-A-Up>', ':m \'<-2<CR>gv=gv', opts)
+vim.api.nvim_set_keymap('n', '<C-A-Down>', 'ddp', opts)
+vim.api.nvim_set_keymap('v', '<C-A-Down>', ':m \'>+1<CR>gv=gv', opts)
+
 -- fast scrolling
-vim.api.nvim_set_keymap('n', '<C-Down>', '9j', opts)
-vim.api.nvim_set_keymap('n', '<C-Up>', '9k', opts)
-vim.api.nvim_set_keymap('v', '<C-Down>', '9j', opts)
-vim.api.nvim_set_keymap('v', '<C-Up>', '9k', opts)
+--vim.api.nvim_set_keymap('n', '<C-Down>', '9j', opts)
+--vim.api.nvim_set_keymap('n', '<C-Up>', '9k', opts)
+--vim.api.nvim_set_keymap('v', '<C-Down>', '9j', opts)
+--vim.api.nvim_set_keymap('v', '<C-Up>', '9k', opts)
 
 -- stay in normal mode after inserting a new line
 vim.api.nvim_set_keymap('', 'o', 'o <Bs><Esc>', opts)
