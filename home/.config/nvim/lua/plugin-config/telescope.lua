@@ -44,14 +44,14 @@ require('telescope').setup {
                 ['<C-k>'] = actions.move_selection_next,
                 ['<C-l>'] = actions.move_selection_previous,
                 ['<C-q>'] = actions.smart_send_to_qflist + actions.open_qflist,
-                -- ['ć'] = actions.close,
+                ['<C-d>'] = 'delete_buffer',
                 ['<CR>'] = actions.select_default + actions.center,
             },
             n = {
                 ['<C-k>'] = actions.move_selection_next,
                 ['<C-l>'] = actions.move_selection_previous,
                 ['<C-q>'] = actions.smart_send_to_qflist + actions.open_qflist,
-                ['ć'] = actions.close,
+                ['<C-d>'] = 'delete_buffer',
             }
         }
     },
