@@ -52,12 +52,19 @@ if (!installScripts.includes(targetInstallScript)) {
 }
 
 console.log('Installing dependencies...');
-//const installOutput = subProcess.spawn('./' + targetInstallScript, {
-    //detached: true,
-//});
-//console.log(installOutput.toString());
+subProcess.spawnSync('./' + targetInstallScript, [], {
+    stdio: 'inherit', 
+});
+
+console.log('Successfully installed OS deps...');
 
 const parentDir = 'common';
 const targetDir = host;
+
+// we want to create a symlink between home/ & host/ to ~/
+// for every file stored in this repo, beforeso we need
+// to create a .bak/ of the origionals as this might 
+// well cause some issues...
+
 
 
