@@ -5,6 +5,9 @@
 //  - Util scripts to add dotfiles
 //      - this could even be extended to auto profile the host & move
 //      stuff accordingly
+//  - .zshrc, .profile etc should create a new file and append
+//  "source .zshrc.laptop" to the current one, in order to not mess
+//  up specific environments
 //
 // FEATURES:
 //  - Backup current dotfiles to dotfiles.bak/
