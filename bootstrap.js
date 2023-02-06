@@ -52,29 +52,31 @@ const panic = (error) => {
     process.exit(0);
 }
 
-if (!host || !os) {
+if (!host) {
     panic('Incorrect usage');
 }
 
-// check we have the host
-const dir = fs.readdirSync('.', { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('.')).map(d => d.name);
-if (!dir.includes(host)) {
-    panic(`Host ${host} does not exist`);
+if (os) {
+    // check we have the host
+    const dir = fs.readdirSync('.', { withFileTypes: true }).filter(d => d.isDirectory() && !d.name.startsWith('.')).map(d => d.name);
+    if (!dir.includes(host)) {
+        panic(`Host ${host} does not exist`);
+    }
+
+    // install the packages that the dotfiles need to function properly
+    const targetInstallScript = os + '.os';
+    const installScripts = fs.readdirSync('.').filter(f => f.endsWith('.os'));
+    if (!installScripts.includes(targetInstallScript)) {
+        panic(`OS ${os} does not exist`);
+    }
+
+    console.log('Installing dependencies...');
+    subProcess.spawnSync('./' + targetInstallScript, [], {
+        stdio: 'inherit', 
+    });
+
+    console.log('Successfully installed OS deps...');
 }
-
-// install the packages that the dotfiles need to function properly
-const targetInstallScript = os + '.os';
-const installScripts = fs.readdirSync('.').filter(f => f.endsWith('.os'));
-if (!installScripts.includes(targetInstallScript)) {
-    panic(`OS ${os} does not exist`);
-}
-
-console.log('Installing dependencies...');
-subProcess.spawnSync('./' + targetInstallScript, [], {
-    stdio: 'inherit', 
-});
-
-console.log('Successfully installed OS deps...');
 
 // we want to create a symlink between common/ & {host}/ to ~/
 // for every file stored in this repo, so we need
@@ -109,11 +111,19 @@ const allAnonPaths = Array.from(new Set(anonBasePaths.concat(anonChildPaths)));
 
 for (const path of allAnonPaths) {
     const copyTarget = HOME + path;
+    if (!fs.existsSync(copyTarget)) {
+        console.log(`Not backing up ${copyTarget}... it does not exist...`);
+        continue;
+    }
+    
     const backupTarget = backupDir + path;
     const backupTargetDir = backupTarget.substring(0, backupTarget.lastIndexOf('/') + 1);
+    
     console.log(`Moving ${copyTarget} to ${backupTarget}`);
-    if (!fs.existsSync(backupTargetDir))
+    if (!fs.existsSync(backupTargetDir)) {
+        console.log(`${backupTargetDir} does not exist... creating`);
         fs.mkdirSync(backupTargetDir, { recursive: true });
+    }
     fs.copyFileSync(copyTarget, backupTarget);
 }
 
@@ -128,6 +138,11 @@ symLinks = symLinks.concat(childPaths);
 for (const symLink of symLinks) {
     const targetSymLink = HOME + (symLink.split('/').slice(1).join('/')) 
     const sourceSymLink = process.cwd() + '/' + symLink;
+    if (!fs.existsSync(targetSymLink)) {
+        console.log(`Not creating symlink for ${targetSymLink}... it does not exist...`);
+        continue;
+    }
+
     console.log(`Creating symlink between ${sourceSymLink} to ${targetSymLink}`);
     fs.rmSync(targetSymLink);
     fs.symlinkSync(sourceSymLink, targetSymLink);
