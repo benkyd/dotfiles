@@ -1,5 +1,5 @@
 #!/bin/bash
-exit
+# 
 # Dev utilsv
 yay -S neovim-git nvm  kitty ranger ripgrep
 
