@@ -1,17 +1,23 @@
+// Ben's amazing dotfiles installer!
+// it would be super cool if it did stuff like notice a new hostname
+// and respond by backing up the current dotfiles in a new host file
+//
+// FEATURES:
+//  - Backup current dotfiles to dotfiles.bak/
+//  - Create symlinks between dotfiles and the actual dotfiles
+
 import fs from 'fs';
+import { readdir } from 'fs/promises';
 import opsys from 'os';
 import path from 'path';
 import { parseArgs } from 'node:util';
 import subProcess from 'child_process';
-import { log } from 'console';
 
-const home = opsys.homedir() + '/';
+const HOME = opsys.homedir() + '/';
 
 const VERSION_MAJOR = 1;
 const VERSION_MINOR = 0;
 const VERSION_PATCH = 1;
-
-// Install the packages that the dotfiles need to function properly
 
 console.log('Ben\'s amazing dotfiles installer!');
 console.log(`Version v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}`);
@@ -49,7 +55,7 @@ if (!dir.includes(host)) {
     panic(`Host ${host} does not exist`);
 }
 
-// check we have the os 
+// install the packages that the dotfiles need to function properly
 const targetInstallScript = os + '.os';
 const installScripts = fs.readdirSync('.').filter(f => f.endsWith('.os'));
 if (!installScripts.includes(targetInstallScript)) {
@@ -63,13 +69,7 @@ subProcess.spawnSync('./' + targetInstallScript, [], {
 
 console.log('Successfully installed OS deps...');
 
-const parentDir = 'common/';
-const childDir = host + '/';
-
-// we want to create a symlink between common/ & {host}/ to ~/
-// for every file stored in this repo, beforeso we need
-// to create a .bak/ of the origionals as this might 
-// well cause some issues...
+// HELPERS //
 const copyRecursiveSync = (src, dest) => {
     const exists = fs.existsSync(src);
     const stats = exists && fs.statSync(src);
@@ -87,30 +87,52 @@ const copyRecursiveSync = (src, dest) => {
         if (!fs.existsSync(newDir))
             fs.mkdirSync(newDir, { recursive: true, overwrite: true });
         
-        fs.copyFileSync(src, dest, fs.constants.COPYFILE_FICLONE);
+        //fs.copyFileSync(src, dest, fs.constants.COPYFILE_FICLONE);
     }
 };
 
-// since we can recursively copy we only need the top level directories
-const basePaths = fs.readdirSync(parentDir);
-const childPaths = fs.readdirSync(childDir);
+const deepReadDir = async (dirPath) => await Promise.all(
+    (await readdir(dirPath, {withFileTypes: true})).map(async (dirent) => {
+        const currentPath = path.join(dirPath, dirent.name)
+        return dirent.isDirectory() ? await deepReadDir(currentPath) : currentPath;
+    }),
+)
+
+// END //
+
+
+// we want to create a symlink between common/ & {host}/ to ~/
+// for every file stored in this repo, beforeso we need
+// to create a .bak/ of the origionals as this might 
+// well cause some issues...
+
+const parentDir = 'common/';
+const childDir = host + '/';
+const basePaths = (await deepReadDir(parentDir)).flat(999);
+const childPaths = (await deepReadDir(childDir)).flat(999);
 
 // start by making the backup
-const backupDir = home + 'dotfiles.bak/'; // TODO: make this a cmd option
+const backupDir = HOME + 'dotfiles.bak/'; // TODO: make this a cmd option
 console.log(`Backing up current dotfiles to ${backupDir}`);
 
+// delete current backupDir first, we might want to warn the user of this Y/n
+if (fs.existsSync(backupDir))
+    fs.rmSync(backupDir, { recursive: true });
 if (!fs.existsSync(backupDir))
     fs.mkdirSync(backupDir);
 
-const allPaths = Array.from(new Set(basePaths.concat(childPaths)));
-for (const path of allPaths) {
-    const copyTarget = home + path;
+console.log(basePaths, childPaths);
+
+const anonBasePaths = basePaths.map(e => e.split('/').slice(1).join('/'));
+const anonChildPaths = basePaths.map(e => e.split('/').slice(1).join('/'));
+const allAnonPaths = Array.from(new Set(anonBasePaths.concat(anonChildPaths)));
+
+for (const path of allAnonPaths) {
+    const copyTarget = HOME + path;
     const backupTarget = backupDir + path;
     console.log(`Moving ${copyTarget} to ${backupTarget}`);
     copyRecursiveSync(copyTarget, backupTarget);
 }
 
 // we prioritise targetDir over parentDir
-
-
 
