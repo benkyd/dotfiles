@@ -1,6 +1,10 @@
 // Ben's amazing dotfiles installer!
 // it would be super cool if it did stuff like notice a new hostname
 // and respond by backing up the current dotfiles in a new host file
+// TODO: 
+//  - Util scripts to add dotfiles
+//      - this could even be extended to auto profile the host & move
+//      stuff accordingly
 //
 // FEATURES:
 //  - Backup current dotfiles to dotfiles.bak/
@@ -69,27 +73,10 @@ subProcess.spawnSync('./' + targetInstallScript, [], {
 
 console.log('Successfully installed OS deps...');
 
-// HELPERS //
-const copyRecursiveSync = (src, dest) => {
-    const exists = fs.existsSync(src);
-    const stats = exists && fs.statSync(src);
-    const isDirectory = exists && stats.isDirectory();
-    if (isDirectory) {
-        fs.mkdirSync(dest);
-        fs.readdirSync(src).forEach(function(childItemName) {
-            copyRecursiveSync(path.join(src, childItemName),
-                path.join(dest, childItemName));
-        });
-    } else {
-        // recirsively make dest
-        const newDir = dest.split('/').splice(-1).join();
-        console.log(dir, newDir); 
-        if (!fs.existsSync(newDir))
-            fs.mkdirSync(newDir, { recursive: true, overwrite: true });
-        
-        //fs.copyFileSync(src, dest, fs.constants.COPYFILE_FICLONE);
-    }
-};
+// we want to create a symlink between common/ & {host}/ to ~/
+// for every file stored in this repo, so we need
+// to create a .bak/ of the origionals as this might 
+// well cause some issues...
 
 const deepReadDir = async (dirPath) => await Promise.all(
     (await readdir(dirPath, {withFileTypes: true})).map(async (dirent) => {
@@ -97,14 +84,6 @@ const deepReadDir = async (dirPath) => await Promise.all(
         return dirent.isDirectory() ? await deepReadDir(currentPath) : currentPath;
     }),
 )
-
-// END //
-
-
-// we want to create a symlink between common/ & {host}/ to ~/
-// for every file stored in this repo, beforeso we need
-// to create a .bak/ of the origionals as this might 
-// well cause some issues...
 
 const parentDir = 'common/';
 const childDir = host + '/';
@@ -121,18 +100,35 @@ if (fs.existsSync(backupDir))
 if (!fs.existsSync(backupDir))
     fs.mkdirSync(backupDir);
 
-console.log(basePaths, childPaths);
-
 const anonBasePaths = basePaths.map(e => e.split('/').slice(1).join('/'));
-const anonChildPaths = basePaths.map(e => e.split('/').slice(1).join('/'));
+const anonChildPaths = childPaths.map(e => e.split('/').slice(1).join('/'));
 const allAnonPaths = Array.from(new Set(anonBasePaths.concat(anonChildPaths)));
 
 for (const path of allAnonPaths) {
     const copyTarget = HOME + path;
     const backupTarget = backupDir + path;
+    const backupTargetDir = backupTarget.substring(0, backupTarget.lastIndexOf('/') + 1);
     console.log(`Moving ${copyTarget} to ${backupTarget}`);
-    copyRecursiveSync(copyTarget, backupTarget);
+    if (!fs.existsSync(backupTargetDir))
+        fs.mkdirSync(backupTargetDir, { recursive: true });
+    fs.copyFileSync(copyTarget, backupTarget);
 }
 
 // we prioritise targetDir over parentDir
+// we first need to make a list that includes both the
+// base and childPaths without the base if child exists
+let symLinks = basePaths.filter(e => {
+    return !anonChildPaths.includes(e.split('/').slice(1).join('/'))
+});
+symLinks = symLinks.concat(childPaths);
+
+for (const symLink of symLinks) {
+    const targetSymLink = HOME + (symLink.split('/').slice(1).join('/')) 
+    const sourceSymLink = process.cwd() + '/' + symLink;
+    console.log(`Creating symlink between ${sourceSymLink} to ${targetSymLink}`);
+    fs.rmSync(targetSymLink);
+    fs.symlinkSync(sourceSymLink, targetSymLink);
+}
+
+console.log('Done!');
 
