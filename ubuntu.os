@@ -1,7 +1,8 @@
 #!/bin/bash
 # Dev utils
-sudo apt install neovim kitty ranger ripgrep curl
+sudo apt install neovim kitty ranger ripgrep curl zsh
 curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 yay -S flameshot
 git clone --filter=blob:none --sparse git@github.com:ryanoasis/nerd-fonts

@@ -1,7 +1,8 @@
 #!/bin/bash
 # 
 # Dev utilsv
-yay -S neovim-git nvm  kitty ranger ripgrep
+yay -S neovim-git nvm kitty ranger ripgrep zsh curl
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Manjaro/i3 visuals with Yay
 yay -S ttf-twemoji xotf-nerd-fonts-monacob-mono xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
