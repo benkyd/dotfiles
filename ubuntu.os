@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Dev utilsv
+# Dev utils
 sudo apt install neovim kitty ranger ripgrep curl
 curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
 
