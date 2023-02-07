@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # Dev utilsv
-sudo apt install neovim kitty ranger ripgrep
+sudo apt install neovim kitty ranger ripgrep curl
 curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
 
 yay -S flameshot
 git clone --filter=blob:none --sparse git@github.com:ryanoasis/nerd-fonts
 source nerdfonts/install.sh
+
+sudo apt update
 
 mkdir -p ~/.local/share/fonts
 cd ~/.local/share/fonts
