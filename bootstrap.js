@@ -143,8 +143,11 @@ for (const symLink of symLinks) {
     if (!fs.existsSync(targetSymLink) && targetSymLink.endsWith('/')) {
         fs.mkdirSync(targetSymLink, { recursive: true });
     }
+    
+    if (fs.existsSync(targetSymLink)) {
+        fs.rmSync(targetSymLink);    
+    }
 
-    fs.rmSync(targetSymLink);
     fs.symlinkSync(sourceSymLink, targetSymLink);
 }
 
