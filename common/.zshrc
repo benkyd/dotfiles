@@ -123,9 +123,12 @@ alias vim="nvim"
 alias vi="nvim"
 alias v="nvim"
 alias oldvim="vim"
-eval $(thefuck --alias)
+#eval $(thefuck --alias)
 
 export VISUAL=nvim;
 export EDITOR=nvim;
 
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+#[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+source .zshrc.local
+
