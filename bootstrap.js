@@ -140,7 +140,7 @@ for (const symLink of symLinks) {
     const sourceSymLink = process.cwd() + '/' + symLink;
     console.log(`Creating symlink between ${sourceSymLink} to ${targetSymLink}`);
 
-    if (!fs.existsSync(targetSymLink) && targetSymLink.endsWith('/')) {
+    if (!fs.existsSync(targetSymLink.split('/').slice(1).join('/'))) {
         fs.mkdirSync(targetSymLink, { recursive: true });
     }
     
