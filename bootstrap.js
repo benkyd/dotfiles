@@ -138,11 +138,12 @@ symLinks = symLinks.concat(childPaths);
 for (const symLink of symLinks) {
     const targetSymLink = HOME + (symLink.split('/').slice(1).join('/')) 
     const sourceSymLink = process.cwd() + '/' + symLink;
+    console.log(`Creating symlink between ${sourceSymLink} to ${targetSymLink}`);
+
     if (!fs.existsSync(targetSymLink) && fs.lstatSync(targetSymLink).isDirectory()) {
         fs.mkdirSync(targetSymLink, { recursive: true });
     }
 
-    console.log(`Creating symlink between ${sourceSymLink} to ${targetSymLink}`);
     fs.rmSync(targetSymLink);
     fs.symlinkSync(sourceSymLink, targetSymLink);
 }
