@@ -12,6 +12,10 @@ local packer = require('packer').startup(function(use)
   -- Packer should manage itself
   use 'wbthomason/packer.nvim'
 
+  -- colorscheme
+  use { 'catppuccin/nvim', as = 'catppuccin' }
+  use 'rebelot/kanagawa.nvim'
+
   -- QUALITY OF LIFE INTEGRATIONS
 
   -- git integration
@@ -83,9 +87,6 @@ local packer = require('packer').startup(function(use)
 
   -- status line
   use 'glepnir/galaxyline.nvim'
-
-  -- colorscheme
-  use { 'catppuccin/nvim', as = 'catppuccin' }
 
   -- nicer looking tab display
   use 'lukas-reineke/indent-blankline.nvim'
