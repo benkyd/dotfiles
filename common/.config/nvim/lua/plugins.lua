@@ -94,7 +94,6 @@ local packer = require('packer').startup(function(use)
   -- show startup time
   use 'dstein64/vim-startuptime'
 
-
   -- UX improvements
   use({
     "folke/noice.nvim",
@@ -106,6 +105,7 @@ local packer = require('packer').startup(function(use)
   use 'stevearc/dressing.nvim'
 
   use 'rcarriga/nvim-notify'
+
 
   -- FUNCTIONAL CODING STUFF
 
