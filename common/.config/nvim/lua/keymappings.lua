@@ -17,7 +17,7 @@ vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR> :vertical resize 30<CR>", {
 vim.api.nvim_set_keymap('i', 'ć', '<Esc>l', opts)
 vim.api.nvim_set_keymap('i', 'Ć', '<Esc>l', opts)
 
--- make ctrl-shift arrows movement
+-- make ctrl-shift arrows line movement
 vim.api.nvim_set_keymap('n', '<C-A-Up>', 'ddkP', opts)
 vim.api.nvim_set_keymap('v', '<C-A-Up>', ':m \'<-2<CR>gv=gv', opts)
 vim.api.nvim_set_keymap('n', '<C-A-Down>', 'ddp', opts)
@@ -52,10 +52,10 @@ vim.api.nvim_set_keymap('i', '<Tab>', '\t', opts)
 vim.api.nvim_set_keymap('i', '<S-Tab>', '\b', opts)
 
 -- window movement
---vim.api.nvim_set_keymap('', '<C-w>j', '<C-w>h', opts)
---vim.api.nvim_set_keymap('', '<C-w>k', '<C-w>j', opts)
---vim.api.nvim_set_keymap('', '<C-w>l', '<C-w>k', opts)
---vim.api.nvim_set_keymap('', '<C-w>č', '<C-w>l', opts)
+vim.api.nvim_set_keymap('', '<C-w><S-Left>', '<C-w><S-h>', opts)
+vim.api.nvim_set_keymap('', '<C-w><S-Down>', '<C-w><S-j>', opts)
+vim.api.nvim_set_keymap('', '<C-w><S-Up>', '<C-w><S-k>', opts)
+vim.api.nvim_set_keymap('', '<C-w><S-Right>', '<C-w><S-l>', opts)
 
 -- opening terminal with shortcut
 vim.api.nvim_set_keymap('', '<Leader><CR>', '<Cmd>silent !$TERM &<CR>', opts)
