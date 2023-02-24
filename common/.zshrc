@@ -119,10 +119,15 @@ alias vim="nvim"
 alias vi="nvim"
 alias v="nvim"
 alias oldvim="vim"
-#eval $(thefuck --alias)
 
 export VISUAL=nvim;
 export EDITOR=nvim;
+
+alias l="exa -lagF --icons --git"
+alias ll="exa -lagF --icons --git"
+alias la="exa -lagF --icons --git"
+alias ls="exa"
+#eval $(thefuck --alias)
 
 #[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
