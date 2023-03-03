@@ -15,6 +15,7 @@ local packer = require('packer').startup(function(use)
   -- colorscheme
   use { 'catppuccin/nvim', as = 'catppuccin' }
   use 'rebelot/kanagawa.nvim'
+  use 'nvim-tree/nvim-web-devicons'
 
   -- QUALITY OF LIFE INTEGRATIONS
 
@@ -25,6 +26,8 @@ local packer = require('packer').startup(function(use)
       'nvim-lua/plenary.nvim'
     }
   }
+
+  use 'tpope/vim-fugitive'
 
   -- speedy searching
   use 'ggandor/leap.nvim'
@@ -53,26 +56,20 @@ local packer = require('packer').startup(function(use)
       codewindow.apply_default_keybinds()
     end,
   }
-  -- surround vim
-  use 'tpope/vim-surround'
 
   -- nerd commenter
   use 'scrooloose/nerdcommenter'
 
   -- nice diagnostic pane on the bottom
-  use 'folke/lsp-trouble.nvim'
-
-  -- support the missing lsp diagnostic colors
-  use 'folke/lsp-colors.nvim'
+  use 'folke/trouble.nvim'
 
   -- better LSP UI (for code actions, rename etc.)
   use({
     "glepnir/lspsaga.nvim",
     branch = "main",
     config = function()
-      require("lspsaga").setup({})
+        require("lspsaga").setup({})
     end,
-    requires = { {"nvim-tree/nvim-web-devicons"} }
   })
 
   -- better find and replace
@@ -85,15 +82,12 @@ local packer = require('packer').startup(function(use)
   -- start page
   use 'echasnovski/mini.starter'
 
-  -- status line
-  use 'glepnir/galaxyline.nvim'
-
   -- nicer looking tab display
   use 'lukas-reineke/indent-blankline.nvim'
   use 'echasnovski/mini.indentscope'
 
-  -- show startup time
-  use 'dstein64/vim-startuptime'
+  -- statusline
+  use 'ojroques/nvim-hardline'
 
   -- UX improvements
   use({
@@ -114,16 +108,16 @@ local packer = require('packer').startup(function(use)
   use {
     'neovim/nvim-lspconfig',
     'williamboman/nvim-lsp-installer',
-    'hrsh7th/nvim-cmp',
   }
 
-  ---- for LSP autocompletion
-  --use 'hrsh7th/cmp-nvim-lsp'
-  --use 'hrsh7th/cmp-buffer'
-  --use 'hrsh7th/cmp-path'
-  --use 'hrsh7th/cmp-cmdline'
+  -- for LSP autocompletion
+  use 'hrsh7th/nvim-cmp'
+  use 'hrsh7th/cmp-nvim-lsp'
+  use 'hrsh7th/cmp-buffer'
+  use 'hrsh7th/cmp-path'
+  use 'hrsh7th/cmp-cmdline'
 
-  -- highlight variables under cursor
+   --highlight variables under cursor
   use 'RRethy/vim-illuminate'
 
   -- this will automatically install listed dependencies
@@ -133,7 +127,8 @@ local packer = require('packer').startup(function(use)
   end
 end)
 
-require('leap').add_default_mappings()-- small plugin pre-init goes here
+-- SIMPLE PLUGIN CONFIGURATION 
+require('leap').add_default_mappings()
 require("indent_blankline").setup {
   char = "│",
   filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
@@ -144,14 +139,14 @@ require('mini.indentscope').setup({
   symbol = "│",
   options = { try_as_border = true },
 })
+require('hardline').setup {}
 
--- plugin specific configs go here
+-- MORE VERBOSE PLUGIN CONFIGS
 require('plugin-config/nvim-cmp')
 require('plugin-config/telescope')
 require('plugin-config/nvim-treesitter')
 require('plugin-config/lsp-trouble')
 require('plugin-config/lspsaga')
-require('plugin-config/galaxyline')
 require('plugin-config/gitsigns')
 require('plugin-config/indent-guide-lines')
 require('plugin-config/dressing')
