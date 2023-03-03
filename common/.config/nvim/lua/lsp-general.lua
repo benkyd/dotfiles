@@ -1,3 +1,16 @@
+local lspconfig = require('lspconfig');
+
+require('mason').setup()
+require('mason-lspconfig').setup({
+  ensure_installed = {'clangd'}
+})
+
+require('mason-lspconfig').setup_handlers({
+  function(server)
+    lspconfig[server].setup({})
+  end,
+})
+
 -- diagnostic symbols
 local signs = { Error = "", Warn = "", Hint = "", Info =  ""}
 for type, icon in pairs(signs) do
