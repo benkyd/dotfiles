@@ -23,7 +23,9 @@ local packer = require('packer').startup(function(use)
     use {
         'lewis6991/gitsigns.nvim',
         requires = { 'nvim-lua/plenary.nvim' },
-        config = require('plugin-config/gitsigns'),
+        config = function ()
+            require('plugin-config/gitsigns')
+        end
     }
 
     use 'tpope/vim-fugitive'
@@ -31,14 +33,18 @@ local packer = require('packer').startup(function(use)
     -- speedy searching
     use {
         'ggandor/leap.nvim',
-        config = require('leap').add_default_mappings(),
+        config = function ()
+            require('leap').add_default_mappings()
+        end
     }
 
     -- telescope - searching / navigation
     use {
         'nvim-telescope/telescope.nvim',
         requires = { 'nvim-lua/plenary.nvim' },
-        config = require('plugin-config/telescope'),
+        config = function ()
+            require('plugin-config/telescope')
+        end
     }
 
     -- better hotfix window (for showing and searching through results in telescope's find usages)
@@ -48,14 +54,18 @@ local packer = require('packer').startup(function(use)
     use {
         'nvim-treesitter/nvim-treesitter', 
         run = ':TSUpdate',
-        config = require('plugin-config/nvim-treesitter'),
+        config = function ()
+            require('plugin-config/nvim-treesitter')
+        end
     }
     use 'nvim-treesitter/nvim-treesitter-context'
 
     -- better split navigation
     use {
         'mrjones2014/smart-splits.nvim',
-        config = require('plugin-config/smart-splits'),
+        config = function ()
+            require('plugin-config/smart-splits')
+        end
     } 
     -- gorbit's codewindow 
     use {
@@ -73,15 +83,19 @@ local packer = require('packer').startup(function(use)
     -- nice diagnostic pane on the bottom
     use {
         'folke/trouble.nvim',
-        config = require('plugin-config/lsp-trouble'),
+        config = function ()
+            require('plugin-config/lsp-trouble')
+        end
     }
 
     -- better LSP UI (for code actions, rename etc.)
-    use {
-        "glepnir/lspsaga.nvim",
-        branch = "main",
-        config = require('plugin-config/lspsaga'),
-    }
+    --use {
+        --"glepnir/lspsaga.nvim",
+        --branch = "main",
+        --config = function ()
+            --require('plugin-config/lspsaga')
+        --end
+    --}
 
     -- better find and replace
     use 'windwp/nvim-spectre'
@@ -92,30 +106,38 @@ local packer = require('packer').startup(function(use)
     -- start page
     use {
         'echasnovski/mini.starter',
-        config = require('plugin-config/ministarter'),
+        config = function ()
+            require('plugin-config/ministarter')
+        end
     }
 
     -- nicer looking tab display
     use {
         'lukas-reineke/indent-blankline.nvim',
-        config = require("indent_blankline").setup {
-            char = "│",
-            filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
-        },
+        config = function ()
+            require("indent_blankline").setup {
+                char = "│",
+                filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+            }
+        end
     }
 
     use {
         'echasnovski/mini.indentscope',
-        require('mini.indentscope').setup {
-            symbol = "│",
-            options = { try_as_border = true },
-        },
+        config = function ()
+            require('mini.indentscope').setup {
+                symbol = "│",
+                options = { try_as_border = true },
+            }
+        end
     }
 
     -- statusline
     use {
         'ojroques/nvim-hardline',
-        require('hardline').setup({}),
+        config = function ()
+            require('hardline').setup({})
+        end
     }
 
     -- UX improvements
@@ -125,12 +147,16 @@ local packer = require('packer').startup(function(use)
             "MunifTanjim/nui.nvim",
             "rcarriga/nvim-notify",
         },
-        config = require('plugin-config/noice')
+        config = function ()
+            require('plugin-config/noice')
+        end
     }
 
     use {
         'stevearc/dressing.nvim',
-        config = require('plugin-config/dressing'),
+        config = function ()
+            require('plugin-config/dressing')
+        end
     }
 
     use 'rcarriga/nvim-notify'
@@ -156,7 +182,9 @@ local packer = require('packer').startup(function(use)
             'hrsh7th/cmp-path',
             'hrsh7th/cmp-cmdline',
         },
-        config = require('plugin-config/nvim-cmp'),
+        config = function ()
+            require('plugin-config/nvim-cmp')
+        end
     } 
 
     -- this will automatically install listed dependencies
