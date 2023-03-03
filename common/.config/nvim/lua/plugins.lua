@@ -39,11 +39,12 @@ local packer = require('packer').startup(function(use)
   }
 
   -- better hotfix window (for showing and searching through results in telescope's find usages)
-  use {"kevinhwang91/nvim-bqf"}
+  use 'kevinhwang91/nvim-bqf'
 
   -- better highlighting
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
   use 'nvim-treesitter/nvim-treesitter-context'
+
   -- better split navigation
   use 'mrjones2014/smart-splits.nvim'
 
@@ -73,7 +74,6 @@ local packer = require('packer').startup(function(use)
   })
 
   -- better find and replace
-  use 'nvim-lua/plenary.nvim'
   use 'windwp/nvim-spectre'
 
 
@@ -106,8 +106,9 @@ local packer = require('packer').startup(function(use)
 
   -- lsp config
   use {
-    'neovim/nvim-lspconfig',
-    'williamboman/nvim-lsp-installer',
+    "williamboman/mason.nvim",
+    "williamboman/mason-lspconfig.nvim",
+    "neovim/nvim-lspconfig",
   }
 
   -- for LSP autocompletion
@@ -116,9 +117,6 @@ local packer = require('packer').startup(function(use)
   use 'hrsh7th/cmp-buffer'
   use 'hrsh7th/cmp-path'
   use 'hrsh7th/cmp-cmdline'
-
-   --highlight variables under cursor
-  use 'RRethy/vim-illuminate'
 
   -- this will automatically install listed dependencies
   -- only the first time NeoVim is opened, because that's when Packer gets installed
