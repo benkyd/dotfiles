@@ -2,7 +2,6 @@
 
 vim.g.mapleader = ','
 
-
 -- ================= File management ================= --
 
 -- swapfile has global & local config, eventhough help says otherwise
@@ -21,11 +20,9 @@ autocmd FileChangedShellPost *
   \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
 ]])
 
-
 -- ================= Scrolling ================= --
 
 vim.o.scrolloff = 8 -- start scrolling when 8 lines away from margins
-
 
 -- ================= Indentation ================= --
 
@@ -48,7 +45,6 @@ vim.o.autoindent = true   -- copy the indentation from previous line
 vim.bo.autoindent = true
 vim.o.smarttab = true 	  -- tab infront of a line inserts blanks based on shiftwidth
 
-
 -- ================= Number column ================= --
 
 vim.wo.number = true
@@ -67,12 +63,10 @@ vim.o.incsearch = true	-- start searching on each keystroke
 vim.o.smartcase = true	-- ignore case when lowercase, match case when capital case is used
 vim.o.hlsearch = true		-- highlight the search results
 
-
 -- ================= Performance ================= --
 
 vim.o.lazyredraw = false -- useful for when executing macros.
 vim.o.ttimeoutlen = 30  -- ms to wait for a key code seq to complete
-
 
 -- ================= Misc ================= --
 

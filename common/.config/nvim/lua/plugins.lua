@@ -43,7 +43,7 @@ local packer = require('packer').startup(function(use)
 
   -- better highlighting
   use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
-
+  use 'nvim-treesitter/nvim-treesitter-context'
   -- better split navigation
   use 'mrjones2014/smart-splits.nvim'
 
