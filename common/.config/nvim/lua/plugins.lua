@@ -91,7 +91,14 @@ local packer = require('packer').startup(function(use)
             require('plugin-config/lsp-trouble')
         end
     }
-
+    
+    -- vscode like LSP code previews
+    use({
+        'dnlhc/glance.nvim',
+        config = function()
+            require('glance').setup({})
+        end
+    })
      
     -- VISUAL CHANGES
 
