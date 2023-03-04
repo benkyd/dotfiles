@@ -78,7 +78,7 @@ local packer = require('packer').startup(function(use)
             local codewindow = require('codewindow')
             codewindow.setup()
             codewindow.apply_default_keybinds()
-        end,
+        end
     }
 
     -- nerd commenter
@@ -92,19 +92,7 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- better LSP UI (for code actions, rename etc.)
-    --use {
-        --"glepnir/lspsaga.nvim",
-        --branch = "main",
-        --config = function ()
-            --require('plugin-config/lspsaga')
-        --end
-    --}
-
-    -- better find and replace
-    use 'windwp/nvim-spectre'
-
-
+     
     -- VISUAL CHANGES
 
     -- start page
