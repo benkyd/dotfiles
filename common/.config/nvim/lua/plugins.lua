@@ -177,7 +177,15 @@ local packer = require('packer').startup(function(use)
         config = function ()
             require('plugin-config/nvim-cmp')
         end
-    } 
+    }
+
+    -- for lsp signature autocompletion
+    use {
+        'ray-x/lsp_signature.nvim',
+        config = function ()
+            require('lsp_signature').setup()
+        end
+    }
 
     -- this will automatically install listed dependencies
     -- only the first time NeoVim is opened, because that's when Packer gets installed
