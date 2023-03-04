@@ -2,7 +2,7 @@ local lspconfig = require('lspconfig');
 
 require('mason').setup()
 require('mason-lspconfig').setup({
-  ensure_installed = {'clangd'}
+  ensure_installed = {'lua-language-server', 'clangd'}
 })
 
 require('mason-lspconfig').setup_handlers({
