@@ -41,9 +41,13 @@ local packer = require('packer').startup(function(use)
     -- telescope - searching / navigation
     use {
         'nvim-telescope/telescope.nvim',
-        requires = { 'nvim-lua/plenary.nvim' },
+        requires = {
+            'nvim-lua/plenary.nvim',
+            'folke/todo-comments.nvim',
+        },
         config = function ()
             require('plugin-config/telescope')
+            require('todo-comments').setup({})
         end
     }
 
