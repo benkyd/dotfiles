@@ -56,6 +56,6 @@ vim.api.nvim_set_keymap('n', 'gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts
 -- Glance LSP
 vim.api.nvim_set_keymap('n', 'gd', '<CMD>Glance definitions<CR>', opts)
 vim.api.nvim_set_keymap('n', 'gt', '<CMD>Glance type_definitions<CR>', opts)
-vim.api.nvim_set_keymap('n', 'gm', '<CMD>Glance implementations<CR>', opts)
+vim.api.nvim_set_keymap('n', 'gi', '<CMD>Glance implementations<CR>', opts)
 vim.api.nvim_set_keymap('n', 'gr', '<CMD>Glance references<CR>', opts)
 
