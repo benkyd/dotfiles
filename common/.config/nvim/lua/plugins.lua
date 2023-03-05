@@ -38,6 +38,16 @@ local packer = require('packer').startup(function(use)
         end
     }
 
+    -- shows what key does what
+    --use {
+        --"folke/which-key.nvim",
+        --config = function()
+            --vim.o.timeout = true
+            --vim.o.timeoutlen = 300
+            --require("which-key").setup({})
+        --end
+    --}
+
     -- telescope - searching / navigation
     use {
         'nvim-telescope/telescope.nvim',
