@@ -14,7 +14,7 @@ local packer = require('packer').startup(function(use)
 
     -- colorscheme
     use { 'catppuccin/nvim', as = 'catppuccin' }
-    use 'rebelot/kanagawa.nvim'
+    use { 'rebelot/kanagawa.nvim', commit = '4c8d487' }
     use 'nvim-tree/nvim-web-devicons'
 
     -- QUALITY OF LIFE INTEGRATIONS
@@ -39,14 +39,14 @@ local packer = require('packer').startup(function(use)
     }
 
     -- shows what key does what
-    --use {
-        --"folke/which-key.nvim",
-        --config = function()
-            --vim.o.timeout = true
-            --vim.o.timeoutlen = 300
-            --require("which-key").setup({})
-        --end
-    --}
+    use {
+        "folke/which-key.nvim",
+        config = function()
+            vim.o.timeout = true
+            vim.o.timeoutlen = 300
+            require("which-key").setup({})
+        end
+    }
 
     -- telescope - searching / navigation
     use {
@@ -109,7 +109,18 @@ local packer = require('packer').startup(function(use)
             require('glance').setup({})
         end
     })
-     
+ 
+    -- whitespace pedantics
+    use 'ntpeters/vim-better-whitespace'
+
+    -- auto brace pairs vscode-style
+    use {
+        "windwp/nvim-autopairs",
+        config = function()
+            require("nvim-autopairs").setup({})
+        end
+    }
+
     -- VISUAL CHANGES
 
     -- start page
