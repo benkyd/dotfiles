@@ -13,7 +13,6 @@ local packer = require('packer').startup(function(use)
     use 'wbthomason/packer.nvim'
 
     -- colorscheme
-    use { 'catppuccin/nvim', as = 'catppuccin' }
     use { 'rebelot/kanagawa.nvim', commit = '4c8d487' }
     use 'nvim-tree/nvim-web-devicons'
 
