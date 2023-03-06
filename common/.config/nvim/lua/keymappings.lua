@@ -1,12 +1,6 @@
 -- defaults
 local opts = { noremap = true, silent = true }
 
--- copy
-vim.api.nvim_set_keymap('', '<C-c>', '"+y', opts)
--- paste
-vim.api.nvim_set_keymap('', '<C-v>', '"+p', opts)
--- cut
-vim.api.nvim_set_keymap('', '<C-x>', '"+d', opts)
 -- paste in insert mode
 vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 
@@ -20,11 +14,8 @@ vim.api.nvim_set_keymap('n', '<C-A-Down>', 'ddp', opts)
 vim.api.nvim_set_keymap('v', '<C-A-Down>', ':m \'>+1<CR>gv=gv', opts)
 
 -- stay in normal mode after inserting a new line
-vim.api.nvim_set_keymap('', 'o', 'o <Bs><Esc>', opts)
-vim.api.nvim_set_keymap('', 'O', 'O <Bs><Esc>', opts)
-
--- mapping that opens .vimrc in a new tab for quick editing
-vim.api.nvim_set_keymap('n', '<Leader>ev', '<Cmd>tabe $MYVIMRC<CR>', opts)
+--vim.api.nvim_set_keymap('', 'o', 'o <Bs><Esc>', opts)
+--vim.api.nvim_set_keymap('', 'O', 'O <Bs><Esc>', opts)
 
 -- Mapping U to Redo.
 vim.api.nvim_set_keymap('', 'U', '<C-r>', opts)
