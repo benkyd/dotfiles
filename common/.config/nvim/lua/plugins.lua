@@ -37,16 +37,6 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- shows what key does what
-    use {
-        "folke/which-key.nvim",
-        config = function()
-            vim.o.timeout = true
-            vim.o.timeoutlen = 300
-            require("which-key").setup({})
-        end
-    }
-
     -- telescope - searching / navigation
     use {
         'nvim-telescope/telescope.nvim',
@@ -65,7 +55,7 @@ local packer = require('packer').startup(function(use)
 
     -- better highlighting
     use {
-        'nvim-treesitter/nvim-treesitter', 
+        'nvim-treesitter/nvim-treesitter',
         run = ':TSUpdate',
         config = function ()
             require('plugin-config/nvim-treesitter')
@@ -79,8 +69,8 @@ local packer = require('packer').startup(function(use)
         config = function ()
             require('plugin-config/smart-splits')
         end
-    } 
-    -- gorbit's codewindow 
+    }
+    -- gorbit's codewindow
     use {
         'gorbit99/codewindow.nvim',
         config = function()
@@ -100,7 +90,7 @@ local packer = require('packer').startup(function(use)
             require('plugin-config/lsp-trouble')
         end
     }
-    
+
     -- vscode like LSP code previews
     use({
         'dnlhc/glance.nvim',
@@ -108,7 +98,7 @@ local packer = require('packer').startup(function(use)
             require('glance').setup({})
         end
     })
- 
+
     -- whitespace pedantics
     use 'ntpeters/vim-better-whitespace'
 
@@ -210,7 +200,9 @@ local packer = require('packer').startup(function(use)
     use {
         'ray-x/lsp_signature.nvim',
         config = function ()
-            require('lsp_signature').setup()
+            require('lsp_signature').setup({
+                hint_prefix="🚀"
+            })
         end
     }
 
