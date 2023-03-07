@@ -2,7 +2,7 @@ local lspconfig = require('lspconfig');
 
 require('mason').setup()
 require('mason-lspconfig').setup({
-  ensure_installed = {'clangd'}
+    ensure_installed = { 'clangd' }
 })
 
 local opts = { noremap = true, silent = true, buffer = bufnr }
@@ -33,16 +33,16 @@ require('mason-lspconfig').setup_handlers({
 
 require('rust-tools').setup {
     server = {
-        on_attatch = on_attach,
+        on_attatch = on_attatch,
         capabilities = capabilities,
     }
 }
 
 -- diagnostic symbols
-local signs = { Error = "", Warn = "", Hint = "", Info =  ""}
+local signs = { Error = "", Warn = "", Hint = "", Info = "" }
 for type, icon in pairs(signs) do
-	local hl = "DiagnosticSign" .. type
-	vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+    local hl = "DiagnosticSign" .. type
+    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
 end
 
 -- completion symbols
@@ -73,5 +73,3 @@ vim.lsp.protocol.CompletionItemKind = {
     "   (Operator)",
     "   (TypeParameter)"
 }
-
-vim.api.nvim_create_autocmd("BufWritePre", { command = "lua vim.lsp.buf.format()" });
