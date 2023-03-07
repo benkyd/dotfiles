@@ -39,14 +39,3 @@ vim.api.nvim_set_keymap('', '<C-w><S-Right>', '<C-w><S-l>', opts)
 vim.api.nvim_set_keymap('', '<C-K>', '<C-O>', opts)
 vim.api.nvim_set_keymap('', '<C-L>', '<C-I>', opts)
 
--- LSP
-vim.api.nvim_set_keymap('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
--- Glance LSP
-vim.api.nvim_set_keymap('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
-vim.api.nvim_set_keymap('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
-

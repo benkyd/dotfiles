@@ -1,30 +1,31 @@
 local status, starter = pcall(require, "mini.starter")
 if not status then
-	return
+    return
 end
 
 starter.setup({
-	content_hooks = {
-		starter.gen_hook.adding_bullet(""),
-		starter.gen_hook.aligning("center", "center"),
-	},
-	evaluate_single = true,
-	footer = os.date(),
-	header = table.concat({
+    content_hooks = {
+        starter.gen_hook.adding_bullet(""),
+        starter.gen_hook.aligning("center", "center"),
+    },
+    evaluate_single = true,
+    footer = os.date(),
+    header = table.concat({
         [[██████╗ ███████╗███╗   ██╗██╗   ██╗██╗███╗   ███╗]],
         [[██╔══██╗██╔════╝████╗  ██║██║   ██║██║████╗ ████║]],
         [[██████╔╝█████╗  ██╔██╗ ██║██║   ██║██║██╔████╔██║]],
         [[██╔══██╗██╔══╝  ██║╚██╗██║╚██╗ ██╔╝██║██║╚██╔╝██║]],
         [[██████╔╝███████╗██║ ╚████║ ╚████╔╝ ██║██║ ╚═╝ ██║]],
         [[╚═════╝ ╚══════╝╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚═╝     ╚═╝]],
-		[[─────────────────────────────────────────────────]],
-	}, "\n"),
-	query_updaters = [[abcdefghilmoqrstuvwxyz0123456789_-,.ABCDEFGHIJKLMOQRSTUVWXYZ]],
-	items = {
-		{ action = "PackerSync", name = "U: Update Plugins", section = "Plugins" },
-		{ action = "enew", name = "E: New Buffer", section = "Builtin actions" },
-		{ action = "qall!", name = "Q: Quit Neovim", section = "Builtin actions" },
-	},
+        [[─────────────────────────────────────────────────]],
+    }, "\n"),
+    query_updaters = [[abcdefghilmoqrstuvwxyz0123456789_-,.ABCDEFGHIJKLMOQRSTUVWXYZ]],
+    items = {
+        { action = "PackerSync",    name = "U: Update Plugins",   section = "Plugins" },
+        { action = "PackerCompile", name = "R: Recompile Packer", section = "Plugins" },
+        { action = "enew",          name = "E: New Buffer",       section = "Builtin actions" },
+        { action = "qall!",         name = "Q: Quit Neovim",      section = "Builtin actions" },
+    },
 })
 
 vim.cmd([[

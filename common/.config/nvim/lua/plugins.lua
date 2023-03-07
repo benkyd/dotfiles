@@ -179,7 +179,11 @@ local packer = require('packer').startup(function(use)
         requires = {
             "williamboman/mason-lspconfig.nvim",
             "neovim/nvim-lspconfig",
+            'simrat39/rust-tools.nvim',
         },
+        config = function ()
+            require('lsp-general')
+        end
     }
 
     -- for LSP autocompletion
