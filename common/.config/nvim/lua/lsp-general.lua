@@ -38,6 +38,19 @@ require('rust-tools').setup {
     }
 }
 
+-- Specific LSP
+lspconfig.rust_analyzer.setup {
+    settings = {
+        ["rust-analyzer"] = {
+            diagnostics = {
+                enable = true,
+                disabled = {"unresolved-proc-macro"},
+                enableExperimental = true,
+            },
+        },
+    },
+}
+
 -- diagnostic symbols
 local signs = { Error = "", Warn = "", Hint = "", Info = "" }
 for type, icon in pairs(signs) do
