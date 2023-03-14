@@ -37,6 +37,14 @@ local packer = require('packer').startup(function(use)
         end
     }
 
+    -- colourise colour codes
+    use {
+        'norcalli/nvim-colorizer.lua',
+        config = function ()
+            require('colorizer').setup({})
+        end
+    }
+
     -- telescope - searching / navigation
     use {
         'nvim-telescope/telescope.nvim',
