@@ -121,12 +121,12 @@ local packer = require('packer').startup(function(use)
     -- VISUAL CHANGES
 
     -- start page
-    use {
-        'echasnovski/mini.starter',
-        config = function ()
-            require('plugin-config/ministarter')
-        end
-    }
+    --use {
+        --'echasnovski/mini.starter',
+        --config = function ()
+            --require('plugin-config/ministarter')
+        --end
+    --}
 
     -- nicer looking tab display
     use {
@@ -157,27 +157,7 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- UX improvements
-    use {
-        "folke/noice.nvim",
-        requires = {
-            "MunifTanjim/nui.nvim",
-            "rcarriga/nvim-notify",
-        },
-        config = function ()
-            require('plugin-config/noice')
-        end
-    }
-
-    use {
-        'stevearc/dressing.nvim',
-        config = function ()
-            require('plugin-config/dressing')
-        end
-    }
-
     use 'rcarriga/nvim-notify'
-
 
     -- FUNCTIONAL CODING STUFF
 
