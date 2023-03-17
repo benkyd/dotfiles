@@ -151,40 +151,44 @@ local packer = require('packer').startup(function(use)
 
     -- statusline
     use {
-        'ojroques/nvim-hardline',
+        'freddiehaddad/feline.nvim',
         config = function ()
-            require('hardline').setup({})
+            require('plugin-config/feline')
         end
     }
 
+    -- fancy notifications
     use 'rcarriga/nvim-notify'
 
     -- FUNCTIONAL CODING STUFF
 
-    -- lsp config
     use {
-        "williamboman/mason.nvim",
+        'VonHeikemen/lsp-zero.nvim',
+        branch = 'v1.x',
         requires = {
-            "williamboman/mason-lspconfig.nvim",
-            "neovim/nvim-lspconfig",
-            'simrat39/rust-tools.nvim',
+            -- LSP Support
+            {'neovim/nvim-lspconfig'},
+            {'williamboman/mason.nvim'},
+            {'williamboman/mason-lspconfig.nvim'},
+
+            -- Special LSP treatment
+            {'simrat39/rust-tools.nvim'},
+
+            -- Autocompletion
+            {'hrsh7th/nvim-cmp'},
+            {'hrsh7th/cmp-nvim-lsp'},
+            {'hrsh7th/cmp-nvim-lua'},
+            {'hrsh7th/cmp-buffer'},
+            {'hrsh7th/cmp-path'},
+            {'hrsh7th/cmp-cmdline'},
+            {'saadparwaiz1/cmp_luasnip'},
+
+            -- Snippets
+            {'L3MON4D3/LuaSnip'},
+            {'rafamadriz/friendly-snippets'},
         },
         config = function ()
             require('lsp-general')
-        end
-    }
-
-    -- for LSP autocompletion
-    use {
-        'hrsh7th/nvim-cmp',
-        requires = {
-            'hrsh7th/cmp-nvim-lsp',
-            'hrsh7th/cmp-buffer',
-            'hrsh7th/cmp-path',
-            'hrsh7th/cmp-cmdline',
-        },
-        config = function ()
-            require('plugin-config/nvim-cmp')
         end
     }
 

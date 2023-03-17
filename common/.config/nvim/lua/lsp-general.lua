@@ -1,62 +1,89 @@
-local lspconfig = require('lspconfig');
+local lsp = require('lsp-zero')
+local cmp = require ('cmp')
+lsp.preset("recommended")
+
+lsp.ensure_installed({
+  'tsserver',
+  'clangd',
+})
+
+-- Fix Undefined global 'vim'
+lsp.configure('lua-language-server', {
+    settings = {
+        Lua = {
+            diagnostics = {
+                globals = { 'vim' }
+            }
+        }
+    }
+})
+
+local cmp = require('cmp')
+local cmp_select = { behavior = cmp.SelectBehavior.Select }
+local cmp_mappings = lsp.defaults.cmp_mappings({
+    ["<Tab>"] = cmp.mapping.select_next_item(cmp_select),
+    ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_select),
+    ["<CR>"] = cmp.mapping.confirm({
+        behavior = cmp.ConfirmBehavior.Replace,
+        select = true,
+    }),
+})
+
+lsp.setup_nvim_cmp({
+    mapping = cmp_mappings,
+})
+
+
+cmp.setup.cmdline('/', {
+    sources = {
+        { name = 'buffer' }
+    }
+})
+
+cmp.setup.cmdline(':', {
+    sources = cmp.config.sources({
+        { name = 'path' }
+    }, {
+        { name = 'cmdline' }
+    })
+})
+
+lsp.set_preferences({
+    suggest_lsp_servers = false,
+    sign_icons = {
+        error = '',
+        warn = '',
+        hint = '',
+        info = ''
+    }
+})
+
 
 require('mason').setup()
 require('mason-lspconfig').setup({
-    ensure_installed = { 'clangd' }
+    ensure_installed = { 'clangd'}
 })
 
-local opts = { noremap = true, silent = true, buffer = bufnr }
-vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
--- Glance LSP
-vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
-vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
-vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
-vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities())
-
-local on_attatch = function(_, bufnr)
+lsp.on_attach(function(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-end
+    local opts = { noremap = true, silent = true, buffer = bufnr }
+    vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+    -- Glance LSP
+    vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
+    vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
+end)
 
-require('mason-lspconfig').setup_handlers({
-    function(server)
-        lspconfig[server].setup({
-            on_attatch = on_attatch,
-            capabilities = capabilities,
-        })
-    end,
+lsp.setup()
+
+vim.diagnostic.config({
+    virtual_text = true
 })
-
-require('rust-tools').setup {
-    server = {
-        on_attatch = on_attatch,
-        capabilities = capabilities,
-    }
-}
-
--- Specific LSP
-lspconfig.rust_analyzer.setup {
-    settings = {
-        ["rust-analyzer"] = {
-            diagnostics = {
-                enable = true,
-                disabled = {"unresolved-proc-macro"},
-                enableExperimental = true,
-            },
-        },
-    },
-}
-
--- diagnostic symbols
-local signs = { Error = "", Warn = "", Hint = "", Info = "" }
-for type, icon in pairs(signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-end
 
 -- completion symbols
 vim.lsp.protocol.CompletionItemKind = {
@@ -86,3 +113,4 @@ vim.lsp.protocol.CompletionItemKind = {
     "   (Operator)",
     "   (TypeParameter)"
 }
+
