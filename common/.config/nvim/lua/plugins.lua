@@ -120,14 +120,6 @@ local packer = require('packer').startup(function(use)
 
     -- VISUAL CHANGES
 
-    -- start page
-    --use {
-        --'echasnovski/mini.starter',
-        --config = function ()
-            --require('plugin-config/ministarter')
-        --end
-    --}
-
     -- nicer looking tab display
     use {
         'lukas-reineke/indent-blankline.nvim',
@@ -161,6 +153,24 @@ local packer = require('packer').startup(function(use)
     use 'rcarriga/nvim-notify'
 
     -- FUNCTIONAL CODING STUFF
+
+    -- AI Autocompletion
+    use {
+        "zbirenbaum/copilot.lua",
+        cmd = "Copilot",
+        event = "InsertEnter",
+        config = function()
+            require("copilot").setup({
+                suggestion = {
+                    enabled = true,
+                    auto_trigger = true,
+                    keymap = {
+                        accept = "<S-CR>",
+                    }
+                },
+            })
+        end
+    }
 
     use {
         'VonHeikemen/lsp-zero.nvim',
