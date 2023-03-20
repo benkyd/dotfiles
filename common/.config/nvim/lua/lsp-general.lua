@@ -29,6 +29,10 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
     }),
 })
 
+-- unmap arrow keys
+cmp_mappings["<Up>"] = nil
+cmp_mappings["<Down>"] = nil
+
 lsp.setup_nvim_cmp({
     mapping = cmp_mappings,
 })

@@ -143,9 +143,9 @@ local packer = require('packer').startup(function(use)
 
     -- statusline
     use {
-        'freddiehaddad/feline.nvim',
+        'benkyd/nvim-hardline',
         config = function ()
-            require('plugin-config/feline')
+            require('hardline').setup({})
         end
     }
 
