@@ -1,6 +1,8 @@
 local lsp = require('lsp-zero')
 local cmp = require ('cmp')
-lsp.preset("recommended")
+lsp.preset({
+    name = 'recommended',
+})
 
 lsp.ensure_installed({
   'tsserver',
@@ -19,14 +21,10 @@ lsp.configure('lua-language-server', {
 })
 
 local cmp = require('cmp')
-local cmp_select = { behavior = cmp.SelectBehavior.Select }
+local cmp_mode = { behavior = cmp.SelectBehavior.Replace }
 local cmp_mappings = lsp.defaults.cmp_mappings({
-    ["<Tab>"] = cmp.mapping.select_next_item(cmp_select),
-    ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_select),
-    ["<CR>"] = cmp.mapping.confirm({
-        behavior = cmp.ConfirmBehavior.Replace,
-        select = true,
-    }),
+    ["<Tab>"] = cmp.mapping.select_next_item(cmp_mode),
+    ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_mode),
 })
 
 -- unmap arrow keys
@@ -34,9 +32,12 @@ cmp_mappings["<Up>"] = nil
 cmp_mappings["<Down>"] = nil
 
 lsp.setup_nvim_cmp({
+    preselect = require('cmp').PreselectMode.None,
+    completion = {
+        completeopt = 'menu,menuone,noinsert,noselect'
+    },
     mapping = cmp_mappings,
 })
-
 
 cmp.setup.cmdline('/', {
     sources = {

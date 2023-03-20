@@ -8,6 +8,7 @@ if fn.empty(fn.glob(installPath)) > 0 then
     vim.cmd [[packadd packer.nvim]]
 end
 
+
 local packer = require('packer').startup(function(use)
     -- Packer should manage itself
     use 'wbthomason/packer.nvim'
