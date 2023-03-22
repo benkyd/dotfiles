@@ -31,7 +31,7 @@ require('telescope').setup {
         display_path = true,
         winblend = 0, -- window should not be transparent
         border = {}, -- no border?
-        borderchars = {'─', '│', '─', '│', '╭', '╮', '╯', '╰'}, -- border chars
+        borderchars = {'─', '│', '─', '│', '╭', '╮', '╯', '╰'}, -- border charsi
         color_devicons = true, -- colorize used icons
         use_less = true, -- less is bash program for preview file contents
         set_env = {['COLORTERM'] = 'truecolor'}, -- use all the colors
@@ -60,6 +60,12 @@ require('telescope').setup {
         fzy_native = {
             override_generic_sorter = false,
             override_file_sorter = true,
+        },
+        extensions = {
+            ["ui-select"] = { }
         }
     }
 }
+
+require("telescope").load_extension("ui-select")
+
