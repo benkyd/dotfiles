@@ -5,7 +5,6 @@
 vim.o.termguicolors = true
 vim.o.background = 'dark'
 
--- Default options:
 require('kanagawa').setup({
     undercurl = true,           -- enable undercurls
     commentStyle = { italic = true },
@@ -27,3 +26,4 @@ require('kanagawa').setup({
 
 -- setup must be called before loading
 vim.cmd("colorscheme kanagawa")
+

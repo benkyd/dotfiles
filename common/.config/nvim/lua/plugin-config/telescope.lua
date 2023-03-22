@@ -7,6 +7,8 @@ vim.api.nvim_set_keymap('n', '<Leader>fh', "<Cmd>lua require'telescope.builtin'.
 vim.api.nvim_set_keymap('n', '<Leader>fc', "<Cmd>TodoTelescope<CR>",opts)
 
 local actions = require('telescope.actions')
+local themes = require('telescope.themes')
+
 require('telescope').setup {
     defaults = {
         -- program to use for searching with its arguments
@@ -61,7 +63,13 @@ require('telescope').setup {
             override_generic_sorter = false,
             override_file_sorter = true,
         },
-        ["ui-select"] = { },
+        ["ui-select"] = {
+            themes.get_ivy {
+                layout_config = {
+                    height = 0.4
+                }
+            }
+        },
     }
 }
 
