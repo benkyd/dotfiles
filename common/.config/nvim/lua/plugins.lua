@@ -195,9 +195,6 @@ local packer = require('packer').startup(function(use)
             {'williamboman/mason.nvim'},
             {'williamboman/mason-lspconfig.nvim'},
 
-            -- Special LSP treatment
-            {'simrat39/rust-tools.nvim'},
-
             -- Autocompletion
             {'hrsh7th/nvim-cmp'},
             {'hrsh7th/cmp-nvim-lsp'},

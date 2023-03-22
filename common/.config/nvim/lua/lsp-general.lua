@@ -1,7 +1,12 @@
 local lsp = require('lsp-zero')
+
+require('mason').setup({})
+require('mason-lspconfig').setup({})
+
 lsp.preset({
     name = 'recommended',
 })
+
 
 lsp.ensure_installed({
   'tsserver',
@@ -60,12 +65,6 @@ lsp.set_preferences({
         hint = '',
         info = ''
     }
-})
-
-
-require('mason').setup()
-require('mason-lspconfig').setup({
-    ensure_installed = { 'clangd'}
 })
 
 
