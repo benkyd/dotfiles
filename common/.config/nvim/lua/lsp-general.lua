@@ -1,5 +1,4 @@
 local lsp = require('lsp-zero')
-local cmp = require ('cmp')
 lsp.preset({
     name = 'recommended',
 })
@@ -77,6 +76,9 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
     vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
     vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+
+    vim.keymap.set('n', '<A-CR>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+
     -- Glance LSP
     vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
     vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
