@@ -49,6 +49,15 @@ lsp.setup_nvim_cmp({
     mapping = cmp_mappings,
 })
 
+local cmp_config = lsp.defaults.cmp_config({
+    window = {
+        completion = cmp.config.window.bordered(),
+        documentation = cmp.config.window.bordered()
+    },
+})
+
+cmp.setup(cmp_config)
+
 cmp.setup.cmdline('/', {
     sources = {
         { name = 'buffer' }
