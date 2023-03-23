@@ -5,7 +5,7 @@ local opts = { noremap = true, silent = true }
 vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 
 -- vscode style quick peek at the tree
-vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR> :vertical resize 30<CR>", { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-b>', ":NvimTreeToggle<CR> :vertical resize 30<CR>", { noremap = true })
 
 -- make ctrl-shift arrows line movement
 vim.api.nvim_set_keymap('n', '<C-A-Up>', 'ddkP', opts)

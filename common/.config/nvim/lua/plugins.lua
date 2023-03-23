@@ -19,6 +19,14 @@ local packer = require('packer').startup(function(use)
 
     -- QUALITY OF LIFE INTEGRATIONS
 
+    -- file explorer
+    use {
+        'nvim-tree/nvim-tree.lua',
+        config = function ()
+            require('plugin-config/nvim-tree')
+        end
+    }
+
     -- git integration
     use {
         'lewis6991/gitsigns.nvim',
