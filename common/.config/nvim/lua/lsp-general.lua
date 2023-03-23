@@ -7,7 +7,7 @@ lsp.preset({
     name = 'recommended',
 })
 
-
+local rust_lsp = lsp.build_options('rust_analyzer', {})
 lsp.ensure_installed({
   'tsserver',
   'clangd',
@@ -86,6 +86,9 @@ lsp.on_attach(function(_, bufnr)
 end)
 
 lsp.setup()
+
+require('rust-tools').setup({server = rust_lsp})
+
 
 vim.diagnostic.config({
     virtual_text = true
