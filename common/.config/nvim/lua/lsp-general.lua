@@ -24,6 +24,12 @@ lsp.configure('lua-language-server', {
     }
 })
 
+lsp.configure('clangd', {
+    capabilities = {
+        offsetEncoding = { "utf-16" }
+    }
+})
+
 local cmp = require('cmp')
 local cmp_mode = { behavior = cmp.SelectBehavior.Replace }
 local cmp_mappings = lsp.defaults.cmp_mappings({
