@@ -86,18 +86,18 @@ lsp.set_preferences({
 lsp.on_attach(function(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     local opts = { noremap = true, silent = true, buffer = bufnr }
-    vim.keymap.set('n', '<Leader>lD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>lT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>lI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-    vim.keymap.set('n', '<Leader>lR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
 
     vim.keymap.set('n', '<A-CR>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', opts)
 
     -- Glance LSP
-    vim.keymap.set('n', '<Leader>ld', '<CMD>Glance definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>lt', '<CMD>Glance type_definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>li', '<CMD>Glance implementations<CR>', opts)
-    vim.keymap.set('n', '<Leader>lr', '<CMD>Glance references<CR>', opts)
+    vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
+    vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
 end)
 
 lsp.setup()
