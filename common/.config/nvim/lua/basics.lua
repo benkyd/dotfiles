@@ -1,3 +1,5 @@
+vim.opt.clipboard = "unnamedplus"
+
 -- ================= Holy leader key ================= --
 
 vim.g.mapleader = ','
