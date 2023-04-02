@@ -44,10 +44,6 @@ require('smart-splits').setup({
     'BufEnter',
     'WinEnter',
   },
-  -- enable or disable the tmux integration
-  tmux_integration = true,
-  -- disable tmux navigation if current tmux pane is zoomed
-  disable_tmux_nav_when_zoomed = true,
 })
 
 vim.keymap.set('n', '<A-Left>', require('smart-splits').resize_left)
