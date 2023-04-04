@@ -132,12 +132,16 @@ local cmp_config = {
     formatting = {
         fields = { "kind", "abbr", "menu" },
         format = function(entry, vim_item)
+            vim_item.menu = ({
+                buffer = "",
+                nvim_lsp = "",
+            })[entry.source.name]
+
+            -- add hints bc im stupid
+            vim_item.menu =  (vim_item.menu or ' ') .. ' ' .. vim_item.kind
+
             vim_item.kind = (cmp_kinds[vim_item.kind] or '')
 
-            vim_item.menu = ({
-                buffer = "[]",
-                nvim_lsp = "[]",
-            })[entry.source.name]
             return vim_item
         end,
     }
@@ -145,6 +149,7 @@ local cmp_config = {
 
 cmp.setup(cmp_config)
 
+vim.api.nvim_set_hl(0, "CmpItemMenu", { italic = true })
 vim.diagnostic.config({
     virtual_text = true
 })
