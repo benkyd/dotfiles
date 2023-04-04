@@ -13,17 +13,6 @@ lsp.ensure_installed({
     'clangd',
 })
 
--- Fix Undefined global 'vim'
-lsp.configure('lua-language-server', {
-    settings = {
-        Lua = {
-            diagnostics = {
-                globals = { 'vim' }
-            }
-        }
-    }
-})
-
 lsp.configure('clangd', {
     capabilities = {
         offsetEncoding = { "utf-16" }
