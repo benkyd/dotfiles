@@ -59,13 +59,6 @@ local packer = require('packer').startup(function(use)
         'ThePrimeagen/harpoon',
         config = function ()
             require('harpoon').setup({})
-            vim.keymap.set("n", "<leader>hh", require("harpoon.ui").toggle_quick_menu, { desc = "Toggle Harpoon Menu" })
-            vim.keymap.set("n", "<leader>hg", require("harpoon.mark").add_file, { desc = "Add file to harpoon list" })
-            for pos = 1, 9 do
-                vim.keymap.set("n", "<leader>h" .. pos, function()
-                    require("harpoon.ui").nav_file(pos)
-                end, { desc = "Move to harpoon mark #" .. pos })
-            end
         end
     }
 
@@ -103,6 +96,15 @@ local packer = require('packer').startup(function(use)
             require('plugin-config/smart-splits')
         end
     }
+
+    -- zen mode
+    use {
+        "folke/zen-mode.nvim",
+        config = function()
+            require("zen-mode").setup({})
+        end
+    }
+
     -- gorbit's codewindow
     use {
         'gorbit99/codewindow.nvim',
