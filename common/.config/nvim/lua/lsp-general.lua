@@ -9,8 +9,8 @@ lsp.preset({
 
 local rust_lsp = lsp.build_options('rust_analyzer', {})
 lsp.ensure_installed({
-  'tsserver',
-  'clangd',
+    'tsserver',
+    'clangd',
 })
 
 -- Fix Undefined global 'vim'
@@ -49,14 +49,28 @@ lsp.setup_nvim_cmp({
     mapping = cmp_mappings,
 })
 
-local cmp_config = lsp.defaults.cmp_config({
-    window = {
-        completion = cmp.config.window.bordered(),
-        documentation = cmp.config.window.bordered()
-    },
-})
 
-cmp.setup(cmp_config)
+lsp.on_attach(function(_, bufnr)
+    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+    local opts = { noremap = true, silent = true, buffer = bufnr }
+    vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+    vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+
+    vim.keymap.set('n', '<A-CR>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+
+    -- Glance LSP
+    vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
+    vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
+    vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
+end)
+
+lsp.setup()
+
+require('rust-tools').setup({server = rust_lsp})
+
 
 cmp.setup.cmdline('/', {
     sources = {
@@ -82,59 +96,56 @@ lsp.set_preferences({
     }
 })
 
+local cmp_kinds = {
+    Text = "",
+    Method = "",
+    Function = "",
+    Constructor = "",
+    Field = "ﴲ",
+    Variable = "",
+    Class = "",
+    Interface = "ﰮ",
+    Module = "",
+    Property = "襁",
+    Unit = "",
+    Value = "",
+    Enum = "練",
+    Keyword = "",
+    Snippet = "",
+    Color = "",
+    File = "",
+    Reference = "",
+    Folder = "",
+    EnumMember = "",
+    Constant = "ﲀ",
+    Struct = "ﳤ",
+    Event = "",
+    Operator = "",
+    TypeParameter = ""
+}
 
-lsp.on_attach(function(_, bufnr)
-    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-    local opts = { noremap = true, silent = true, buffer = bufnr }
-    vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+local cmp_config = {
+    window = {
+        completion = cmp.config.window.bordered(),
+        documentation = cmp.config.window.bordered()
+    },
+    formatting = {
+        fields = { "kind", "abbr", "menu" },
+        format = function(entry, vim_item)
+            vim_item.kind = (cmp_kinds[vim_item.kind] or '')
 
-    vim.keymap.set('n', '<A-CR>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+            vim_item.menu = ({
+                buffer = "[]",
+                nvim_lsp = "[]",
+            })[entry.source.name]
+            return vim_item
+        end,
+    }
+}
 
-    -- Glance LSP
-    vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
-    vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
-end)
-
-lsp.setup()
-
-require('rust-tools').setup({server = rust_lsp})
-
+cmp.setup(cmp_config)
 
 vim.diagnostic.config({
     virtual_text = true
 })
-
--- completion symbols
-vim.lsp.protocol.CompletionItemKind = {
-    "   (Text) ",
-    "   (Method)",
-    "   (Function)",
-    "   (Constructor)",
-    " ﴲ  (Field)",
-    "[] (Variable)",
-    "   (Class)",
-    " ﰮ  (Interface)",
-    "   (Module)",
-    " 襁 (Property)",
-    "   (Unit)",
-    "   (Value)",
-    " 練 (Enum)",
-    "   (Keyword)",
-    "   (Snippet)",
-    "   (Color)",
-    "   (File)",
-    "   (Reference)",
-    "   (Folder)",
-    "   (EnumMember)",
-    " ﲀ  (Constant)",
-    " ﳤ  (Struct)",
-    "   (Event)",
-    "   (Operator)",
-    "   (TypeParameter)"
-}
 
