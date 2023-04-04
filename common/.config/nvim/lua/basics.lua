@@ -1,4 +1,3 @@
-vim.opt.clipboard = "unnamedplus"
 
 -- ================= Holy leader key ================= --
 
@@ -12,6 +11,8 @@ vim.bo.swapfile = false
 vim.o.backup = false
 vim.o.writebackup = false
 vim.o.autoread = true -- auto file change detection
+-- clipboard
+vim.opt.clipboard = "unnamedplus"
 
 -- autocmds are currently not supported by nvim (0.5 nighlty)
 vim.api.nvim_command([[
