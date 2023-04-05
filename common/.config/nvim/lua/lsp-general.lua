@@ -1,4 +1,6 @@
 local lsp = require('lsp-zero')
+local cmp = require('cmp')
+local luasnip = require('luasnip')
 
 require('mason').setup({})
 require('mason-lspconfig').setup({})
@@ -7,7 +9,7 @@ lsp.preset({
     name = 'recommended',
 })
 
-local rust_lsp = lsp.build_options('rust_analyzer', {})
+
 lsp.ensure_installed({
     'tsserver',
     'clangd',
@@ -19,10 +21,18 @@ lsp.configure('clangd', {
     }
 })
 
-local cmp = require('cmp')
 local cmp_mode = { behavior = cmp.SelectBehavior.Replace }
 local cmp_mappings = lsp.defaults.cmp_mappings({
-    ["<Tab>"] = cmp.mapping.select_next_item(cmp_mode),
+    ["<Tab>"] = cmp.mapping(function(fallback)
+        if (cmp.visible()) then
+            cmp.select_next_item(cmp_mode)
+        elseif luasnip.expand_or_jumpable() then
+          luasnip.expand_or_jump()
+        else
+            fallback()
+        end
+        cmp.mapping.select_next_item(cmp_mode)
+    end, { 'i', 's'}),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_mode),
 })
 
@@ -56,9 +66,11 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
 end)
 
-lsp.setup()
 
+local rust_lsp = lsp.build_options('rust_analyzer', {})
 require('rust-tools').setup({server = rust_lsp})
+
+lsp.setup()
 
 
 cmp.setup.cmdline('/', {

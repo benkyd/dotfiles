@@ -28,6 +28,8 @@ local packer = require('packer').startup(function(use)
     }
 
     -- git integration
+    use 'tpope/vim-fugitive'
+
     use {
         'lewis6991/gitsigns.nvim',
         requires = { 'nvim-lua/plenary.nvim' },
@@ -35,8 +37,6 @@ local packer = require('packer').startup(function(use)
             require('plugin-config/gitsigns')
         end
     }
-
-    use 'tpope/vim-fugitive'
 
     -- speedy searching
     use {
