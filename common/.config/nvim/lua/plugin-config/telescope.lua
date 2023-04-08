@@ -5,11 +5,17 @@ vim.api.nvim_set_keymap('n', '<Leader>fg', "<Cmd>lua require'telescope.builtin'.
 vim.api.nvim_set_keymap('n', '<Leader>fb', "<Cmd>lua require'telescope.builtin'.buffers()<CR>", opts)
 vim.api.nvim_set_keymap('n', '<Leader>fh', "<Cmd>lua require'telescope.builtin'.help_tags()<CR>", opts)
 vim.api.nvim_set_keymap('n', '<Leader>fc', "<Cmd>TodoTelescope<CR>",opts)
+vim.api.nvim_set_keymap('n', '<Leader>fu', "<Cmd>Telescope undo<CR>",opts)
 
 local actions = require('telescope.actions')
 local themes = require('telescope.themes')
 
 require('telescope').setup {
+    pickers = {
+        find_files = {
+            hidden = true
+        }
+    },
     defaults = {
         -- program to use for searching with its arguments
         find_command = {'rg', '--no-heading', '--with-filename', '--line-number', '--column', '--smart-case'},
@@ -74,4 +80,5 @@ require('telescope').setup {
 }
 
 require("telescope").load_extension("ui-select")
+require("telescope").load_extension("undo")
 

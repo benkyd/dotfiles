@@ -66,8 +66,9 @@ local packer = require('packer').startup(function(use)
     use {
         'nvim-telescope/telescope.nvim',
         requires = {
-            'nvim-telescope/telescope-ui-select.nvim',
             'nvim-lua/plenary.nvim',
+            'nvim-telescope/telescope-ui-select.nvim',
+            'debugloop/telescope-undo.nvim',
             'folke/todo-comments.nvim',
         },
         config = function ()
