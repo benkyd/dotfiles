@@ -18,8 +18,8 @@ config.window_background_opacity = 0.85
 config.window_padding = {
     left = '0.5cell',
     right = '0.5cell',
-    top = '0.2cell',
-    bottom = 0,
+    top = '0.3cell',
+    bottom = '0.3cell',
 }
 
 config.keys = {
