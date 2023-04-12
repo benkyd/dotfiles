@@ -3,6 +3,9 @@
 
 vim.g.mapleader = ','
 
+
+vim.keymap.set({'n', 'v', 'o', 's'}, '<space>', '<leader>', {remap = true})
+
 -- ================= File management ================= --
 
 -- swapfile has global & local config, eventhough help says otherwise
