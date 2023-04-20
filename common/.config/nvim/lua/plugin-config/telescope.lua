@@ -50,15 +50,15 @@ require('telescope').setup {
         -- preview_cutoff = 120,
         mappings = {
             i = {
-                ['<C-k>'] = actions.move_selection_next,
-                ['<C-l>'] = actions.move_selection_previous,
+                ['<C-j>'] = actions.move_selection_next,
+                ['<C-k>'] = actions.move_selection_previous,
                 ['<C-q>'] = actions.smart_send_to_qflist + actions.open_qflist,
                 ['<C-d>'] = 'delete_buffer',
                 ['<CR>'] = actions.select_default + actions.center,
             },
             n = {
-                ['<C-k>'] = actions.move_selection_next,
-                ['<C-l>'] = actions.move_selection_previous,
+                ['<C-j>'] = actions.move_selection_next,
+                ['<C-k>'] = actions.move_selection_previous,
                 ['<C-q>'] = actions.smart_send_to_qflist + actions.open_qflist,
                 ['<C-d>'] = 'delete_buffer',
             }
