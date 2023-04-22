@@ -4,6 +4,9 @@ local opts = { noremap = true, silent = true }
 -- paste in insert mode
 vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 
+-- paste and keep the paste register
+vim.api.nvim_set_keymap('', '<leader>p', '"_dP', opts)
+
 -- vscode style quick peek at the tree
 vim.api.nvim_set_keymap('n', '<C-b>', ":NvimTreeToggle<CR>", { noremap = true })
 
