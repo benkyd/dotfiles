@@ -77,14 +77,6 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- highlight variables under the cursor
-    use {
-        'tzachar/local-highlight.nvim',
-        config = function()
-            require('local-highlight').setup()
-        end
-    }
-
     -- better hotfix window (for showing and searching through results in telescope's find usages)
     use 'kevinhwang91/nvim-bqf'
 
@@ -191,7 +183,7 @@ local packer = require('packer').startup(function(use)
         'ecthelionvi/NeoColumn.nvim',
         config = function()
             require('NeoColumn').setup({
-                NeoColumn = 80,
+                NeoColumn = '80',
                 always_on = true,
             })
         end
