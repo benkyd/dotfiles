@@ -27,12 +27,12 @@ local cmp_mappings = lsp.defaults.cmp_mappings({
         if (cmp.visible()) then
             cmp.select_next_item(cmp_mode)
         elseif luasnip.expand_or_jumpable() then
-          luasnip.expand_or_jump()
+            luasnip.expand_or_jump()
         else
             fallback()
         end
         cmp.mapping.select_next_item(cmp_mode)
-    end, { 'i', 's'}),
+    end, { 'i', 's' }),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_mode),
 })
 
@@ -64,11 +64,13 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
     vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
     vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
+
+    vim.keymap.set('n', '<Leader>gf', '<Cmd>lua vim.lsp.buf.format()<CR>', opts)
 end)
 
 
 local rust_lsp = lsp.build_options('rust_analyzer', {})
-require('rust-tools').setup({server = rust_lsp})
+require('rust-tools').setup({ server = rust_lsp })
 
 lsp.setup()
 
@@ -139,7 +141,7 @@ local cmp_config = {
             })[entry.source.name]
 
             -- add hints bc im stupid
-            vim_item.menu =  (vim_item.menu or ' ') .. ' ' .. vim_item.kind
+            vim_item.menu = (vim_item.menu or ' ') .. ' ' .. vim_item.kind
 
             vim_item.kind = (cmp_kinds[vim_item.kind] or '')
 
@@ -154,4 +156,3 @@ vim.api.nvim_set_hl(0, "CmpItemMenu", { italic = true })
 vim.diagnostic.config({
     virtual_text = true
 })
-
