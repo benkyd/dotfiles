@@ -6,6 +6,7 @@ vim.api.nvim_set_keymap('n', '<Leader>fb', "<Cmd>lua require'telescope.builtin'.
 vim.api.nvim_set_keymap('n', '<Leader>fh', "<Cmd>lua require'telescope.builtin'.help_tags()<CR>", opts)
 vim.api.nvim_set_keymap('n', '<Leader>fc', "<Cmd>TodoTelescope<CR>",opts)
 vim.api.nvim_set_keymap('n', '<Leader>fu', "<Cmd>Telescope undo<CR>",opts)
+vim.api.nvim_set_keymap('n', '<Leader>fo', "<Cmd>ObsidianSearch<CR>",opts)
 
 local actions = require('telescope.actions')
 local themes = require('telescope.themes')

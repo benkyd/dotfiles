@@ -77,6 +77,14 @@ local packer = require('packer').startup(function(use)
         end
     }
 
+    -- highlight variables under the cursor
+    use {
+        'tzachar/local-highlight.nvim',
+        config = function()
+            require('local-highlight').setup()
+        end
+    }
+
     -- better hotfix window (for showing and searching through results in telescope's find usages)
     use 'kevinhwang91/nvim-bqf'
 
@@ -100,9 +108,9 @@ local packer = require('packer').startup(function(use)
 
     -- zen mode
     use {
-        "folke/zen-mode.nvim",
+        'folke/zen-mode.nvim',
         config = function()
-            require("zen-mode").setup({})
+            require('zen-mode').setup({})
         end
     }
 
@@ -140,9 +148,17 @@ local packer = require('packer').startup(function(use)
 
     -- auto brace pairs vscode-style
     use {
-        "windwp/nvim-autopairs",
+        'windwp/nvim-autopairs',
         config = function()
-            require("nvim-autopairs").setup({})
+            require('nvim-autopairs').setup({})
+        end
+    }
+
+    -- obsidian!!!
+    use {
+        'epwalsh/obsidian.nvim',
+        config = function()
+            require('plugin-config/obsidian')
         end
     }
 
@@ -152,20 +168,32 @@ local packer = require('packer').startup(function(use)
     use {
         'lukas-reineke/indent-blankline.nvim',
         config = function ()
-            require("indent_blankline").setup {
-                char = "│",
-                filetype_exclude = { "help", "alpha", "dashboard", "neo-tree", "Trouble", "lazy" },
+            require('indent_blankline').setup {
+                char = '│',
+                filetype_exclude = { 'help', 'alpha', 'dashboard', 'neo-tree', 'Trouble', 'lazy' },
             }
         end
     }
 
+    -- nicer looking indent guides
     use {
         'echasnovski/mini.indentscope',
         config = function ()
-            require('mini.indentscope').setup {
-                symbol = "│",
+            require('mini.indentscope').setup({
+                symbol = '│',
                 options = { try_as_border = true },
-            }
+            })
+        end
+    }
+
+    -- colourcolumn that looks better
+    use {
+        'ecthelionvi/NeoColumn.nvim',
+        config = function()
+            require('NeoColumn').setup({
+                NeoColumn = 80,
+                always_on = true,
+            })
         end
     }
 
@@ -181,16 +209,16 @@ local packer = require('packer').startup(function(use)
 
     -- AI Autocompletion
     use {
-        "zbirenbaum/copilot.lua",
-        cmd = "Copilot",
-        event = "InsertEnter",
+        'zbirenbaum/copilot.lua',
+        cmd = 'Copilot',
+        event = 'InsertEnter',
         config = function()
-            require("copilot").setup({
+            require('copilot').setup({
                 suggestion = {
                     enabled = true,
                     auto_trigger = true,
                     keymap = {
-                        accept = "<S-CR>",
+                        accept = '<S-CR>',
                     }
                 },
             })
@@ -231,7 +259,7 @@ local packer = require('packer').startup(function(use)
         'ray-x/lsp_signature.nvim',
         config = function ()
             require('lsp_signature').setup({
-                hint_prefix="🚀"
+                hint_prefix='🚀'
             })
         end
     }

@@ -12,7 +12,7 @@ require('smart-splits').setup({
   -- whether to wrap to opposite side when cursor is at an edge
   -- e.g. by default, moving left at the left edge will jump
   -- to the rightmost window, and vice versa, same for up/down.
-  wrap_at_edge = true,
+  at_edge = 'wrap',
   -- when moving cursor between splits left or right,
   -- place the cursor on the same row of the *screen*
   -- regardless of line numbers. False by default.
@@ -46,13 +46,23 @@ require('smart-splits').setup({
   },
 })
 
-vim.keymap.set('n', '<A-Left>', require('smart-splits').resize_left)
-vim.keymap.set('n', '<A-Down>', require('smart-splits').resize_down)
-vim.keymap.set('n', '<A-Up>', require('smart-splits').resize_up)
-vim.keymap.set('n', '<A-Right>', require('smart-splits').resize_right)
+-- resize splits
+vim.keymap.set('', '<A-Left>', require('smart-splits').resize_left)
+vim.keymap.set('', '<A-Down>', require('smart-splits').resize_down)
+vim.keymap.set('', '<A-Up>', require('smart-splits').resize_up)
+vim.keymap.set('', '<A-Right>', require('smart-splits').resize_right)
+
 -- moving between splits
-vim.keymap.set('n', '<C-Left>', require('smart-splits').move_cursor_left)
-vim.keymap.set('n', '<C-Down>', require('smart-splits').move_cursor_down)
-vim.keymap.set('n', '<C-Up>', require('smart-splits').move_cursor_up)
-vim.keymap.set('n', '<C-Right>', require('smart-splits').move_cursor_right)
+vim.keymap.set('', '<C-Left>', require('smart-splits').move_cursor_left)
+vim.keymap.set('', '<C-Down>', require('smart-splits').move_cursor_down)
+vim.keymap.set('', '<C-Up>', require('smart-splits').move_cursor_up)
+vim.keymap.set('', '<C-Right>', require('smart-splits').move_cursor_right)
+
+local opts = { noremap = true, silent = true }
+
+-- window movement
+vim.api.nvim_set_keymap('', '<A-C-Left>', '<C-w><S-h>', opts)
+vim.api.nvim_set_keymap('', '<A-C-Down>', '<C-w><S-j>', opts)
+vim.api.nvim_set_keymap('', '<A-C-Up>', '<C-w><S-k>', opts)
+vim.api.nvim_set_keymap('', '<A-C-Right>', '<C-w><S-l>', opts)
 
