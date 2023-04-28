@@ -14,7 +14,7 @@ local packer = require('packer').startup(function(use)
     use 'wbthomason/packer.nvim'
 
     -- colourscheme
-    use { 'rebelot/kanagawa.nvim', commit = '4c8d487' }
+    use { 'rebelot/kanagawa.nvim' }
     use 'nvim-tree/nvim-web-devicons'
 
     -- QUALITY OF LIFE INTEGRATIONS
