@@ -43,8 +43,8 @@ Ben = {
     crust = "#11111B",
   },
   fonts = {
-    normal = "Quicksand 12",
-    monospace = "SFMono Nerd Font 12",
+    normal = "DejaVu Sans Mono 12",
+    monospace = "DejaVu Sans Mono 12",
   },
 }
 

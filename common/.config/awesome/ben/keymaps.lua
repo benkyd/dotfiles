@@ -8,7 +8,7 @@ awful.keyboard.append_global_keybindings({
     awesome.restart()
   end),
 
-  --[[ very important applications ]]--
+  --[[ very important applications ]] --
 
   awful.key({ keys.mod }, keys.enter, function()
     awesome.spawn(programs.terminal)
@@ -27,11 +27,11 @@ awful.keyboard.append_global_keybindings({
   end),
 
   --[[awful.key({ keys.mod }, "m", function()]]
-    --[[local rofi_beats = os.getenv("HOME") .. "/.local/bin/scripts/rofi-beats.sh"]]
-    --[[awesome.spawn(rofi_beats)]]
+  --[[local rofi_beats = os.getenv("HOME") .. "/.local/bin/scripts/rofi-beats.sh"]]
+  --[[awesome.spawn(rofi_beats)]]
   --[[end),]]
 
-  --[[ window management ]]--
+  --[[ window management ]] --
   awful.key({ keys.mod }, "h", function()
     awful.client.focus.global_bydirection("left")
   end),
@@ -64,7 +64,7 @@ awful.keyboard.append_global_keybindings({
     awful.client.swap.global_bydirection("right")
   end),
 
-  --[[ Switching between tags ]]--
+  --[[ Switching between tags ]] --
 
   awful.key({ keys.mod }, "#10", function()
     local tag = awful.screen.focused().tags[1]
@@ -245,7 +245,67 @@ awful.keyboard.append_global_keybindings({
       client.focus:move_to_tag(tag)
     end
   end),
+  awful.key({}, "XF86MonBrightnessUp",
+    function()
+      awful.spawn("xbacklight -inc 10", false)
+      awesome.emit_signal("backlight_change")
+    end
+  --  {description = "brightness up", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86MonBrightnessDown",
+    function()
+      awful.spawn("xbacklight -dec 10", false)
+      awesome.emit_signal("backlight_change")
+    end
+  --{description = "brightness down", group = "hotkeys"}
+  ),
+  -- ALSA volume control
+  awful.key({}, "XF86AudioRaiseVolume",
+    function()
+      awful.spawn("amixer -D pulse sset Master 5%+", false)
+      awesome.emit_signal("volume_change")
+    end
+  --{description = "volume up", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86AudioLowerVolume",
+    function()
+      awful.spawn("amixer -D pulse sset Master 5%-", false)
+      awesome.emit_signal("volume_change")
+    end
+  --{description = "volume down", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86AudioMute",
+    function()
+      awful.spawn("amixer -D pulse set Master 1+ toggle", false)
+      awesome.emit_signal("volume_change")
+    end
+  --{description = "toggle mute", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86AudioNext",
+    function()
+      awful.spawn("mpc next", false)
+    end
+  --{description = "next music", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86AudioPrev",
+    function()
+      awful.spawn("mpc prev", false)
+    end
+  --{description = "previous music", group = "hotkeys"}
+  ),
+  awful.key({}, "XF86AudioPlay",
+    function()
+      awful.spawn("mpc toggle", false)
+    end
+  --{description = "play/pause music", group = "hotkeys"}
+  ),
+  awful.key({}, "print",
+    function()
+      awful.spawn("flameshot gui", false)
+    end
+  ),
 })
+
 
 client.connect_signal("request::default_keybindings", function()
   awful.keyboard.append_client_keybindings({
@@ -254,7 +314,7 @@ client.connect_signal("request::default_keybindings", function()
     end),
 
     awful.key({ keys.mod }, keys.space, function(c)
-      c.floating = !c.floating
+      c.floating = not c.floating
       c:raise()
     end),
 
@@ -267,7 +327,7 @@ end)
 
 client.connect_signal("request::default_mousebindings", function()
   awful.mouse.append_client_mousebindings({
-    awful.button({ }, 1, function(c)
+    awful.button({}, 1, function(c)
       c:activate({ context = "mouse_click" })
     end),
 

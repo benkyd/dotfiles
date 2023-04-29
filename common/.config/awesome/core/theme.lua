@@ -298,7 +298,7 @@ return {
   -- The urgent titlebar foreground (text) color
   titlebar_fg_urgent = colors.red,
   -- The default gap
-  useless_gap = dpi(8),
+  useless_gap = dpi(2),
   -- The default wallpaper background color
   wallpaper_bg = colors.base,
   -- The default wallpaper foreground color

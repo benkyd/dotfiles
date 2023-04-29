@@ -34,21 +34,25 @@ require("core.rules")
 require("core.notifications")
 
 -- autostart
-require("alphakeks.autostart")
+require("ben.autostart")
+
+-- my own components
+require("ben.volume")
+require("ben.backlight")
 
 -- fancy titlebars
 local nice = require("plugins.nice")
 nice({
-  titlebar_color = Ben.colors.crust,
-  titlebar_height = 24,
-  button_size = 14,
-  mb_resize = nice.MB_MIDDLE,
-  mb_contextmenu = nice.MB_RIGHT,
-  titlebar_items = {
-    left = {},
-    middle = "title",
-    right = { "maximize", "close" },
-  },
-  maximize_color = Ben.colors.green,
-  close_color = Ben.colors.red,
+    titlebar_color = Ben.colors.crust,
+    titlebar_height = 20,
+    button_size = 14,
+    mb_resize = nice.MB_MIDDLE,
+    mb_contextmenu = nice.MB_RIGHT,
+    titlebar_items = {
+        left = {},
+        middle = "title",
+        right = { "maximize", "close" },
+    },
+    maximize_color = Ben.colors.green,
+    close_color = Ben.colors.red,
 })
