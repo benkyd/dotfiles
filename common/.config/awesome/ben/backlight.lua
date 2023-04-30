@@ -77,7 +77,7 @@ awesome.connect_signal("backlight_change",
    function()
       -- set new brightness value
       awful.spawn.easy_async_with_shell(
-         "cat /sys/class/backlight/nv_backlight/actual_brightness",
+         "cat /sys/class/backlight/intel_backlight/brightness",
          function(stdout)
             local backlight_level = tonumber(stdout)
             backlight_bar.value = backlight_level

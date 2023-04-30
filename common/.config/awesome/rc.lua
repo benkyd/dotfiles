@@ -43,6 +43,9 @@ require("ben.autostart")
 require("ben.volume")
 require("ben.backlight")
 
+-- bling
+local bling = require("plugins.bling")
+
 -- fancy titlebars
 local nice = require("plugins.nice")
 nice({
