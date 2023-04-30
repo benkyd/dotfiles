@@ -54,6 +54,7 @@ nice({
     titlebar_font = Ben.fonts.small,
     button_size = 14,
     mb_resize = nice.MB_MIDDLE,
+    titlebar_radius = 0,
     mb_contextmenu = nice.MB_RIGHT,
     titlebar_items = {
         left = {},
@@ -66,8 +67,12 @@ nice({
 
 -- fix annoying fullscreen stuff
 client.connect_signal("property::fullscreen", function(c)
-    c.border_width = c.fullscreen and 0 or beautiful.border_width
-    c:geometry(c.screen.geometry)
-    awful.titlebar.hide(c)
+    if c.fullscreen then
+        c.border_width = c.fullscreen and 0 or beautiful.border_width
+        c:geometry(c.screen.geometry)
+        awful.titlebar.hide(c)
+    else
+        awful.titlebar.show(c)
+    end
 end)
 
