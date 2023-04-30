@@ -4,7 +4,7 @@ local fonts = Ben.fonts
 
 return {
   -- The Awesome icon path
-  awesome_icon = "/mnt/mass/pictures/Schnose/schnose.png",
+  awesome_icon = "",
   -- The default focused element background color
   bg_focus = colors.base,
   -- The default minimized element background color
@@ -38,19 +38,19 @@ return {
   -- The border color when the client has the urgent property set
   border_color_urgent = colors.red,
   -- The fallback border width when nothing else is set
-  border_width = 2,
+  border_width = 0,
   -- The client border width for the active client
-  border_width_active = 2,
+  border_width_active = 0,
   -- The fallback border width when the client is floating
-  border_width_floating = 4,
+  border_width_floating = 0,
   -- The client border width for the active floating client
-  border_width_floating_active = 4,
+  border_width_floating_active = 0,
   -- The client border width for the new floating clients
-  border_width_floating_new = 4,
+  border_width_floating_new = 0,
   -- The client border width for the normal floating clients
-  border_width_floating_normal = 4,
+  border_width_floating_normal = 0,
   -- The client border width for the urgent floating clients
-  border_width_floating_urgent = 4,
+  border_width_floating_urgent = 0,
   -- The client border width for the fullscreen clients
   border_width_fullscreen = 0,
   -- The client border width for the active fullscreen client
@@ -60,7 +60,7 @@ return {
   -- The client border width for the normal fullscreen clients
   border_width_fullscreen_normal = 0,
   -- The client border width for the urgent fullscreen clients
-  border_width_fullscreen_urgent = 2,
+  border_width_fullscreen_urgent = 0,
   -- The fallback border width when the client is maximized
   border_width_maximized = 0,
   -- The client border width for the active maximized client
@@ -70,13 +70,13 @@ return {
   -- The client border width for the normal maximized clients
   border_width_maximized_normal = 0,
   -- The client border width for the urgent maximized clients
-  border_width_maximized_urgent = 2,
+  border_width_maximized_urgent = 0,
   -- The client border width for the new clients
   border_width_new = 2,
   -- The client border width for the normal clients
-  border_width_normal = 2,
+  border_width_normal = 0,
   -- The client border width for the urgent clients
-  border_width_urgent = 2,
+  border_width_urgent = 0,
   -- The calendar font
   calendar_font = fonts.normal,
   -- Format the weekdays with three characters instead of two
@@ -298,7 +298,7 @@ return {
   -- The urgent titlebar foreground (text) color
   titlebar_fg_urgent = colors.red,
   -- The default gap
-  useless_gap = dpi(2),
+  useless_gap = 0,
   -- The default wallpaper background color
   wallpaper_bg = colors.base,
   -- The default wallpaper foreground color
@@ -312,7 +312,7 @@ return {
   -- The wibar's foreground (text) color
   wibar_fg = colors.text,
   -- The wibar's height
-  wibar_height = 20,
+  wibar_height = 30,
   -- If the wibar is to be on top of other windows
   wibar_ontop = false,
 }

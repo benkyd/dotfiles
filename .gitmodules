@@ -7,3 +7,9 @@
 [submodule "common/.config/awesome/plugins/rubato"]
 	path = common/.config/awesome/plugins/rubato
 	url = https://github.com/andOrlando/rubato
+[submodule "common/.config/awesome/json.lua"]
+	path = common/.config/awesome/json/
+	url = https://github.com/rxi/json.lua
+[submodule "common/.config/awesome/json"]
+	path = common/.config/awesome/json
+	url = https://github.com/rxi/json.lua

@@ -44,6 +44,7 @@ Ben = {
   },
   fonts = {
     normal = "DejaVu Sans Mono 12",
+    small = "DejaVu Sans Mono 9",
     monospace = "DejaVu Sans Mono 12",
   },
 }

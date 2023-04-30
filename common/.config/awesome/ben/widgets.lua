@@ -36,6 +36,6 @@ widgets.clock = wibox.widget({
 widgets.separator = wibox.widget.separator()
 
 widgets.systray = wibox.widget.systray()
-widgets.systray:set_base_size(16)
+widgets.systray:set_base_size(30)
 
 return widgets

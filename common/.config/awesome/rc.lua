@@ -45,6 +45,7 @@ local nice = require("plugins.nice")
 nice({
     titlebar_color = Ben.colors.crust,
     titlebar_height = 20,
+    titlebar_font = Ben.fonts.small,
     button_size = 14,
     mb_resize = nice.MB_MIDDLE,
     mb_contextmenu = nice.MB_RIGHT,

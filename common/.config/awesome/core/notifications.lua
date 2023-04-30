@@ -7,7 +7,7 @@ ruled.notification.connect_signal("request::rules", function()
     rule = {},
     properties = {
       screen = awful.screen.preferred,
-      implicit_timeout = 5,
+      implicit_timeout = 2,
     },
   })
 end)
