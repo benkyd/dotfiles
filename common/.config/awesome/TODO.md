@@ -9,3 +9,7 @@
 [x] Fix annoying fullscreen shit
 [ ] Fix spotify widget being annoying as shit
 [ ] TABS
+[ ] Lock, suspend, shutdown, reboot hotkeys
+[ ] Get rid of i3 deps
+[ ] Figure out wtf is up with tags
+    [ ] Switchback easy

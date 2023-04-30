@@ -70,6 +70,7 @@ awful.screen.connect_for_each_screen(function(screen)
                 battery_widget({
                     font = Ben.fonts.normal,
                     show_current_level = true,
+                    display_notification = true,
                     charging_color = Ben.colors.green,
                     low_level_color = Ben.colors.red,
                     medium_level_color = Ben.colors.yellow,

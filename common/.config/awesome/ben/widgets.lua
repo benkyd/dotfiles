@@ -1,31 +1,6 @@
-local awful = require("awful")
 local wibox = require("wibox")
-local beautiful = require("beautiful")
 
 local widgets = {}
-
-widgets.menu = awful.menu({
-  items = {
-    { "Restart", awesome.restart },
-    {
-          "👋",
-      function()
-        awesome.quit()
-      end
-    },
-    {
-      "Shutdown",
-      function()
-        os.execute("shutdown now")
-      end,
-    },
-  },
-})
-
-widgets.launcher = awful.widget.launcher({
-  image = beautiful.awesome_icon,
-  menu = widgets.menu,
-})
 
 widgets.clock = wibox.widget({
   widget = wibox.widget.textclock,
