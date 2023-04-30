@@ -47,22 +47,8 @@ require('smart-splits').setup({
 })
 
 -- resize splits
-vim.keymap.set('', '<A-Left>', require('smart-splits').resize_left)
-vim.keymap.set('', '<A-Down>', require('smart-splits').resize_down)
-vim.keymap.set('', '<A-Up>', require('smart-splits').resize_up)
-vim.keymap.set('', '<A-Right>', require('smart-splits').resize_right)
-
--- moving between splits
-vim.keymap.set('', '<C-Left>', require('smart-splits').move_cursor_left)
-vim.keymap.set('', '<C-Down>', require('smart-splits').move_cursor_down)
-vim.keymap.set('', '<C-Up>', require('smart-splits').move_cursor_up)
-vim.keymap.set('', '<C-Right>', require('smart-splits').move_cursor_right)
-
-local opts = { noremap = true, silent = true }
-
--- window movement
-vim.api.nvim_set_keymap('', '<A-C-Left>', '<C-w><S-h>', opts)
-vim.api.nvim_set_keymap('', '<A-C-Down>', '<C-w><S-j>', opts)
-vim.api.nvim_set_keymap('', '<A-C-Up>', '<C-w><S-k>', opts)
-vim.api.nvim_set_keymap('', '<A-C-Right>', '<C-w><S-l>', opts)
+vim.keymap.set('', '<A-S-h>', require('smart-splits').resize_left)
+vim.keymap.set('', '<A-S-j>', require('smart-splits').resize_down)
+vim.keymap.set('', '<A-S-k>', require('smart-splits').resize_up)
+vim.keymap.set('', '<A-S-l>', require('smart-splits').resize_right)
 

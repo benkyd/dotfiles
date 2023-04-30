@@ -2,6 +2,9 @@
 pcall(require, "luarocks.loader")
 require("awful.autofocus")
 
+local gears = require("gears")
+local awful = require("awful")
+
 -- Report potential errors
 require("core.error_report")
 
@@ -57,3 +60,11 @@ nice({
     maximize_color = Ben.colors.green,
     close_color = Ben.colors.red,
 })
+
+-- fix annoying fullscreen stuff
+client.connect_signal("property::fullscreen", function(c)
+    c.border_width = c.fullscreen and 0 or beautiful.border_width
+    c:geometry(c.screen.geometry)
+    awful.titlebar.hide(c)
+end)
+

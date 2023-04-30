@@ -8,6 +8,7 @@ Ben = {
   },
   keys = {
     mod = "Mod4",
+    alt = "Mod1",
     shift = "Shift",
     ctrl = "Control",
     space = "space",

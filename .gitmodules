@@ -13,3 +13,6 @@
 [submodule "common/.config/awesome/json"]
 	path = common/.config/awesome/json
 	url = https://github.com/rxi/json.lua
+[submodule "common/.config/awesome/plugins/bling"]
+	path = common/.config/awesome/plugins/bling
+	url = https://github.com/BlingCorp/bling

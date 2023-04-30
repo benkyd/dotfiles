@@ -11,10 +11,10 @@ vim.api.nvim_set_keymap('', '<leader>p', '"_dP', opts)
 vim.api.nvim_set_keymap('n', '<C-b>', ":NvimTreeToggle<CR>", { noremap = true })
 
 -- make ctrl-shift arrows line movement
-vim.api.nvim_set_keymap('n', '<C-S-Up>', 'ddkP', opts)
-vim.api.nvim_set_keymap('v', '<C-S-Up>', ':m \'<-2<CR>gv=gv', opts)
-vim.api.nvim_set_keymap('n', '<C-S-Down>', 'ddp', opts)
-vim.api.nvim_set_keymap('v', '<C-S-Down>', ':m \'>+1<CR>gv=gv', opts)
+vim.api.nvim_set_keymap('n', '<C-K>', 'ddkP', opts)
+vim.api.nvim_set_keymap('v', '<C-K>', ':m \'<-2<CR>gv=gv', opts)
+vim.api.nvim_set_keymap('n', '<C-J>', 'ddp', opts)
+vim.api.nvim_set_keymap('v', '<C-J>', ':m \'>+1<CR>gv=gv', opts)
 
 -- Mapping U to Redo.
 vim.api.nvim_set_keymap('', 'U', '<C-r>', opts)

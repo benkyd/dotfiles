@@ -72,7 +72,7 @@ return {
   -- The client border width for the urgent maximized clients
   border_width_maximized_urgent = 0,
   -- The client border width for the new clients
-  border_width_new = 2,
+  border_width_new = 0,
   -- The client border width for the normal clients
   border_width_normal = 0,
   -- The client border width for the urgent clients
