@@ -38,7 +38,4 @@ widgets.separator = wibox.widget.separator()
 widgets.systray = wibox.widget.systray()
 widgets.systray:set_base_size(16)
 
-widgets.bluetooth = require("ben.bluetooth")
-widgets.battery = require("ben.battery")
-
 return widgets

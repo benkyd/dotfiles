@@ -1,7 +1,7 @@
 local awful = require("awful")
 
 local autostart = {
-    ["picom"] = "/usr/bin/picom -b",
+    ["picom"] = "/usr/bin/picom -b --config /home/$USER/.config/awesome/config/picom.conf",
     ["volumeicon"] = "/usr/bin/volumeicon",
     ["xdilehook"] = "/usr/bin/xidlehook --not-when-fullscreen --not-when-audio --timer 600 'blurlock' ''",
     ["nm-applet"] = "/usr/bin/nm-applet",

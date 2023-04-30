@@ -4,8 +4,10 @@
 yay -S neovim-git nvm wezterm ranger ripgrep zsh curl exa
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-# Manjaro/i3 visuals with Yay
-yay -S ttf-twemoji xotf-nerd-fonts-monacob-mono xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi alternating-layouts-git
+# WM Deps
+yay -S awesome-git
+yay -S picom-pijulis-git
+yay -S ttf-twemoji xorg-xbacklight xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
 
 mkdir -p ~/.local/share/fonts
 cd ~/.local/share/fonts
@@ -17,6 +19,6 @@ yay -S tmux
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 tmux source ~/.tmux.conf
 
-# Manjaro/i3 audio with Yay
+# Audio
 yay -S pulseaudio-equalizer-ladspa mpris-ctl
 
