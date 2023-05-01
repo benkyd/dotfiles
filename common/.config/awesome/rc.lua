@@ -68,9 +68,9 @@ nice({
 -- fix annoying fullscreen stuff
 client.connect_signal("property::fullscreen", function(c)
     if c.fullscreen then
-        c.border_width = c.fullscreen and 0 or beautiful.border_width
-        c:geometry(c.screen.geometry)
         awful.titlebar.hide(c)
+        c.border_width = 0 --c.fullscreen and 0 or beautiful.border_width
+        c:geometry(c.screen.geometry)
     else
         awful.titlebar.show(c)
     end
