@@ -128,12 +128,15 @@ local packer = require('packer').startup(function(use)
     }
 
     -- vscode like LSP code previews
-    use({
-        'dnlhc/glance.nvim',
+    use {
+        "glepnir/lspsaga.nvim",
+        opt = true,
+        branch = "main",
+        event = "LspAttach",
         config = function()
-            require('glance').setup({})
-        end
-    })
+            require("lspsaga").setup({})
+        end,
+    }
 
     -- whitespace pedantics
     use 'ntpeters/vim-better-whitespace'

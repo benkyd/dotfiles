@@ -51,21 +51,31 @@ lsp.setup_nvim_cmp({
 
 lsp.on_attach(function(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+
     local opts = { noremap = true, silent = true, buffer = bufnr }
-    vim.keymap.set('n', '<Leader>gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gI', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-    vim.keymap.set('n', '<Leader>gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
+    vim.keymap.set('n', 'gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    vim.keymap.set('n', 'gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    vim.keymap.set('n', 'gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
 
-    vim.keymap.set('n', '<A-CR>', '<Cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+    -- action & rename
+    vim.keymap.set('n', '<A-CR>', '<Cmd>Lspsaga code_action<CR>', opts)
+    vim.keymap.set('n', '<Leader>gr', '<Cmd>Lspsaga rename<CR>', opts)
 
-    -- Glance LSP
-    vim.keymap.set('n', '<Leader>gd', '<CMD>Glance definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>gt', '<CMD>Glance type_definitions<CR>', opts)
-    vim.keymap.set('n', '<Leader>gi', '<CMD>Glance implementations<CR>', opts)
-    vim.keymap.set('n', '<Leader>gr', '<CMD>Glance references<CR>', opts)
+    -- overwrite the defaults
+    vim.keymap.set('n', 'gi', '<Cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+    vim.keymap.set('n', 'K', '<Cmd>Lspsaga hover_doc<CR>', opts)
 
-    vim.keymap.set('n', '<Leader>gf', '<Cmd>lua vim.lsp.buf.format()<CR>', opts)
+    -- jump forward/backward up/down the call list
+    vim.keymap.set('n', 'gI', '<Cmd>Lspsaga incoming_calls<CR>', opts)
+    vim.keymap.set('n', 'gO', '<Cmd>Lspsaga outgoing_calls<CR>', opts)
+
+    -- Sexy LSP
+    vim.keymap.set('n', 'gd', '<CMD>Lspsaga peek_definition<CR>', opts)
+    vim.keymap.set('n', 'gt', '<CMD>Lspsaga peek_type_definition<CR>', opts)
+    vim.keymap.set('n', 'gr', '<CMD>Lspsaga lsp_finder<CR>', opts)
+
+    -- CLANGFORMATTTTT
+    vim.keymap.set('n', 'gf', '<Cmd>lua vim.lsp.buf.format()<CR>', opts)
 end)
 
 
