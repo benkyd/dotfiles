@@ -80,6 +80,7 @@ awesome.connect_signal("backlight_change",
          "cat /sys/class/backlight/intel_backlight/brightness",
          function(stdout)
             local backlight_level = tonumber(stdout)
+            backlight_level = backlight_level / 4
             backlight_bar.value = backlight_level
             if (backlight_level < 50) then
                backlight_icon:set_image(icon_dir .. "brightness-low.png")

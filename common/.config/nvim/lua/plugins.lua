@@ -210,7 +210,7 @@ local packer = require('packer').startup(function(use)
                     enabled = true,
                     auto_trigger = true,
                     keymap = {
-                        accept = '<S-CR>',
+                        accept = '<C-CR>',
                     }
                 },
             })

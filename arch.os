@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Dev utilsv
-yay -S neovim-git nvm wezterm ranger ripgrep zsh curl exa
+yay -S neovim-git nvm wezterm ranger ripgrep zsh zsh-vi-mode curl exa
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # WM Deps
