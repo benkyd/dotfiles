@@ -38,14 +38,6 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- speedy searching
-    use {
-        'ggandor/leap.nvim',
-        config = function ()
-            require('leap').add_default_mappings()
-        end
-    }
-
     -- colourise colour codes
     use {
         'norcalli/nvim-colorizer.lua',
@@ -134,7 +126,14 @@ local packer = require('packer').startup(function(use)
         branch = "main",
         event = "LspAttach",
         config = function()
-            require("lspsaga").setup({})
+            require("lspsaga").setup({
+                lightbulb = {
+                    enable = false,
+                },
+                rename = {
+                    whole_project = false,
+                }
+            })
         end,
     }
 

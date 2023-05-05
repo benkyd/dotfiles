@@ -7,6 +7,9 @@ vim.api.nvim_set_keymap('i', '<C-v>', '<Esc>"+pa', opts)
 -- paste and keep the paste register
 vim.api.nvim_set_keymap('', '<leader>p', '"_dP', opts)
 
+-- peek registers
+vim.api.nvim_set_keymap('n', '<leader>r', ':Telescope registers<CR>', opts)
+
 -- vscode style quick peek at the tree
 vim.api.nvim_set_keymap('n', '<C-b>', ":NvimTreeToggle<CR>", { noremap = true })
 
@@ -21,8 +24,6 @@ vim.api.nvim_set_keymap('', 'U', '<C-r>', opts)
 vim.api.nvim_set_keymap('', '<C-r>', '<NOP>', opts)
 
 -- indent via Tab
-vim.api.nvim_set_keymap('n', '<Tab>', '>>_', opts)
-vim.api.nvim_set_keymap('n', '<S-Tab>', '<<_', opts)
 vim.api.nvim_set_keymap('v', '<Tab>', '>>_', opts)
 vim.api.nvim_set_keymap('v', '<S-Tab>', '<<_', opts)
 vim.api.nvim_set_keymap('i', '<Tab>', '\t', opts)
