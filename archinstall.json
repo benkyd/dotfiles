@@ -13,7 +13,7 @@
     "keyboard-language": "uk",
     "mirror-region": "United Kingdom",
     "nic": {
-        "NetworkManager": true,
+        "NetworkManager": true
     },
     "ntp": true,
     "packages": [
@@ -57,13 +57,13 @@
         "rofi",
         "google-chrome-unstable",
         "darktable-git",
-        "ktira",
+        "ktira"
     ],
     "services": [
         "bluetooth.service",
-        "lightdm.service",
+        "lightdm.service"
     ],
     "sys-encoding": "utf-8",
     "sys-language": "en_GB",
-    "timezone": "Europe/London",
+    "timezone": "Europe/London"
 }
