@@ -10,7 +10,7 @@
     "kernels": [
         "linux"
     ],
-    "keyboard-language": "en",
+    "keyboard-language": "uk",
     "mirror-region": "United Kingdom",
     "nic": {
         "NetworkManager": true,
@@ -64,6 +64,6 @@
         "lightdm.service",
     ],
     "sys-encoding": "utf-8",
-    "sys-language": "en_UK",
+    "sys-language": "en_GB",
     "timezone": "Europe/London",
 }
