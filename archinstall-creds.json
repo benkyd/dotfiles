@@ -1,0 +1,10 @@
+{
+    "!root-password": "password",
+    "!superusers": {
+        "root": { "!password": "password" }
+        "benk": { "!password": "password" }
+    },
+    "!users": {
+        "benk": { "!password": "password" }
+    },
+}
