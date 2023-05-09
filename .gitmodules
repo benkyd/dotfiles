@@ -1,6 +1,3 @@
-[submodule "common/.config/awesome/plugins/nide"]
-	path = common/.config/awesome/plugins/nice/
-	url = https://github.com/AlphaKeks/awesome-wm-nice
 [submodule "common/.config/awesome/awesome-wm-widgets"]
 	path = common/.config/awesome/awesome-wm-widgets
 	url = https://github.com/streetturtle/awesome-wm-widgets/
