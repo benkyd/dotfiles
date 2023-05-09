@@ -1,5 +1,10 @@
 {
     "packages": [
+	    "fakeroot",
+	    "sudo",
+	    "vim",
+	    "man",
+	    "man-db",
         "yay",
         "git",
         "wget",

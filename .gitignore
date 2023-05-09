@@ -1,3 +1,8 @@
 packer_compiled.lua
 flameshot.ini
 
+
+
+# Added by cargo
+
+/target
