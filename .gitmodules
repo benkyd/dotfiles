@@ -13,3 +13,6 @@
 [submodule "common/.config/awesome/plugins/bling"]
 	path = common/.config/awesome/plugins/bling
 	url = https://github.com/BlingCorp/bling
+[submodule "common/.config/awesome/plugins/nice"]
+	path = common/.config/awesome/plugins/nice
+	url = https://github.com/AlphaKeks/awesome-wm-nice
