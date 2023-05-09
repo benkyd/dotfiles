@@ -4,8 +4,16 @@ local beautiful = require("beautiful")
 
 local wallpapers = {
  "/home/benk/pictures/Wallpapers/waves_right_colored.png",
+ "/home/benk/pictures/Wallpapers/portal2.png",
 }
-beautiful.wallpaper = wallpapers[1]
+
+Hostname = io.popen("uname -n"):read()
+
+if Hostname == "ben-xps9310" then
+    beautiful.wallpaper = wallpapers[2]
+else
+    beautiful.wallpaper = wallpapers[1]
+end
 
 screen.connect_signal('request::wallpaper', function(s)
     awful.wallpaper {
