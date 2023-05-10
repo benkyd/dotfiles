@@ -269,14 +269,14 @@ awful.keyboard.append_global_keybindings({
   end),
   awful.key({}, "XF86MonBrightnessUp",
     function()
-      awful.spawn("xbacklight -inc 10", false)
+      awful.spawn("brightnessctl s +5%", false)
       awesome.emit_signal("backlight_change")
     end
   --  {description = "brightness up", group = "hotkeys"}
   ),
   awful.key({}, "XF86MonBrightnessDown",
     function()
-      awful.spawn("xbacklight -dec 10", false)
+      awful.spawn("brightnessctl s 5%-", false)
       awesome.emit_signal("backlight_change")
     end
   --{description = "brightness down", group = "hotkeys"}
