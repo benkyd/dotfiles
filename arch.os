@@ -6,7 +6,7 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 
 # WM Deps
 yay -S awesome-git i3 betterlockscreen polybar-git eww xss-lock ttf-material-design-icons ttf-unifont polybar
-yay -S picom-ftlabs-git dunst alternating-layouts-git
+yay -S picom-ftlabs-git dunst alternating-layouts-git stalonetray
 yay -S i3exit arc-icon-theme ttf-twemoji xorg-xbacklight xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
 yay -S ttf-dejavu-nerd
 
