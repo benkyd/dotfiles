@@ -230,26 +230,5 @@ for_window [class="^.*"] border pixel 0
 
 # Enable and disable gaps
 bindsym $mod+Shift+n gaps inner all set 0; gaps outer all set 0
-bindsym $mod+n gaps inner all set 7; gaps outer all set -1
-
-#bar {
-    #status_command SCRIPT_DIR=~/.config/i3blocks/scripts i3blocks -c ~/.config/i3blocks/config
-    #position bottom
-    #separator_symbol "│"
-
-    #tray_output primary
-    #tray_padding 4
-
-    #font pango:DejaVu Sans Mono Nerd Font 12
-
-    #colors {
-        #background $base
-            #statusline $text
-            #separator $rosewater
-            ##          		   border	bg  	   	text
-            #focused_workspace  $pink	$pink		$base
-            #inactive_workspace $surface0	$surface0	$overlay0
-            #urgent_workspace   $red		$red		$base
-    #}
-#}
+bindsym $mod+n gaps inner all set 10; gaps outer all set -1
 
