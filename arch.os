@@ -6,13 +6,9 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 
 # WM Deps
 yay -S awesome-git i3 betterlockscreen polybar-git eww xss-lock ttf-material-design-icons ttf-unifont polybar
-yay -S picom-ftlabs-git dunst
+yay -S picom-ftlabs-git dunst alternating-layouts-git
 yay -S i3exit arc-icon-theme ttf-twemoji xorg-xbacklight xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
-
-mkdir -p ~/.local/share/fonts
-cd ~/.local/share/fonts
-curl -fLo "Droid Sans Mono for Powerline Nerd Font Complete.otf" https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/complete/Droid%20Sans%20Mono%20Nerd%20Font%20Complete.otf
-cd ~
+yay -S ttf-dejavu-nerd
 
 # Tmux
 yay -S tmux
