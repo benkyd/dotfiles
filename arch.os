@@ -5,8 +5,8 @@ yay -S neovim-git nvm wezterm ranger ripgrep zsh zsh-vi-mode curl exa
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # WM Deps
-yay -S awesome-git
-yay -S picom-pijulis-git
+yay -S awesome-git i3 ttf-material-design-icons ttf-unifont polybar
+yay -S picom-ftlabs-git
 yay -S i3exit arc-icon-theme ttf-twemoji xorg-xbacklight xidlehook sysstat i3blocks mpris-ctl flameshot perl rofi
 
 mkdir -p ~/.local/share/fonts

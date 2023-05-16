@@ -16,3 +16,6 @@
 [submodule "common/.config/awesome/plugins/nice"]
 	path = common/.config/awesome/plugins/nice
 	url = https://github.com/AlphaKeks/awesome-wm-nice
+[submodule "common/.config/awesome/plugins/udisks2"]
+	path = common/.config/awesome/plugins/udisks2
+	url = https://github.com/mireq/awesome-udisks2-mount

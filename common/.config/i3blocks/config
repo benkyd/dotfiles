@@ -1,24 +1,63 @@
-[NOW_PLAYING]
-command=mpris-ctl info '🎶 %player_name: %track_name - %artist_name' 
+separator_block_width=18
+
+[title]
+command=$SCRIPT_DIR/i3-focusedwindow/i3-focusedwindow
 interval=1
-color=#1DB954
+separator=false
 
-[DISK]
-command=df -h / | awk '/\//{ printf(" 💾 %sB \n", $4) }'
-interval=10
-color=#C9E3DB
-
-[CPU]
-full_text= CPU:  0.00% @ +00.0°C 
-command=~/.config/i3blocks/cpu/cpu_info.sh
-interval=2
-color=#0071C5
-
-[MEM]
-command=free -h | awk '/Mem:/ { printf(" %5s/%s \n", $3, $2) }'
+[spotify]
+label= 
+command=python3 $SCRIPT_DIR/spotify/spotify.py
+seperator=false
 interval=5
-color=#FEC925
+color=#c6a0f6
 
-[TIME_DATE]
+[memory]
+label=󰍛 
+command=$SCRIPT_DIR/memory/memory
+interval=30
+color=#f4dbd6
+
+[cpu_usage]
+label= 
+command=$SCRIPT_DIR/cpu_usage/cpu_usage
+interval=10
+#color=#8bd5ca
+#T_WARN=50
+#T_CRIT=80
+#DECIMALS=2
+#COLOR_NORMAL=#EBDBB2
+#COLOR_WARN=#FFFC00
+#COLOR_CRIT=#FF0000
+
+[jas]
+label=󰃟  
+command=$SCRIPT_DIR/jas/jas
+markup="pango"
+interval=once
+signal=10
+#STEP_SIZE=5
+color=#eed49f
+
+[baterkos]
+label= 
+command=$SCRIPT_DIR/battery/battery
+interval=10
+color=#b7bdf8
+
+[volume]
+label=󰕾 
+command=$SCRIPT_DIR/volume/volume
+#label=VOL
+interval=5
+signal=10
+markup=pango
+color=#f5bde6
+
+[time]
+label= 
 command=date +" %a, %d %b - %H:%M:%S"
+min_width=100
+align=center
+seperator=false
 interval=1

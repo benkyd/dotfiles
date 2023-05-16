@@ -267,6 +267,7 @@ awful.keyboard.append_global_keybindings({
       client.focus:move_to_tag(tag)
     end
   end),
+
   awful.key({}, "XF86MonBrightnessUp",
     function()
       awful.spawn("brightnessctl s +5%", false)

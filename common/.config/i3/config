@@ -1,0 +1,253 @@
+# i3 config file (v4)
+set $rosewater #f4dbd6
+set $flamingo  #f0c6c6
+set $pink      #f5bde6
+set $mauve     #c6a0f6
+set $red       #ed8796
+set $maroon    #ee99a0
+set $peach     #f5a97f
+set $green     #a6da95
+set $teal      #8bd5ca
+set $sky       #91d7e3
+set $sapphire  #7dc4e4
+set $blue      #8aadf4
+set $lavender  #b7bdf8
+set $text      #cad3f5
+set $subtext1  #b8c0e0
+set $subtext0  #a5adcb
+set $overlay2  #939ab7
+set $overlay1  #8087a2
+set $overlay0  #6e738d
+set $surface2  #5b6078
+set $surface1  #494d64
+set $surface0  #363a4f
+set $base      #24273a
+set $mantle    #1e2030
+set $crust     #181926
+
+# Theme colors
+client.focused           $pink     	$pink 	   $base      $blue	  $blue
+client.focused_inactive  $pink     	$pink 	   $base      $blue	  $blue
+client.unfocused         $base    	$surface0  $overlay2  $surface0	  $surface0
+client.urgent            $red		$red 	   $base      $red	  $red
+client.placeholder       $overlay0 	$base 	   $text      $overlay0   $overlay0
+client.background        $base
+
+# Set mod key (Mod1=<Alt>, Mod4=<Super>)
+set $mod Mod4
+floating_modifier $mod
+
+default_border none
+default_floating_border normal
+
+exec_always --no-startup-id $HOME/.config/i3/i3-chrome-tab-dragging.py
+# remember to install this on the aur!
+exec --no-startup-id alternating_layouts.py
+
+font xft:DejaVu Sans Mono 12
+
+bindsym $mod+Return exec wezterm
+bindsym $mod+Shift+q kill
+bindsym $mod+d exec --no-startup-id rofi -show drun
+bindsym $mod+z exec --no-startup-id morc_menu
+bindsym $mod+Print --release exec --no-startup-id i3-scrot -w
+bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
+bindsym Print exec flameshot gui
+
+# Screen brightness controls
+bindsym XF86MonBrightnessUp exec "brightnessctl set +5%; notify-send 'brightness up'"
+bindsym XF86MonBrightnessDown exec "brightnessctl set 5-%; notify-send 'brightness down'"
+
+# Audio Controls
+bindsym XF86AudioPlay exec "mpris-ctl pp && mpris-ctl --player inactive pp"
+bindsym XF86AudioNext exec "mpris-ctl --player active next"
+bindsym XF86AudioPrev exec "mpris-ctl --player active prev"
+#bindsym XF86AudioPlay exec "playerctl play-pause"
+#bindsym XF86AudioNext exec "playerctl next"
+#bindsym XF86AudioPrev exec "playerctl previous"
+
+focus_follows_mouse yes
+
+# workspace back and forth (with/without active container)
+workspace_auto_back_and_forth yes
+bindsym $mod+b workspace back_and_forth
+bindsym $mod+Shift+b move container to workspace back_and_forth; workspace back_and_forth
+
+bindsym $mod+q split toggle
+bindsym $mod+f fullscreen toggle
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+bindsym $mod+Shift+space floating toggle
+bindsym $mod+space focus mode_toggle
+bindsym $mod+Shift+s sticky toggle
+bindsym $mod+a focus parent
+
+# scratchpad (todo learn what this is)
+bindsym $mod+Shift+minus move scratchpad
+bindsym $mod+minus scratchpad show
+
+# Workspace names
+set $ws1 1
+set $ws2 2
+set $ws3 3
+set $ws4 4
+set $ws5 5
+set $ws6 6
+set $ws7 7
+set $ws8 8
+set $ws9 9
+
+# switch to workspace
+bindsym $mod+1 workspace $ws1
+bindsym $mod+2 workspace $ws2
+bindsym $mod+3 workspace $ws3
+bindsym $mod+4 workspace $ws4
+bindsym $mod+5 workspace $ws5
+bindsym $mod+6 workspace $ws6
+bindsym $mod+7 workspace $ws7
+bindsym $mod+8 workspace $ws8
+bindsym $mod+9 workspace $ws9
+
+# Move focused container to workspace
+bindsym $mod+Ctrl+1 move container to workspace $ws1
+bindsym $mod+Ctrl+2 move container to workspace $ws2
+bindsym $mod+Ctrl+3 move container to workspace $ws3
+bindsym $mod+Ctrl+4 move container to workspace $ws4
+bindsym $mod+Ctrl+5 move container to workspace $ws5
+bindsym $mod+Ctrl+6 move container to workspace $ws6
+bindsym $mod+Ctrl+7 move container to workspace $ws7
+bindsym $mod+Ctrl+8 move container to workspace $ws8
+bindsym $mod+Ctrl+9 move container to workspace $ws9
+
+# Move to workspace with focused container
+bindsym $mod+Shift+1 move container to workspace $ws1; workspace $ws1
+bindsym $mod+Shift+2 move container to workspace $ws2; workspace $ws2
+bindsym $mod+Shift+3 move container to workspace $ws3; workspace $ws3
+bindsym $mod+Shift+4 move container to workspace $ws4; workspace $ws4
+bindsym $mod+Shift+5 move container to workspace $ws5; workspace $ws5
+bindsym $mod+Shift+6 move container to workspace $ws6; workspace $ws6
+bindsym $mod+Shift+7 move container to workspace $ws7; workspace $ws7
+bindsym $mod+Shift+8 move container to workspace $ws8; workspace $ws8
+bindsym $mod+Shift+9 move container to workspace $ws9; workspace $ws9
+
+# resize focused window
+bindsym $mod+Shift+h resize shrink width 5 px or 5 pp9t
+bindsym $mod+Shift+j resize grow height 5 px or 5 ppt
+bindsym $mod+Shift+k resize shrink height 5 px or 5 ppt
+bindsym $mod+Shift+l resize grow width 5 px or 5 ppt
+
+# focus
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# move focused window
+bindsym $mod+Ctrl+h move left
+bindsym $mod+Ctrl+j move down
+bindsym $mod+Ctrl+k move up
+bindsym $mod+Ctrl+l move right
+
+# move workspace amongst screens
+bindsym $mod+Ctrl+Shift+h move workspace to output left
+bindsym $mod+Ctrl+Shift+l move workspace to output right
+bindsym $mod+Ctrl+Shift+k move workspace to output up
+bindsym $mod+Ctrl+Shift+j move workspace to output down
+
+
+# Open applications on specific workspaces
+assign [class="discord"] $ws4
+
+# Open specific applications in floating mode
+for_window [title="alsamixer"] floating enable border pixel 1
+for_window [class="Clipgrab"] floating enable
+for_window [class="Galculator"] floating enable border pixel 1
+for_window [class="GParted"] floating enable border normal
+for_window [class="Lxappearance"] floating enable sticky enable border normal
+for_window [class="Nitrogen"] floating enable sticky enable border normal
+for_window [class="Pavucontrol"] floating enable
+for_window [class="qt5ct"] floating enable sticky enable border normal
+for_window [class="Qtconfig-qt4"] floating enable sticky enable border normal
+for_window [class="Aeon"] floating enable, sticky enable
+for_window [class="Inferno v3.0.1_alpha"] floating enable, sticky enable
+
+# switch to workspace with urgent window automatically
+for_window [urgent=latest] focus
+
+# reload the config file
+bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r restart
+
+# exit i3 (logs you out of your X session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+
+# Set shut down, restart and locking features
+bindsym $mod+0 mode "$mode_system"
+set $mode_system (l)ock, (e)xit, switch_(u)ser, (s)uspend, (h)ibernate, (r)eboot, (Shift+s)hutdown
+mode "$mode_system" {
+    bindsym l exec --no-startup-id i3exit lock, mode "default"
+    bindsym s exec --no-startup-id i3exit suspend, mode "default"
+    bindsym u exec --no-startup-id i3exit switch_user, mode "default"
+    bindsym e exec --no-startup-id i3exit logout, mode "default"
+    bindsym h exec --no-startup-id i3exit hibernate, mode "default"
+    bindsym r exec --no-startup-id i3exit reboot, mode "default"
+    bindsym Shift+s exec --no-startup-id i3exit shutdown, mode "default"
+
+    # exit system mode: "Enter" or "Escape"
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+
+# Autostart applications
+exec --no-startup-id nitrogen --restore
+exec --no-startup-id nm-applet
+exec --no-startup-id xfce4-power-manager
+exec --no-startup-id clipit
+exec --no-startup-id xidlehook --not-when-fullscreen --not-when-audio --timer 600 'blurlock' ''
+exec_always --no-startup-id ff-theme-util
+exec_always --no-startup-id fix_xcursor
+exec --no-startup-id volumeicon
+exec --no-startup-id mpris-proxy
+exec --no-startup-id pa-applet
+
+exec_always killall -q picom ; picom -b --config $HOME/.config/picom.conf
+
+# hide/unhide i3status bar
+bindsym $mod+m bar mode toggle
+
+gaps inner 10
+gaps outer -1
+
+smart_gaps on
+smart_borders on
+
+# Hide title bar
+default_border pixel 0
+default_floating_border pixel 0
+for_window [class="^.*"] border pixel 0
+
+# Enable and disable gaps
+bindsym $mod+Shift+n gaps inner all set 0; gaps outer all set 0
+bindsym $mod+n gaps inner all set 7; gaps outer all set -1
+
+bar {
+    status_command SCRIPT_DIR=~/.config/i3blocks/scripts i3blocks -c ~/.config/i3blocks/config
+    position bottom
+    separator_symbol "│"
+
+    tray_output primary
+    tray_padding 4
+
+    font pango:DejaVu Sans Mono Nerd Font 12
+
+    colors {
+        background $base
+            statusline $text
+            separator $rosewater
+            #          		   border	bg  	   	text
+            focused_workspace  $pink	$pink		$base
+            inactive_workspace $surface0	$surface0	$overlay0
+            urgent_workspace   $red		$red		$base
+    }
+}
+

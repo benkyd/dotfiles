@@ -43,36 +43,5 @@ require("ben.autostart")
 require("ben.volume")
 require("ben.backlight")
 
--- bling
-local bling = require("plugins.bling")
 
--- fancy titlebars
-local nice = require("plugins.nice")
-nice({
-    titlebar_color = Ben.colors.crust,
-    titlebar_height = 20,
-    titlebar_font = Ben.fonts.small,
-    button_size = 14,
-    mb_resize = nice.MB_MIDDLE,
-    titlebar_radius = 0,
-    mb_contextmenu = nice.MB_RIGHT,
-    titlebar_items = {
-        left = {},
-        middle = "title",
-        right = { "maximize", "close" },
-    },
-    maximize_color = Ben.colors.green,
-    close_color = Ben.colors.red,
-})
-
--- fix annoying fullscreen stuff
-client.connect_signal("property::fullscreen", function(c)
-    if c.fullscreen then
-        awful.titlebar.hide(c)
-        c.border_width = 0 --c.fullscreen and 0 or beautiful.border_width
-        c:geometry(c.screen.geometry)
-    else
-        awful.titlebar.show(c)
-    end
-end)
 

@@ -1,6 +1,9 @@
 # Dotfiles
 
 ## Ben's Amazing Dotfile Installer
+
+NOTE THIS ONLY WORKS IF THE USERNAME IS benk
+
 The only prerequisite for Ben's Amazing Dotfile Installer is to install nodejs
 
 `node bootstrap.js [--os[-o] ubuntu/arch] [--host[-h] host/laptop]`
