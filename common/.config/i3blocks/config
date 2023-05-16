@@ -21,7 +21,7 @@ color=#f4dbd6
 [cpu_usage]
 label= 
 command=$SCRIPT_DIR/cpu_usage/cpu_usage
-interval=10
+interval=1
 #color=#8bd5ca
 #T_WARN=50
 #T_CRIT=80
@@ -42,14 +42,14 @@ color=#eed49f
 [baterkos]
 label= 
 command=$SCRIPT_DIR/battery/battery
-interval=10
+interval=3
 color=#b7bdf8
 
 [volume]
 label=󰕾 
 command=$SCRIPT_DIR/volume/volume
 #label=VOL
-interval=5
+interval=1
 signal=10
 markup=pango
 color=#f5bde6
