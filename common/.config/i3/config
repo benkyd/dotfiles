@@ -26,8 +26,8 @@ set $mantle    #1e2030
 set $crust     #181926
 
 # Theme colors
-client.focused           $pink     	$pink 	   $base      $blue	  $blue
-client.focused_inactive  $pink     	$pink 	   $base      $blue	  $blue
+client.focused           $pink     	$pink 	   $base      $pink	  $pink
+client.focused_inactive  $pink     	$pink 	   $base      $pink	  $pink
 client.unfocused         $base    	$surface0  $overlay2  $surface0	  $surface0
 client.urgent            $red		$red 	   $base      $red	  $red
 client.placeholder       $overlay0 	$base 	   $text      $overlay0   $overlay0
@@ -152,6 +152,9 @@ bindsym $mod+Ctrl+Shift+h move workspace to output left
 bindsym $mod+Ctrl+Shift+l move workspace to output right
 bindsym $mod+Ctrl+Shift+k move workspace to output up
 bindsym $mod+Ctrl+Shift+j move workspace to output down
+
+bindsym $mod+semicolon exec i3-msg border pixel 3
+bindsym --release $mod+semicolon exec i3-msg border pixel 0
 
 
 # Open applications on specific workspaces
