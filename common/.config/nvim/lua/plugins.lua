@@ -50,7 +50,9 @@ local packer = require('packer').startup(function(use)
     use {
         'ThePrimeagen/harpoon',
         config = function ()
-            require('harpoon').setup({})
+            require('harpoon').setup({
+                tabline = true,
+            })
         end
     }
 
@@ -127,6 +129,9 @@ local packer = require('packer').startup(function(use)
         event = "LspAttach",
         config = function()
             require("lspsaga").setup({
+                symbol_in_winbar = {
+                    enable = false,
+                },
                 lightbulb = {
                     enable = false,
                 },
