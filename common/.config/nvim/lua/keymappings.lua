@@ -11,7 +11,7 @@ vim.api.nvim_set_keymap('', '<leader>p', '"_dP', opts)
 vim.api.nvim_set_keymap('n', '<leader>r', ':Telescope registers<CR>', opts)
 
 -- vscode style quick peek at the tree
-vim.api.nvim_set_keymap('n', '<C-b>', ":NvimTreeToggle<CR>", { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-b>', ":Lexplore<CR><C-w><S-l>:vertical resize 30<CR>", { noremap = true })
 
 -- make ctrl-shift arrows line movement
 vim.api.nvim_set_keymap('n', '<C-K>', 'ddkP', opts)

@@ -47,8 +47,8 @@ require('smart-splits').setup({
 })
 
 -- resize splits
-vim.keymap.set('', '<A-S-h>', require('smart-splits').resize_left)
-vim.keymap.set('', '<A-S-j>', require('smart-splits').resize_down)
-vim.keymap.set('', '<A-S-k>', require('smart-splits').resize_up)
-vim.keymap.set('', '<A-S-l>', require('smart-splits').resize_right)
+vim.keymap.set('', '<A-C-h>', require('smart-splits').resize_left)
+vim.keymap.set('', '<A-C-j>', require('smart-splits').resize_down)
+vim.keymap.set('', '<A-C-k>', require('smart-splits').resize_up)
+vim.keymap.set('', '<A-C-l>', require('smart-splits').resize_right)
 

@@ -74,6 +74,14 @@ vim.o.hlsearch = true		-- highlight the search results
 vim.o.lazyredraw = false -- useful for when executing macros.
 vim.o.ttimeoutlen = 30  -- ms to wait for a key code seq to complete
 
+-- ================= NETRW ================= --
+
+vim.g.netrw_banner = 0
+vim.g.netrw_liststyle = 3
+vim.g.netrw_browse_split = 4
+vim.g.netrw_altv = 1
+vim.g.netrw_winsize = 25
+
 -- ================= Misc ================= --
 
 vim.wo.wrap = true -- wrap long text into multiple lines
