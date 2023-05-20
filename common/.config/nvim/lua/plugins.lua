@@ -84,7 +84,7 @@ local packer = require('packer').startup(function(use)
         end
     }
 
-    -- zen mode
+    -- zen m
     use {
         'folke/zen-mode.nvim',
         config = function()
@@ -105,15 +105,7 @@ local packer = require('packer').startup(function(use)
     -- nerd commenter
     use 'scrooloose/nerdcommenter'
 
-    -- nice diagnostic pane on the bottom
-    use {
-        'folke/trouble.nvim',
-        config = function ()
-            require('plugin-config/lsp-trouble')
-        end
-    }
-
-    -- vscode like LSP code previews
+    -- LSP code previews
     use {
         "glepnir/lspsaga.nvim",
         opt = true,
@@ -254,6 +246,25 @@ local packer = require('packer').startup(function(use)
             })
         end
     }
+
+    use({
+        "https://git.sr.ht/~whynothugo/lsp_lines.nvim",
+        config = function()
+            require("lsp_lines").setup()
+            vim.keymap.set("", "<leader>x", function()
+                local config = vim.diagnostic.config()
+                vim.diagnostic.config({
+                    virtual_text = not config.virtual_text,
+                    virtual_lines = not config.virtual_lines,
+                })
+            end, { desc = "Toggle Line Diagnostics" })
+
+            vim.diagnostic.config({
+                virtual_text = true,
+                virtual_lines = false,
+            })
+        end,
+    })
 
     -- this will automatically install listed dependencies
     -- only the first time NeoVim is opened, because that's when Packer gets installed

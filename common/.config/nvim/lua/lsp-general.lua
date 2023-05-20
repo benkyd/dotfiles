@@ -57,6 +57,10 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', 'gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
     vim.keymap.set('n', 'gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
 
+    -- diagnostics
+    vim.keymap.set('n', 'gn', '<Cmd>lua vim.diagnostic.goto_next()<CR>', opts)
+    vim.keymap.set('n', 'gp', '<Cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+
     -- action & rename
     vim.keymap.set('n', '<A-CR>', '<Cmd>Lspsaga code_action<CR>', opts)
     vim.keymap.set('n', '<Leader>gr', '<Cmd>Lspsaga rename<CR>', opts)
