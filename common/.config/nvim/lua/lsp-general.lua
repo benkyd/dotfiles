@@ -171,3 +171,4 @@ vim.api.nvim_set_hl(0, "CmpItemMenu", { italic = true })
 vim.diagnostic.config({
     virtual_text = true
 })
+

@@ -45,6 +45,13 @@ local packer = require('packer').startup(function(use)
             require('harpoon').setup({
                 tabline = true,
             })
+            vim.keymap.set("n", "<leader>hg", require("harpoon.mark").toggle_file, { desc = "Add file to harpoon list" })
+            vim.keymap.set("n", "<leader>hh", require("harpoon.ui").toggle_quick_menu, { desc = "Toggle harpoon menu" })
+            for pos = 1, 9 do
+                vim.keymap.set("n", "<leader>h" .. pos, function()
+                    require("harpoon.ui").nav_file(pos)
+                end, { desc = "Move to harpoon mark #" .. pos })
+            end
         end
     }
 
@@ -89,6 +96,9 @@ local packer = require('packer').startup(function(use)
         'folke/zen-mode.nvim',
         config = function()
             require('zen-mode').setup({})
+            vim.keymap.set("n", "<leader>z", function()
+                require("zen-mode").toggle()
+            end, { desc = "Toggle Zen Mode" })
         end
     }
 
