@@ -45,8 +45,8 @@ local packer = require('packer').startup(function(use)
             require('harpoon').setup({
                 tabline = true,
             })
-            vim.keymap.set("n", "<leader>hg", require("harpoon.mark").toggle_file, { desc = "Add file to harpoon list" })
             vim.keymap.set("n", "<leader>hh", require("harpoon.ui").toggle_quick_menu, { desc = "Toggle harpoon menu" })
+            vim.keymap.set("n", "<leader>hg", require("harpoon.mark").toggle_file, { desc = "Add file to harpoon list" })
             for pos = 1, 9 do
                 vim.keymap.set("n", "<leader>h" .. pos, function()
                     require("harpoon.ui").nav_file(pos)
@@ -157,14 +157,47 @@ local packer = require('packer').startup(function(use)
 
     -- VISUAL CHANGES
 
+    -- epic splash screen
+    use {
+        'jovanlanik/fsplash.nvim',
+        config = function ()
+            require('fsplash').setup({
+                lines = {
+                    "▄▄▄▄· ▄▄▄ . ▐ ▄  ▌ ▐·▪  • ▌ ▄ ·. ",
+                    "▐█ ▀█▪▀▄.▀·•█▌▐█▪█·█▌██ ·██ ▐███▪",
+                    "▐█▀▀█▄▐▀▀▪▄▐█▐▐▌▐█▐█•▐█·▐█ ▌▐▌▐█·",
+                    "██▄▪▐█▐█▄▄▌██▐█▌ ███ ▐█▌██ ██▌▐█▌",
+                    "·▀▀▀▀  ▀▀▀ ▀▀ █▪. ▀  ▀▀▀▀▀  █▪▀▀▀",
+                    '',
+                    'NVIM v'
+                    .. vim.version().major
+                    .. '.'
+                    .. vim.version().minor
+                    .. '.'
+                    ..  vim.version().patch,
+                    'Nvim is open Source and freely distributable',
+                    '',
+                    'type  :checkhealth<Enter>     to optimize Nvim',
+                    'type  :q<Enter>               to exit         ',
+                    'type  :help<Enter>            for help        ',
+                    '',
+                    'type  :help news<Enter> to see changes in v'
+                    .. vim.version().major
+                    .. '.'
+                    .. vim.version().minor
+                },
+            })
+        end
+    }
+
     -- nicer looking tab display
     use {
         'lukas-reineke/indent-blankline.nvim',
         config = function ()
-            require('indent_blankline').setup {
+            require('indent_blankline').setup({
                 char = '│',
                 filetype_exclude = { 'help', 'alpha', 'dashboard', 'neo-tree', 'Trouble', 'lazy' },
-            }
+            })
         end
     }
 

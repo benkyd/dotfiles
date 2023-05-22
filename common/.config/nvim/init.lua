@@ -8,3 +8,6 @@ vim.api.nvim_set_hl(0, "FloatBorder", { bg = "NONE" })
 vim.api.nvim_set_hl(0, "CmpItemMenu", { bg = "NONE" })
 
 require('plugins')
+
+vim.cmd('source ~/.config/nvim/neovim.vim')
+
