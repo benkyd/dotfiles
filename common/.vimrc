@@ -1,4 +1,8 @@
-colorscheme kanagawa
+if has('nvim')
+    colorscheme kanagawa
+else
+    colorscheme evening
+endif
 
 set confirm
 set noswapfile
@@ -7,11 +11,14 @@ set autoread
 
 set clipboard=unnamedplus
 
-" Triger `autoread` when files changes on disk
-autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * if mode() != 'c' | checktime | endif
-" Notification after file change
-autocmd FileChangedShellPost *
-  \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
+augroup setup
+  autocmd!
+  " Triger `autoread` when files changes on disk
+  autocmd FocusGained,BufEnter,CursorHold,CursorHoldI * if mode() != 'c' | checktime | endif
+  " Notification after file change
+  autocmd FileChangedShellPost *
+    \ echohl WarningMsg | echo "File changed on disk. Buffer reloaded." | echohl None
+augroup end
 
 set scrolloff=4
 set tabstop=4
