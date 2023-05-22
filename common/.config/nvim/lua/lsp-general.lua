@@ -48,7 +48,6 @@ lsp.setup_nvim_cmp({
     mapping = cmp_mappings,
 })
 
-
 lsp.on_attach(function(_, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
@@ -83,9 +82,18 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', 'gw', '<Cmd>StripWhitespace<CR>', opts)
 end)
 
+local rust_lsp = lsp.build_options('rust_analyzer', {
+      --cmd = { "/home/benk/programming/rust-analyzer/target/release/rust-analyzer" },
+})
 
-local rust_lsp = lsp.build_options('rust_analyzer', {})
-require('rust-tools').setup({ server = rust_lsp })
+require('rust-tools').setup({
+    server = rust_lsp,
+    tools = {
+        inlay_hints = {
+            auto = false,
+        }
+    },
+})
 
 lsp.setup()
 

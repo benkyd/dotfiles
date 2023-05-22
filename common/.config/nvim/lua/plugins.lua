@@ -48,7 +48,7 @@ local packer = require('packer').startup(function(use)
             vim.keymap.set("n", "<leader>hh", require("harpoon.ui").toggle_quick_menu, { desc = "Toggle harpoon menu" })
             vim.keymap.set("n", "<leader>hg", require("harpoon.mark").toggle_file, { desc = "Add file to harpoon list" })
             for pos = 1, 9 do
-                vim.keymap.set("n", "<leader>h" .. pos, function()
+                vim.keymap.set("n", "<C-w>" .. pos, function()
                     require("harpoon.ui").nav_file(pos)
                 end, { desc = "Move to harpoon mark #" .. pos })
             end
@@ -186,6 +186,7 @@ local packer = require('packer').startup(function(use)
                     .. '.'
                     .. vim.version().minor
                 },
+                border = 'none';
             })
         end
     }

@@ -1,6 +1,4 @@
-if has('nvim')
-    colorscheme kanagawa
-else
+if !has('nvim')
     colorscheme evening
 endif
 
@@ -42,17 +40,17 @@ augroup numbertoggle
     autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
 augroup END
 
-set nolazyredraw
-set timeoutlen=600
-
 let g:netrw_banner=0
 let g:netrw_liststyle=3
 let g:netrw_browse_split=4
 let g:netrw_altv=1
 let g:netrw_winsize=25
 
+set nolazyredraw
+set updatetime=300
+set ttimeoutlen=50
+set timeoutlen=1000
 set history=1000
-set updatetime=69
 set mouse=nvi
 set cursorline
 
@@ -86,7 +84,7 @@ nn U <C-r>
 nn <C-r> <nop>
 
 " Peep the registers
-nn <lader>r :Telescope registers<cr>
+nn <leader>r :Telescope registers<cr>
 
 " Paste and keep the " register
 nn <leader>p "_dP
