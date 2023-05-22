@@ -90,7 +90,10 @@ require('rust-tools').setup({
     server = rust_lsp,
     tools = {
         inlay_hints = {
-            auto = false,
+            auto = true,
+            show_parameter_hints = true,
+            parameter_hints_prefix = " ",
+            other_hints_prefix = " ",
         }
     },
 })
