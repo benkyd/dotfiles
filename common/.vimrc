@@ -60,6 +60,20 @@ set splitright
 set completeopt=menu,menuone,preview,noinsert,noselect
 set guicursor=a:block,i:ver20,v-r:hor20
 
+" The epico quickfix list
+packadd cfilter
+function! RemoveQFItem()
+  let curqfidx = line('.') - 1
+  let qfall = getqflist()
+  call remove(qfall, curqfidx)
+  call setqflist(qfall, 'r')
+  execute curqfidx + 1 . "cfirst"
+  :copen
+endfunction
+:command! RemoveQFItem :call RemoveQFItem()
+" Use map <buffer> to only map dd in the quickfix window. Requires +localmap
+autocmd FileType qf map <buffer> dd :RemoveQFItem<cr>
+
 " The holy leader key
 let g:mapleader=","
 map <space> <leader>
