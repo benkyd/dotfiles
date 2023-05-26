@@ -9,5 +9,3 @@ augroup vimload
     autocmd VimEnter * lua require('fsplash').open_window()
 augroup END
 
-colorscheme kanagawa
-
