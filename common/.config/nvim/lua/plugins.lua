@@ -9,9 +9,7 @@ return {
     },
     -- QUALITY OF LIFE INTEGRATIONS
     {
-        -- git integration
         'tpope/vim-fugitive',
-        opts = {}
     },
     {
         'lewis6991/gitsigns.nvim',
@@ -29,6 +27,7 @@ return {
     {
         -- EPIC HARPOON MOMENT
         'ThePrimeagen/harpoon',
+        lazy = false,
         opts = {
             tabline = true,
         },
@@ -47,6 +46,7 @@ return {
     {
         'nvim-telescope/telescope.nvim',
         dependencies = {
+            'nvim-tree/nvim-web-devicons',
             'nvim-lua/plenary.nvim',
             'nvim-telescope/telescope-ui-select.nvim',
             'debugloop/telescope-undo.nvim',

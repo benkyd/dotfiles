@@ -1,8 +1,8 @@
-augroup vimrc
-    autocmd!
-    autocmd BufWritePost plugins.lua PackerCompile
-    autocmd BufWritePost init.lua source <afile> | PackerCompile
-augroup END
+"augroup vimrc
+    "autocmd!
+    "autocmd BufWritePost plugins.lua PackerCompile
+    "autocmd BufWritePost init.lua source <afile> | PackerCompile
+"augroup END
 
 augroup vimload
     autocmd!
