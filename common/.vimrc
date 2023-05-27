@@ -51,7 +51,7 @@ set updatetime=300
 set ttimeoutlen=50
 set timeoutlen=1000
 set history=1000
-set mouse=nvi
+set mouse=nv
 set cursorline
 
 set splitbelow

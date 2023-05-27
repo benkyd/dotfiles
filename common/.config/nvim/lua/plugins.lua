@@ -21,7 +21,7 @@ return {
     {
         -- colourise colour codes
         'norcalli/nvim-colorizer.lua',
-        lazy = true,
+        lazy = false,
         opts = {}
     },
     {
@@ -33,7 +33,7 @@ return {
         },
         keys = {
             { '<leader>hh', '<cmd>lua require("harpoon.ui").toggle_quick_menu()<cr>', desc = "Toggle harpoon menu" },
-            { '<leader>hg', '<cmd>require("harpoon.mark").toggle_file() <cr>', desc = "Add file to harpoon list" },
+            { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>', desc = "Add file to harpoon list" },
         },
         config = function()
             for pos = 1, 9 do
@@ -84,7 +84,7 @@ return {
     },
     {
         'gorbit99/codewindow.nvim',
-        lazy = true,
+        lazy = false,
         opts = {},
         config = function ()
             require('codewindow').apply_default_keybinds()
@@ -95,7 +95,7 @@ return {
     },
     {
         'glepnir/lspsaga.nvim',
-        lazy = true,
+        lazy = false,
         opts = {
             symbol_in_winbar = {
                 enable = false,
