@@ -28,14 +28,13 @@ return {
         -- EPIC HARPOON MOMENT
         'ThePrimeagen/harpoon',
         lazy = false,
-        opts = {
-            tabline = true,
-        },
         keys = {
             { '<leader>hh', '<cmd>lua require("harpoon.ui").toggle_quick_menu()<cr>', desc = "Toggle harpoon menu" },
             { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>',    desc = "Add file to harpoon list" },
         },
         config = function()
+             require('harpoon').setup({ tabline = true })
+
             for pos = 1, 9 do
                 vim.keymap.set("n", "<C-w>" .. pos, function()
                     require("harpoon.ui").nav_file(pos)
