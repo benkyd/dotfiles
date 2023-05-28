@@ -3,7 +3,7 @@ return {
         'rebelot/kanagawa.nvim',
         lazy = false,
         priority = 1000,
-        config = function ()
+        config = function()
             vim.cmd('colorscheme kanagawa')
         end
     },
@@ -14,7 +14,7 @@ return {
     {
         'lewis6991/gitsigns.nvim',
         dependencies = { 'nvim-lua/plenary.nvim' },
-        config = function ()
+        config = function()
             require('plugin-config/gitsigns')
         end
     },
@@ -33,7 +33,7 @@ return {
         },
         keys = {
             { '<leader>hh', '<cmd>lua require("harpoon.ui").toggle_quick_menu()<cr>', desc = "Toggle harpoon menu" },
-            { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>', desc = "Add file to harpoon list" },
+            { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>',    desc = "Add file to harpoon list" },
         },
         config = function()
             for pos = 1, 9 do
@@ -53,7 +53,7 @@ return {
             'folke/todo-comments.nvim',
             'kevinhwang91/nvim-bqf',
         },
-        config = function ()
+        config = function()
             require('plugin-config/telescope')
             require('todo-comments').setup({})
         end
@@ -64,13 +64,13 @@ return {
         dependencies = {
             'nvim-treesitter/nvim-treesitter',
         },
-        config = function ()
+        config = function()
             require('plugin-config/nvim-treesitter')
         end
     },
     {
         'mrjones2014/smart-splits.nvim',
-         config = function ()
+        config = function()
             require('plugin-config/smart-splits')
         end
     },
@@ -86,12 +86,32 @@ return {
         'gorbit99/codewindow.nvim',
         lazy = false,
         opts = {},
-        config = function ()
+        config = function()
             require('codewindow').apply_default_keybinds()
         end
     },
     {
-        'scrooloose/nerdcommenter'
+        'numToStr/Comment.nvim',
+        opts = {
+            padding = true,
+            toggler = {
+                line = '<leader>cc',
+                block = '<leader>bb',
+            },
+            opleader = {
+                line = '<leader>c',
+                block = '<leader>b',
+            },
+            extra = {
+                above = '<leader>cO',
+                below = '<leader>co',
+                eol = '<leader>ca',
+            },
+            mappings = {
+                basic = true,
+                extra = true,
+            },
+        },
     },
     {
         'glepnir/lspsaga.nvim',
@@ -131,7 +151,7 @@ return {
                 .. '.'
                 .. vim.version().minor
                 .. '.'
-                ..  vim.version().patch,
+                .. vim.version().patch,
                 'Nvim is open Source and freely distributable',
                 '',
                 'type  :checkhealth<Enter>     to optimize Nvim',
@@ -143,7 +163,7 @@ return {
                 .. '.'
                 .. vim.version().minor
             },
-            border = 'none';
+            border = 'none',
         },
     },
     {
@@ -190,33 +210,33 @@ return {
         branch = 'v1.x',
         dependencies = {
             -- LSP Support
-            {'neovim/nvim-lspconfig'},
-            {'williamboman/mason.nvim'},
-            {'williamboman/mason-lspconfig.nvim'},
+            { 'neovim/nvim-lspconfig' },
+            { 'williamboman/mason.nvim' },
+            { 'williamboman/mason-lspconfig.nvim' },
 
-            {'simrat39/rust-tools.nvim'},
+            { 'simrat39/rust-tools.nvim' },
 
             -- Autocompletion
-            {'hrsh7th/nvim-cmp'},
-            {'hrsh7th/cmp-nvim-lsp'},
-            {'hrsh7th/cmp-nvim-lua'},
-            {'hrsh7th/cmp-buffer'},
-            {'hrsh7th/cmp-path'},
-            {'hrsh7th/cmp-cmdline'},
-            {'saadparwaiz1/cmp_luasnip'},
+            { 'hrsh7th/nvim-cmp' },
+            { 'hrsh7th/cmp-nvim-lsp' },
+            { 'hrsh7th/cmp-nvim-lua' },
+            { 'hrsh7th/cmp-buffer' },
+            { 'hrsh7th/cmp-path' },
+            { 'hrsh7th/cmp-cmdline' },
+            { 'saadparwaiz1/cmp_luasnip' },
 
             -- Snippets
-            {'L3MON4D3/LuaSnip'},
-            {'rafamadriz/friendly-snippets'},
+            { 'L3MON4D3/LuaSnip' },
+            { 'rafamadriz/friendly-snippets' },
         },
-        config = function ()
+        config = function()
             require('lsp-general')
         end
     },
     {
         'ray-x/lsp_signature.nvim',
         opts = {
-            hint_prefix='🚀'
+            hint_prefix = '🚀'
         },
     },
     {
