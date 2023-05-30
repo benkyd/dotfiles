@@ -16,11 +16,17 @@ config.color_scheme = 'Catppuccin Macchiato'
 config.window_background_opacity = 0.85
 
 config.window_padding = {
-    left = '0.5cell',
-    right = '0.5cell',
-    top = '0.3cell',
-    bottom = '0.3cell',
+    left = 4,
+    right = 4,
+    top = 4,
+    bottom = 0,
 }
+
+config.default_prog = { "/usr/bin/zsh" }
+config.line_height = 1
+config.animation_fps = 60
+--config.cursor_blink_ease_in = "Linear"
+--config.cursor_blink_ease_out = "Linear"
 
 config.keys = {
     -- Turn off the default CMD-m Hide action, allowing CMD-m to
