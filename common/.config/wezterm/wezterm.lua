@@ -15,6 +15,12 @@ config.adjust_window_size_when_changing_font_size = false
 config.color_scheme = 'Catppuccin Macchiato'
 config.window_background_opacity = 0.85
 
+config.colors = {
+    cursor_bg = '#c6a0f6',
+    cursor_fg = 'black',
+    cursor_border = '#c6a0f6',
+}
+
 config.window_padding = {
     left = 4,
     right = 4,
