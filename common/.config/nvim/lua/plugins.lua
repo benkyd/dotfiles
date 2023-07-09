@@ -25,6 +25,25 @@ return {
         opts = {}
     },
     {
+        -- Vim vinegar - better netrw
+        'stevearc/oil.nvim',
+        opts = {
+            float = {
+                max_width = 80,
+                max_height = 20,
+                border = 'rounded',
+                win_options = {
+                    winblend = 0,
+                },
+            },
+        },
+        keys = {
+            { '<C-b>', '<cmd>lua require("oil").open_float()<cr>', desc = "Toggle Oil" },
+        },
+        -- Optional dependencies
+        dependencies = { "nvim-tree/nvim-web-devicons" }
+    },
+    {
         -- EPIC HARPOON MOMENT
         'ThePrimeagen/harpoon',
         lazy = false,

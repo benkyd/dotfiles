@@ -58,7 +58,7 @@ lsp.on_attach(function(_, bufnr)
 
     -- diagnostics
     vim.keymap.set('n', 'gn', '<Cmd>lua vim.diagnostic.goto_next()<CR>', opts)
-    vim.keymap.set('n', 'gp', '<Cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+    vim.keymap.set('n', 'gN', '<Cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
 
     -- action & rename
     vim.keymap.set('n', '<A-CR>', '<Cmd>Lspsaga code_action<CR>', opts)
