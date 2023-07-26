@@ -29,3 +29,5 @@ export MAKEFLAGS="-j$(nproc)"
 
 source $HOME/.zshrc.local
 
+
+export QSYS_ROOTDIR="/home/benk/intelFPGA/22.1std/quartus/sopc_builder/bin"
