@@ -3,3 +3,4 @@ application/x-extension-html=google-chrome-unstable
 
 [Default Applications]
 application/x-extension-html=google-chrome-unstable
+x-scheme-handler/eclipse+command=_usr_lib_dbeaver_.desktop
