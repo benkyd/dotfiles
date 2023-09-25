@@ -52,7 +52,7 @@ return {
             { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>',    desc = "Add file to harpoon list" },
         },
         config = function()
-             require('harpoon').setup({ tabline = true })
+            require('harpoon').setup({ tabline = true })
 
             for pos = 1, 9 do
                 vim.keymap.set("n", "<C-w>" .. pos, function()
@@ -256,6 +256,17 @@ return {
         opts = {
             hint_prefix = '🚀'
         },
+    },
+    {
+        "lervag/vimtex",
+        lazy = false,
+        keys = {
+            { '<leader>ll', '<cmd>VimtexCompileSS<cr>', desc = "Compile LaTeX" },
+            { '<leader>lc', '<cmd>VimtexCompile<cr>', desc = "Compile LaTeX Continuously" },
+        },
+        config = function()
+            vim.g.vimtex_view_method = 'zathura'
+        end,
     },
     {
         url = 'https://git.sr.ht/~whynothugo/lsp_lines.nvim',
