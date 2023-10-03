@@ -171,7 +171,7 @@ for_window [class="Pavucontrol"] floating enable
 for_window [class="qt5ct"] floating enable sticky enable border normal
 for_window [class="Qtconfig-qt4"] floating enable sticky enable border normal
 for_window [class="Aeon"] floating enable, sticky enable
-for_window [class="Inferno v3.0.1_alpha"] floating enable, sticky enable
+for_window [class="Inferno v3.0.13_alpha"] floating enable, sticky enable
 
 # switch to workspace with urgent window automatically
 for_window [urgent=latest] focus
