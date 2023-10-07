@@ -186,9 +186,11 @@ return {
     },
     {
         'lukas-reineke/indent-blankline.nvim',
+        main = 'ibl',
         opts = {
-            char = '│',
-            filetype_exclude = { 'help', 'alpha', 'dashboard', 'neo-tree', 'Trouble', 'lazy' },
+            debounce = 100,
+            indent = { char = '│' },
+            whitespace = { highlight = { "Whitespace", "NonText" } },
         }
     },
     {
@@ -258,11 +260,18 @@ return {
         },
     },
     {
+        'rcarriga/nvim-dap-ui',
+        dependencies = {
+            'mfussenegger/nvim-dap',
+        },
+        lazy = false
+    },
+    {
         "lervag/vimtex",
         lazy = false,
         keys = {
             { '<leader>ll', '<cmd>VimtexCompileSS<cr>', desc = "Compile LaTeX" },
-            { '<leader>lc', '<cmd>VimtexCompile<cr>', desc = "Compile LaTeX Continuously" },
+            { '<leader>lc', '<cmd>VimtexCompile<cr>',   desc = "Compile LaTeX Continuously" },
         },
         config = function()
             vim.g.vimtex_view_method = 'zathura'
