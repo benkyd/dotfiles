@@ -1,7 +1,8 @@
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
-ZSH_THEME="bira"
+ZSH_THEME="gallifrey"
+#ZSH_THEME="bira"
 
 plugins=(git fancy-ctrl-z fzf)
 
