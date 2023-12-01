@@ -26,7 +26,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 export PATH=$PATH:$HOME/.local/bin/
 export PATH=$PATH:$HOME/.cargo/env/
-export MAKEFLAGS="-j$(nproc)"
+export MAKEFLAGS="-j20"
 
 source $HOME/.zshrc.local
 

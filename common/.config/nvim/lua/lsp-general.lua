@@ -1,14 +1,115 @@
 local lsp = require('lsp-zero')
 local cmp = require('cmp')
 local luasnip = require('luasnip')
+local dap = require('dap')
+local dapui = require('dapui')
 
 require('mason').setup({})
+require('mason-nvim-dap').setup({
+    ensure_installed = {
+        'cpptools',
+        'cppdbg',
+    },
+})
 require('mason-lspconfig').setup({})
+
+dap.configurations = {
+    cpp = {
+        {
+            name = "Launch",
+            type = "codelldb",
+            request = "launch",
+            program = function()
+                return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/', 'file')
+            end,
+            cwd = '${workspaceFolder}',
+            stopOnEntry = true,
+        },
+    },
+}
+
+dap.adapters.codelldb = {
+    type = 'server',
+    port = '13000',
+    host = '127.0.0.1',
+    executable = {
+        command = vim.fn.stdpath('data') .. '/mason/bin/codelldb',
+        args = {"--port", "13000"}
+    }
+}
+
+dapui.setup({
+    icons = { expanded = "➡️", collapsed = "⬇️" },
+    mappings = {
+        open = "o",
+        remove = "d",
+        edit = "e",
+        repl = "r",
+        toggle = "t",
+    },
+    expand_lines = vim.fn.has("nvim-0.7"),
+    layouts = {
+        {
+            elements = {
+                "scopes",
+                "stacks",
+                "watches"
+            },
+            size = 0.2,
+            position = "left"
+        },
+        {
+            elements = {
+                "repl",
+                "console",
+                "breakpoints",
+            },
+            size = 0.3,
+            position = "bottom",
+        },
+    },
+    floating = {
+        max_height = nil,
+        max_width = nil,
+        border = "single",
+        mappings = {
+            close = { "q", "<Esc>" },
+        },
+    },
+    windows = { indent = 1 },
+    render = {
+        max_type_length = nil,
+    },
+})
+
+dap.listeners.after.event_initialized["dapui_config"]=function()
+    dapui.open()
+end
+dap.listeners.before.event_terminated["dapui_config"]=function()
+    dapui.close()
+end
+dap.listeners.before.event_exited["dapui_config"]=function()
+    dapui.close()
+end
+vim.keymap.set("n", "<leader>ds", function()
+    dap.continue()
+    dapui.toggle({})
+end)
+vim.keymap.set("n", "<leader>de", function()
+    dapui.toggle({})
+    dap.terminate()
+    require("notify")("Debugger session ended", "warn")
+end)
+vim.keymap.set("n", "<leader>dC", function()
+    require('dap').clear_breakpoints()
+    require("notify")("Cleared breakpoints", "warn")
+end)
+vim.fn.sign_define('DapBreakpoint',{ text ='🔴', texthl ='', linehl ='', numhl =''})
+vim.fn.sign_define('DapStopped',{ text ='▶️', texthl ='', linehl ='', numhl =''})
 
 lsp.preset({
     name = 'recommended',
 })
-
 
 lsp.ensure_installed({
     'tsserver',

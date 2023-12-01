@@ -103,3 +103,8 @@ nn <leader>r :Telescope registers<cr>
 
 " Paste and keep the " register
 nn <leader>p "_dP
+
+" on leader vs, run mksession! .vims
+nn <leader>vs :mksession! .vims<cr>
+nn <leader>vl :source .vims<cr>
+

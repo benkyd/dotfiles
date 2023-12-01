@@ -70,6 +70,7 @@ return {
             'debugloop/telescope-undo.nvim',
             'folke/todo-comments.nvim',
             'kevinhwang91/nvim-bqf',
+            'rcarriga/nvim-notify',
         },
         config = function()
             require('plugin-config/telescope')
@@ -232,6 +233,8 @@ return {
             -- LSP Support
             { 'neovim/nvim-lspconfig' },
             { 'williamboman/mason.nvim' },
+            { 'mfussenegger/nvim-dap' },
+            { 'jay-babu/mason-nvim-dap.nvim' },
             { 'williamboman/mason-lspconfig.nvim' },
 
             { 'simrat39/rust-tools.nvim' },
@@ -263,6 +266,13 @@ return {
         'rcarriga/nvim-dap-ui',
         dependencies = {
             'mfussenegger/nvim-dap',
+        },
+        keys = {
+            { '<leader>db', '<cmd>lua require("dap").toggle_breakpoint()<cr>', desc = "Toggle DAP UI" },
+            { '<leader>dc', '<cmd>lua require("dap").continue()<cr>' },
+            { '<leader>dn', '<cmd>lua require("dap").step_over()<cr>' },
+            { '<leader>di', '<cmd>lua require("dap").step_into()<cr>' },
+            { '<leader>do', '<cmd>lua require("dap").step_out()<cr>' },
         },
         lazy = false
     },
