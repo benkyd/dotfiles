@@ -55,7 +55,7 @@ dapui.setup({
                 "stacks",
                 "watches"
             },
-            size = 0.2,
+            size = 0.17,
             position = "left"
         },
         {
@@ -64,7 +64,7 @@ dapui.setup({
                 "console",
                 "breakpoints",
             },
-            size = 0.3,
+            size = 0.15,
             position = "bottom",
         },
     },
