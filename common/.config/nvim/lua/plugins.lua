@@ -238,7 +238,7 @@ return {
         branch = 'v1.x',
         dependencies = {
             -- LSP Support
-            { 'nvim-neotest/nvim-nio.nvim' },
+            { 'nvim-neotest/nvim-nio' },
             { 'neovim/nvim-lspconfig' },
             { 'williamboman/mason.nvim' },
             { 'mfussenegger/nvim-dap' },
