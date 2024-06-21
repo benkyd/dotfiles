@@ -180,6 +180,7 @@ lsp.on_attach(function(_, bufnr)
 
     -- CLANGFORMATTTTT
     vim.keymap.set('n', 'gf', '<Cmd>lua vim.lsp.buf.format()<CR>', opts)
+    vim.keymap.set('n', 'gs', '<Cmd>ClangdSwitchSourceHeader<CR>', opts)
     vim.keymap.set('n', 'gw', '<Cmd>StripWhitespace<CR>', opts)
 end)
 
