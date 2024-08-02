@@ -12,6 +12,12 @@ return {
         'tpope/vim-fugitive',
     },
     {
+      'tzachar/local-highlight.nvim',
+      config = function()
+        require('local-highlight').setup()
+      end
+  },
+    {
         'lewis6991/gitsigns.nvim',
         dependencies = { 'nvim-lua/plenary.nvim' },
         config = function()
