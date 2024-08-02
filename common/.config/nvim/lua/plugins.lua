@@ -14,7 +14,21 @@ return {
     {
       'tzachar/local-highlight.nvim',
       config = function()
-        require('local-highlight').setup()
+        require('local-highlight').setup(
+            hlgroup = 'Search',
+            cw_hlgroup = nil,
+            -- Whether to display highlights in INSERT mode or not
+            insert_mode = true,
+            min_match_len = 1,
+            max_match_len = math.huge,
+            highlight_single_match = true,
+        })
+        vim.api.nvim_create_autocmd('BufRead', {
+          pattern = {'*.*'},
+          callback = function(data)
+            require('local-highlight').attach(data.buf)
+          end
+        })
       end
   },
     {
