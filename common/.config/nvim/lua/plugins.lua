@@ -32,6 +32,10 @@ return {
       end
   },
     {
+        'miversen33/sunglasses.nvim',
+        config = true
+    },
+    {
         'lewis6991/gitsigns.nvim',
         dependencies = { 'nvim-lua/plenary.nvim' },
         config = function()
