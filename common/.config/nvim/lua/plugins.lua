@@ -33,7 +33,12 @@ return {
   },
     {
         'miversen33/sunglasses.nvim',
-        config = true
+        config = function()
+            require('sunglasses').setup({
+                    filter_type = "SHADE",
+                    filter_percent = .30
+            })
+        end   
     },
     {
         'lewis6991/gitsigns.nvim',
