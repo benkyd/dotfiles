@@ -48,6 +48,14 @@ return {
         end
     },
     {
+        -- Window picker
+      "yorickpeterse/nvim-window",
+      keys = {
+        { "<C-w>e", "<cmd>lua require('nvim-window').pick()<cr>", desc = "nvim-window: Jump to window" },
+      },
+      config = true,
+    },
+    {
         -- colourise colour codes
         'norcalli/nvim-colorizer.lua',
         lazy = false,
