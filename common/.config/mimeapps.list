@@ -6,3 +6,5 @@ application/x-extension-html=google-chrome-unstable
 x-scheme-handler/eclipse+command=_usr_lib_dbeaver_.desktop
 x-scheme-handler/postman=Postman.desktop
 application/x-ms-dos-executable;application/x-wine-extension-msp;application/x-msi;application/x-msdos-program=PortProton.desktop
+x-scheme-handler/adskidmgr=adskidmgr-opener.desktop
+x-scheme-handler/eclipse+mpc=_opt_stm32cubeide_.desktop
