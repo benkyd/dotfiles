@@ -1,10 +1,15 @@
 require('gitsigns').setup {
-    keymaps = {
-        -- Default keymap options
-        noremap = true,
-        buffer = true,
-        ['n <leader>gb'] = '<cmd>lua require"gitsigns".blame_line()<CR>',
-    },
+    on_attach = function(bufnr)
+        local gitsigns = require('gitsigns')
+        local function localmap(mode, l, r, opts)
+            opts = opts or {}
+            opts.buffer = bufnr
+            vim.keymap.set(mode, l, r, opts)
+        end
+
+        localmap('n', '<leader>gb', gitsigns.toggle_current_line_blame)
+    end,
+
     signs = {
         add          = { text = '┃' },
         change       = { text = '┃' },
@@ -41,9 +46,6 @@ require('gitsigns').setup {
         relative = 'cursor',
         row = 0,
         col = 1
-    },
-    yadm = {
-        enable = false
     },
 }
 

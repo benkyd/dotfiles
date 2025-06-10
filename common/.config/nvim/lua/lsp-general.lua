@@ -1,17 +1,8 @@
-local lsp = require('lsp-zero')
+local lsp = require('lsp-zero');
 local cmp = require('cmp')
 local luasnip = require('luasnip')
 local dap = require('dap')
 local dapui = require('dapui')
-
-require('mason').setup({})
-require('mason-nvim-dap').setup({
-    ensure_installed = {
-        'cpptools',
-        'cppdbg',
-    },
-})
-require('mason-lspconfig').setup({})
 
 dap.configurations = {
     cpp = {
@@ -107,52 +98,22 @@ end)
 vim.fn.sign_define('DapBreakpoint',{ text ='🔴', texthl ='', linehl ='', numhl =''})
 vim.fn.sign_define('DapStopped',{ text ='▶️', texthl ='', linehl ='', numhl =''})
 
-lsp.preset({
-    name = 'recommended',
-})
-
-lsp.ensure_installed({
-    'tsserver',
-    'clangd',
-})
-
 lsp.configure('clangd', {
     capabilities = {
         offsetEncoding = { "utf-16" }
     }
 })
 
-local cmp_mode = { behavior = cmp.SelectBehavior.Replace }
-local cmp_mappings = lsp.defaults.cmp_mappings({
-    ["<Tab>"] = cmp.mapping(function(fallback)
-        if (cmp.visible()) then
-            cmp.select_next_item(cmp_mode)
-        elseif luasnip.expand_or_jumpable() then
-            luasnip.expand_or_jump()
-        else
-            fallback()
-        end
-        cmp.mapping.select_next_item(cmp_mode)
-    end, { 'i', 's' }),
-    ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_mode),
-})
+-- lsp.setup_nvim_cmp({
+--     preselect = require('cmp').PreselectMode.None,
+--     completion = {
+--         completeopt = 'menu,menuone,noinsert,noselect'
+--     },
+--     mapping = cmp_mappings,
+-- })
 
--- unmap arrow keys
-cmp_mappings["<Up>"] = nil
-cmp_mappings["<Down>"] = nil
-
-lsp.setup_nvim_cmp({
-    preselect = require('cmp').PreselectMode.None,
-    completion = {
-        completeopt = 'menu,menuone,noinsert,noselect'
-    },
-    mapping = cmp_mappings,
-})
-
-lsp.on_attach(function(_, bufnr)
-    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-
-    local opts = { noremap = true, silent = true, buffer = bufnr }
+lsp.on_attach(function(client, bufnr)
+    local opts = { buffer = bufnr }
     vim.keymap.set('n', 'gD', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
     vim.keymap.set('n', 'gT', '<Cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
     vim.keymap.set('n', 'gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
@@ -184,48 +145,8 @@ lsp.on_attach(function(_, bufnr)
     vim.keymap.set('n', 'gw', '<Cmd>StripWhitespace<CR>', opts)
 end)
 
-local rust_lsp = lsp.build_options('rust_analyzer', {
-      --cmd = { "/home/benk/programming/rust-analyzer/target/release/rust-analyzer" },
-})
-
-require('rust-tools').setup({
-    server = rust_lsp,
-    tools = {
-        inlay_hints = {
-            auto = true,
-            show_parameter_hints = true,
-            parameter_hints_prefix = " ",
-            other_hints_prefix = " ",
-        }
-    },
-})
 
 lsp.setup()
-
-
-cmp.setup.cmdline('/', {
-    sources = {
-        { name = 'buffer' }
-    }
-})
-
-cmp.setup.cmdline(':', {
-    sources = cmp.config.sources({
-        { name = 'path' }
-    }, {
-        { name = 'cmdline' }
-    })
-})
-
-lsp.set_preferences({
-    suggest_lsp_servers = false,
-    sign_icons = {
-        error = '',
-        warn = '',
-        hint = '',
-        info = ''
-    }
-})
 
 local cmp_kinds = {
     Text = "",
@@ -255,7 +176,21 @@ local cmp_kinds = {
     TypeParameter = ""
 }
 
-local cmp_config = {
+
+require('mason').setup({})
+require('mason-lspconfig').setup({
+    handlers = {
+        lsp.default_setup,
+    },
+})
+
+cmp.setup({
+    sources = {
+        { name = 'nvim_lsp' },
+        { name = 'luasnip' },
+        { name = 'buffer' },
+        { name = 'path' },
+    },
     window = {
         completion = cmp.config.window.bordered(),
         documentation = cmp.config.window.bordered()
@@ -295,11 +230,45 @@ local cmp_config = {
     performance = {
         max_view_entries = 20,
     },
-}
+    mapping = {
+        ["<Tab>"] = cmp.mapping(function(fallback)
+            if (cmp.visible()) then
+                cmp.select_next_item(cmp_mode)
+            elseif luasnip.expand_or_jumpable() then
+                luasnip.expand_or_jump()
+            else
+                fallback()
+            end
+            cmp.mapping.select_next_item(cmp_mode)
+        end, { 'i', 's' }),
+        ["<S-Tab>"] = cmp.mapping.select_prev_item(cmp_mode),
+        ["<Up>"] = nil,
+        ["<Down>"] = nil
+    },
+})
 
-cmp.setup(cmp_config)
+cmp.setup.cmdline('/', {
+    sources = {
+        { name = 'buffer' }
+    }
+})
+
+cmp.setup.cmdline(':', {
+    sources = cmp.config.sources({
+        { name = 'path' }
+    }, {
+        { name = 'cmdline' }
+    })
+})
 
 vim.api.nvim_set_hl(0, "CmpItemMenu", { italic = true })
 vim.diagnostic.config({
-    virtual_text = true
+    virtual_text = true,
+    signs = {
+        [vim.diagnostic.severity.ERROR] = '',
+        [vim.diagnostic.severity.WARN] = '',
+        [vim.diagnostic.severity.HINT] = '',
+        [vim.diagnostic.severity.INFO] = ''
+    }
 })
+

@@ -1,3 +1,4 @@
+"testg
 "augroup vimrc
     "autocmd!
     "autocmd BufWritePost plugins.lua PackerCompile

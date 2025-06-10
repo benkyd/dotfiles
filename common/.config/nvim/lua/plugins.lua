@@ -5,6 +5,22 @@ return {
         priority = 1000,
         config = function()
             vim.cmd('colorscheme kanagawa')
+            require('kanagawa').setup({
+                transparent = true,
+                undercurl = true,
+                commentStyle = { italic = true },
+                keywordsStyle = { italic = true },
+                statementStyle = { bold = true },
+                overrides = function(colors)
+                    return {
+                        Normal = { bg = 'none' },
+                        NormalFloat = { bg = 'none' },
+                        FloatBorder = { fg = colors.palette.sumiInk4, bg = 'none' },
+                        CursorLine = { bg = colors.palette.sumiInk1 },
+                        CursorLineNr = { fg = colors.palette.sumiInk6, bold = true },
+                    }
+                end
+            })
         end
     },
     -- QUALITY OF LIFE INTEGRATIONS
@@ -12,33 +28,40 @@ return {
         'tpope/vim-fugitive',
     },
     {
-      'tzachar/local-highlight.nvim',
-      config = function()
-        require('local-highlight').setup({
-            hlgroup = 'Search',
-            cw_hlgroup = nil,
-            -- Whether to display highlights in INSERT mode or not
-            insert_mode = true,
-            min_match_len = 1,
-            max_match_len = math.huge,
-            highlight_single_match = true,
+        'hat0uma/csvview.nvim',
+        lazy = true,
+    },
+    {
+        'folke/snacks.nvim'
+    },
+    {
+        'tzachar/local-highlight.nvim',
+        config = function()
+            require('local-highlight').setup({
+                hlgroup = 'Search',
+                cw_hlgroup = nil,
+                -- Whether to display highlights in INSERT mode or not
+                insert_mode = true,
+                min_match_len = 1,
+                max_match_len = math.huge,
+                highlight_single_match = true,
             })
-        vim.api.nvim_create_autocmd('BufRead', {
-          pattern = {'*.*'},
-          callback = function(data)
-            require('local-highlight').attach(data.buf)
-          end
-        })
-      end
-  },
+            vim.api.nvim_create_autocmd('BufRead', {
+                pattern = {'*.*'},
+                callback = function(data)
+                    require('local-highlight').attach(data.buf)
+                end
+            })
+        end
+    },
     {
         'miversen33/sunglasses.nvim',
         config = function()
             require('sunglasses').setup({
-                    filter_type = "SHADE",
-                    filter_percent = .20
+                filter_type = "SHADE",
+                filter_percent = .20
             })
-        end   
+        end
     },
     {
         'lewis6991/gitsigns.nvim',
@@ -49,11 +72,11 @@ return {
     },
     {
         -- Window picker
-      "yorickpeterse/nvim-window",
-      keys = {
-        { "<C-w>e", "<cmd>lua require('nvim-window').pick()<cr>", desc = "nvim-window: Jump to window" },
-      },
-      config = true,
+        "yorickpeterse/nvim-window",
+        keys = {
+            { "<C-w>e", "<cmd>lua require('nvim-window').pick()<cr>", desc = "nvim-window: Jump to window" },
+        },
+        config = true,
     },
     {
         -- colourise colour codes
@@ -265,14 +288,10 @@ return {
     },
     {
         "L3MON4D3/LuaSnip",
-        -- follow latest release.
-        version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-        -- install jsregexp (optional!).
         build = "make install_jsregexp"
     },
     {
         'VonHeikemen/lsp-zero.nvim',
-        branch = 'v1.x',
         dependencies = {
             -- LSP Support
             { 'nvim-neotest/nvim-nio' },
