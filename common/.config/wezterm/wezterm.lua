@@ -13,7 +13,13 @@ config.font_size = 10.0
 config.adjust_window_size_when_changing_font_size = false
 
 config.color_scheme = 'Catppuccin Macchiato'
-config.window_background_opacity = 0.85
+
+config.enable_wayland = true
+config.window_background_opacity = 0.60
+config.text_background_opacity = 0.80
+
+config.macos_window_background_blur = 20
+config.kde_window_background_blur = true
 
 config.colors = {
     cursor_bg = '#c6a0f6',
