@@ -8,8 +8,10 @@ end
 
 
 config.hide_tab_bar_if_only_one_tab = true
-config.font = wezterm.font("JetBrains Mono")
+config.font = wezterm.font("Source Code Pro", { weight = "DemiBold" })
 config.font_size = 10.0
+config.line_height = 1.2
+
 config.adjust_window_size_when_changing_font_size = false
 
 config.color_scheme = 'Catppuccin Macchiato'
