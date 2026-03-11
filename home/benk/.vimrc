@@ -59,7 +59,7 @@ set splitbelow
 set splitright
 
 set completeopt=menu,menuone,preview,noinsert,noselect
-set guicursor=a:block,i:ver20,v-r:hor20
+set guicursor=a:block-Cursor,i:ver20-Cursor,v-r:hor20-Cursor
 
 " The epico quickfix list
 packadd cfilter

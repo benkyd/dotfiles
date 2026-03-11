@@ -5,22 +5,27 @@ return {
         priority = 1000,
         config = function()
             require('kanagawa').setup({
-                transparent = true,
                 undercurl = true,
                 commentStyle = { italic = true },
                 keywordsStyle = { italic = true },
                 statementStyle = { bold = true },
-                overrides = function(colors)
-                    return {
-                        Normal = { bg = 'none' },
-                        NormalFloat = { bg = 'none' },
-                        FloatBorder = { fg = colors.palette.sumiInk4, bg = 'none' },
-                        CursorLine = { bg = colors.palette.sumiInk1 },
-                        CursorLineNr = { fg = colors.palette.sumiInk6, bold = true },
-                    }
-                end
             })
             vim.cmd('colorscheme kanagawa')
+            -- Transparent bg so catppuccin mocha terminal bg shows through
+            vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+            vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
+
+            vim.keymap.set('n', '<leader>tt', function()
+                if vim.o.background == 'dark' then
+                    vim.o.background = 'light'
+                    vim.cmd('colorscheme kanagawa-lotus')
+                else
+                    vim.o.background = 'dark'
+                    vim.cmd('colorscheme kanagawa')
+                    vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+                    vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
+                end
+            end, { desc = 'Toggle light/dark theme' })
         end
     },
     -- QUALITY OF LIFE INTEGRATIONS
@@ -52,15 +57,6 @@ return {
                 callback = function(data)
                     require('local-highlight').attach(data.buf)
                 end
-            })
-        end
-    },
-    {
-        'miversen33/sunglasses.nvim',
-        config = function()
-            require('sunglasses').setup({
-                filter_type = "SHADE",
-                filter_percent = .20
             })
         end
     },

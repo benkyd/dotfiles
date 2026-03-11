@@ -3,10 +3,6 @@ CACHE_PATH = vim.fn.stdpath('cache')
 
 vim.cmd('source ~/.vimrc')
 
-vim.api.nvim_set_hl(0, "NormalFloat", { bg = "NONE" })
-vim.api.nvim_set_hl(0, "FloatBorder", { bg = "NONE" })
-vim.api.nvim_set_hl(0, "CmpItemMenu", { bg = "NONE" })
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
