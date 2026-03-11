@@ -1,6 +1,24 @@
 # Dotfiles
 
-Mirrors `$HOME`. Symlinked via `bootstrap.sh`.
+Filesystem overlay. Structure mirrors actual paths on disk.
+
+```
+dotfiles/
+  home/benk/          -> symlinked into $HOME
+    .config/nvim/
+    .config/fish/
+    .config/wezterm/
+    .tmux.conf
+    .vimrc
+    ...
+  etc/                -> copied into /etc (prompted, needs sudo)
+    fstab
+    nginx/nginx.conf
+  packages/           -> package lists for brew/yay
+  bootstrap.sh        -> does everything
+```
+
+## Usage
 
 ```
 git clone git@github.com:benkyd/dotfiles.git ~/dotfiles
@@ -8,11 +26,11 @@ cd ~/dotfiles
 ./bootstrap.sh
 ```
 
-The bootstrap script will:
-1. Detect your OS (macOS or Arch Linux)
-2. Optionally install packages (Homebrew on macOS, yay on Arch)
-3. Install tmux plugin manager and fisher (fish plugin manager)
-4. Symlink all dotfiles into `$HOME` (existing files backed up to `~/dotfiles.bak/`)
-5. Optionally copy system configs from `etc/` to `/etc/` (with sudo, prompted)
+The bootstrap will:
+1. Detect OS (macOS / Arch)
+2. Optionally install packages (Homebrew or yay)
+3. Install oh-my-fish, fisher, tmux plugin manager
+4. Symlink `home/benk/` into `$HOME`
+5. Optionally copy `etc/` to `/etc` (prompted)
 
-Works on both macOS and Linux — wezterm, tmux, and fish auto-detect the platform.
+Existing files are backed up to `~/dotfiles.bak/`.
