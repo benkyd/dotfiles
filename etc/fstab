@@ -1,0 +1,11 @@
+# /etc/fstab: static file system information.
+#
+# <file system>  <mount point>  <type>  <options>         <dump>  <pass>
+# / was on /dev/sda1 during installation
+UUID=CHANGEME   /              ext4    errors=remount-ro  0       1
+
+# swap
+#UUID=CHANGEME   none           swap    sw                 0       0
+
+# tmpfs for /tmp
+tmpfs            /tmp           tmpfs   defaults,noatime,mode=1777  0  0

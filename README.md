@@ -1,16 +1,18 @@
 # Dotfiles
 
-## Ben's Amazing Dotfile Installer
+Mirrors `$HOME`. Symlinked via `bootstrap.sh`.
 
-NOTE THIS ONLY WORKS IF THE USERNAME IS benk
+```
+git clone git@github.com:benkyd/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+./bootstrap.sh
+```
 
-ALSO BEN NEEDS TO GET HIS NEOVIM CONFIG TO BOOTSTRAP ON A NEW MACHINE! 
+The bootstrap script will:
+1. Detect your OS (macOS or Arch Linux)
+2. Optionally install packages (Homebrew on macOS, yay on Arch)
+3. Install tmux plugin manager and fisher (fish plugin manager)
+4. Symlink all dotfiles into `$HOME` (existing files backed up to `~/dotfiles.bak/`)
+5. Optionally copy system configs from `etc/` to `/etc/` (with sudo, prompted)
 
-It appears Ben doesn't want to do this, so this message should remain until he does. 
-
-The only prerequisite for Ben's Amazing Dotfile Installer is to install nodejs
-
-`node bootstrap.js [--os[-o] ubuntu/arch] [--host[-h] host/laptop]`
-
-NOTE: This will install and set up everything but it will not source tmux for example, you must `<C-b>I` in order to do that
-
+Works on both macOS and Linux — wezterm, tmux, and fish auto-detect the platform.

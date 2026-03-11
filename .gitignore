@@ -1,8 +1,7 @@
 packer_compiled.lua
+lazy-lock.json
 flameshot.ini
-
-
-
-# Added by cargo
-
+.config/nvim/lazy-lock.json
+node_modules/
 /target
+.DS_Store

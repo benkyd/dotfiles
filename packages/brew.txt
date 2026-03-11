@@ -1,0 +1,17 @@
+fish
+tmux
+nvim
+wezterm
+btop
+ripgrep
+fd
+git
+curl
+wget
+lua-language-server
+typescript-language-server
+pyright
+bash-language-server
+cmake
+node
+python3
