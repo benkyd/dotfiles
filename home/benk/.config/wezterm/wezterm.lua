@@ -17,7 +17,6 @@ if is_macos then
 else
   config.default_prog = { '/usr/bin/fish' }
   config.enable_wayland = true
-  config.kde_window_background_blur = true
 end
 
 config.hide_tab_bar_if_only_one_tab = true

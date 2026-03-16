@@ -6,10 +6,11 @@ BACKUP_DIR="$HOME/dotfiles.bak"
 USER="$(whoami)"
 
 usage() {
-    echo "Usage: ./bootstrap.sh [--pull]"
+    echo "Usage: ./bootstrap.sh [--pull | --copy]"
     echo ""
     echo "  (no args)   Install packages, sync repo -> system"
     echo "  --pull      Sync system -> repo (pull changes back)"
+    echo "  --copy      Sync repo -> home only (skip packages and shell tooling)"
     exit 0
 }
 
@@ -36,8 +37,36 @@ pull_back() {
     exit 0
 }
 
+# --- Copy mode: sync repo -> $HOME only, no packages or tooling ---
+copy_home() {
+    OVERLAY_HOME="$DOTFILES_DIR/home/$USER"
+    if [ ! -d "$OVERLAY_HOME" ]; then
+        echo "WARNING: No home overlay for user '$USER', falling back to home/benk/"
+        OVERLAY_HOME="$DOTFILES_DIR/home/benk"
+    fi
+
+    echo "==> Creating directory structure..."
+    mkdir -p \
+        "$HOME/.config" \
+        "$HOME/.local/bin" \
+        "$HOME/.local/share" \
+        "$HOME/.local/state" \
+        "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+
+    echo "==> Syncing $OVERLAY_HOME -> $HOME"
+    mkdir -p "$BACKUP_DIR/home"
+    rsync -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/home" \
+        "$OVERLAY_HOME/" "$HOME/"
+    echo ""
+    echo "Done. Backups at ~/dotfiles.bak/"
+    exit 0
+}
+
 if [[ "${1:-}" == "--pull" ]]; then
     pull_back
+elif [[ "${1:-}" == "--copy" ]]; then
+    copy_home
 elif [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     usage
 fi
@@ -61,6 +90,21 @@ echo "Detected OS: $OS"
 echo ""
 
 # --- Package installation ---
+install_with_prompt() {
+    local cmd="$1"
+    local pkg="$2"
+    if ! $cmd "$pkg" 2>&1; then
+        echo ""
+        echo "  [!] Failed to install: $pkg"
+        read -p "  Continue anyway? [y/N] " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "  Aborting."
+            exit 1
+        fi
+    fi
+}
+
 install_packages() {
     case "$OS" in
         macos)
@@ -70,7 +114,13 @@ install_packages() {
                 eval "$(/opt/homebrew/bin/brew shellenv)"
             fi
             echo "==> Installing packages via brew..."
-            xargs brew install < "$DOTFILES_DIR/packages/brew.txt"
+            set +e
+            while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+                [[ -z "$pkg" || "$pkg" == \#* ]] && continue
+                echo "  brew install $pkg"
+                install_with_prompt "brew install" "$pkg"
+            done < "$DOTFILES_DIR/packages/brew.txt"
+            set -e
             ;;
         arch)
             if ! command -v yay &>/dev/null; then
@@ -78,12 +128,17 @@ install_packages() {
                 sudo pacman -S --needed --noconfirm git base-devel
                 tmpdir=$(mktemp -d)
                 git clone https://aur.archlinux.org/yay.git "$tmpdir/yay"
-                cd "$tmpdir/yay" && makepkg -si --noconfirm
-                cd "$DOTFILES_DIR"
+                (cd "$tmpdir/yay" && makepkg -si --noconfirm)
                 rm -rf "$tmpdir"
             fi
             echo "==> Installing packages via yay..."
-            xargs yay -S --needed --noconfirm < "$DOTFILES_DIR/packages/arch.txt"
+            set +e
+            while IFS= read -r pkg || [[ -n "$pkg" ]]; do
+                [[ -z "$pkg" || "$pkg" == \#* ]] && continue
+                echo "  yay -S $pkg"
+                install_with_prompt "yay -S --needed --noconfirm" "$pkg"
+            done < "$DOTFILES_DIR/packages/arch.txt"
+            set -e
             ;;
         *)
             echo "  Unknown OS, skipping package install."
@@ -138,6 +193,15 @@ if [ ! -d "$OVERLAY_HOME" ]; then
     echo "WARNING: No home overlay for user '$USER', falling back to home/benk/"
     OVERLAY_HOME="$DOTFILES_DIR/home/benk"
 fi
+
+echo "==> Creating directory structure..."
+mkdir -p \
+    "$HOME/.config" \
+    "$HOME/.local/bin" \
+    "$HOME/.local/share" \
+    "$HOME/.local/state" \
+    "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
 
 echo "==> Syncing $OVERLAY_HOME -> $HOME"
 mkdir -p "$BACKUP_DIR/home"

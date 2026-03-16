@@ -134,14 +134,16 @@ return {
         end
     },
     {
-        'nvim-treesitter/nvim-treesitter-context',
+        'nvim-treesitter/nvim-treesitter',
+        branch = 'master',
         build = ':TSUpdate',
-        dependencies = {
-            'nvim-treesitter/nvim-treesitter',
-        },
         config = function()
             require('plugin-config/nvim-treesitter')
         end
+    },
+    {
+        'nvim-treesitter/nvim-treesitter-context',
+        dependencies = { 'nvim-treesitter/nvim-treesitter' },
     },
     {
         'mrjones2014/smart-splits.nvim',
@@ -160,7 +162,7 @@ return {
     {
         'gorbit99/codewindow.nvim',
         lazy = false,
-        opts = {},
+        dependencies = { 'nvim-treesitter/nvim-treesitter' },
         config = function()
             require('codewindow').apply_default_keybinds()
         end
@@ -270,19 +272,6 @@ return {
     },
     -- FUNCTIONAL CODING STUFF
     {
-        'zbirenbaum/copilot.lua',
-        event = 'InsertEnter',
-        opts = {
-            suggestion = {
-                enabled = true,
-                auto_trigger = true,
-                keymap = {
-                    accept = '<C-y>',
-                }
-            },
-        }
-    },
-    {
         "L3MON4D3/LuaSnip",
         build = "make install_jsregexp"
     },
@@ -372,41 +361,6 @@ return {
     {
         'nvim-treesitter/nvim-treesitter-textobjects',
         dependencies = { 'nvim-treesitter/nvim-treesitter' },
-        config = function()
-            require('nvim-treesitter.configs').setup({
-                textobjects = {
-                    select = {
-                        enable = true,
-                        lookahead = true,
-                        keymaps = {
-                            ['af'] = '@function.outer',
-                            ['if'] = '@function.inner',
-                            ['ac'] = '@class.outer',
-                            ['ic'] = '@class.inner',
-                            ['aa'] = '@parameter.outer',
-                            ['ia'] = '@parameter.inner',
-                        },
-                    },
-                    move = {
-                        enable = true,
-                        set_jumps = true,
-                        goto_next_start = {
-                            [']m'] = '@function.outer',
-                            [']]'] = '@class.outer',
-                        },
-                        goto_previous_start = {
-                            ['[m'] = '@function.outer',
-                            ['[['] = '@class.outer',
-                        },
-                    },
-                    swap = {
-                        enable = true,
-                        swap_next = { ['<leader>a'] = '@parameter.inner' },
-                        swap_previous = { ['<leader>A'] = '@parameter.inner' },
-                    },
-                },
-            })
-        end,
     },
     -- Format on save / manual format (clang-format, prettier, etc.)
     {
