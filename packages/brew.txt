@@ -16,3 +16,4 @@ bash-language-server
 cmake
 node
 python3
+xclip
