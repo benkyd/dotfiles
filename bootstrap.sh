@@ -5,6 +5,25 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKUP_DIR="$HOME/dotfiles.bak"
 USER="$(whoami)"
 
+# --- Detect OS early (needed by sync functions) ---
+OS="unknown"
+if [[ "$(uname)" == "Darwin" ]]; then
+    OS="macos"
+elif [[ -f /etc/arch-release ]]; then
+    OS="arch"
+elif [[ -f /etc/os-release ]]; then
+    OS="linux"
+fi
+
+# Files/dirs in the home overlay that are macOS-only
+MACOS_ONLY=(Library/)
+HOME_EXCLUDES=()
+if [[ "$OS" != "macos" ]]; then
+    for item in "${MACOS_ONLY[@]}"; do
+        HOME_EXCLUDES+=(--exclude "$item")
+    done
+fi
+
 usage() {
     echo "Usage: ./bootstrap.sh [--pull | --copy]"
     echo ""
@@ -12,6 +31,34 @@ usage() {
     echo "  --pull      Sync system -> repo (pull changes back)"
     echo "  --copy      Sync repo -> home only (skip packages and shell tooling)"
     exit 0
+}
+
+# --- rsync wrapper: prompts for confirmation if existing files would be overwritten ---
+# Usage: rsync_confirm [--sudo] <rsync args...>
+rsync_confirm() {
+    local rsync_cmd=(rsync)
+    if [[ "${1:-}" == "--sudo" ]]; then
+        rsync_cmd=(sudo rsync)
+        shift
+    fi
+
+    local overwrites
+    overwrites=$("${rsync_cmd[@]}" --dry-run --itemize-changes "$@" 2>/dev/null \
+        | awk '/^>f/ && !/\+{9}/ { print $2 }')
+
+    if [ -n "$overwrites" ]; then
+        echo "The following existing files would be overwritten:"
+        echo "$overwrites" | sed 's/^/  /'
+        echo ""
+        read -p "Proceed with overwrite? [y/N] " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "  Aborted."
+            return 1
+        fi
+    fi
+
+    "${rsync_cmd[@]}" "$@"
 }
 
 # --- Pull mode: copy live files back into the repo ---
@@ -22,13 +69,13 @@ pull_back() {
     fi
 
     echo "==> Pulling home files back into repo..."
-    rsync -av --itemize-changes --existing --update \
-        "$HOME/" "$OVERLAY_HOME/"
+    rsync_confirm -av --itemize-changes --existing --update \
+        "${HOME_EXCLUDES[@]}" "$HOME/" "$OVERLAY_HOME/"
     echo ""
 
     if [ -d "$DOTFILES_DIR/etc" ]; then
         echo "==> Pulling /etc files back into repo..."
-        sudo rsync -av --itemize-changes --existing --update \
+        rsync_confirm --sudo -av --itemize-changes --existing --update \
             /etc/ "$DOTFILES_DIR/etc/"
         echo ""
     fi
@@ -56,8 +103,8 @@ copy_home() {
 
     echo "==> Syncing $OVERLAY_HOME -> $HOME"
     mkdir -p "$BACKUP_DIR/home"
-    rsync -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/home" \
-        "$OVERLAY_HOME/" "$HOME/"
+    rsync_confirm -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/home" \
+        "${HOME_EXCLUDES[@]}" "$OVERLAY_HOME/" "$HOME/"
     echo ""
     echo "Done. Backups at ~/dotfiles.bak/"
     exit 0
@@ -77,15 +124,6 @@ echo "Repo:     $DOTFILES_DIR"
 echo "User:     $USER"
 echo ""
 
-# --- Detect OS ---
-OS="unknown"
-if [[ "$(uname)" == "Darwin" ]]; then
-    OS="macos"
-elif [[ -f /etc/arch-release ]]; then
-    OS="arch"
-elif [[ -f /etc/os-release ]]; then
-    OS="linux"
-fi
 echo "Detected OS: $OS"
 echo ""
 
@@ -205,8 +243,8 @@ chmod 700 "$HOME/.ssh"
 
 echo "==> Syncing $OVERLAY_HOME -> $HOME"
 mkdir -p "$BACKUP_DIR/home"
-rsync -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/home" \
-    "$OVERLAY_HOME/" "$HOME/"
+rsync_confirm -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/home" \
+    "${HOME_EXCLUDES[@]}" "$OVERLAY_HOME/" "$HOME/"
 echo ""
 
 # --- Overlay: etc/ -> /etc ---
@@ -224,7 +262,7 @@ if [ -d "$DOTFILES_DIR/etc" ]; then
 
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             mkdir -p "$BACKUP_DIR/etc"
-            sudo rsync -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/etc" \
+            rsync_confirm --sudo -av --itemize-changes --backup --backup-dir="$BACKUP_DIR/etc" \
                 "$DOTFILES_DIR/etc/" /etc/
             echo "  Originals backed up to ~/dotfiles.bak/etc/"
         else

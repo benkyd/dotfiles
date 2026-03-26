@@ -1,7 +1,7 @@
+# formulae — installed via `brew install`
 fish
 tmux
-nvim
-wezterm
+neovim
 btop
 ripgrep
 fd
@@ -9,11 +9,12 @@ git
 curl
 wget
 rsync
+fastfetch
 lua-language-server
 typescript-language-server
 pyright
 bash-language-server
 cmake
 node
-python3
-xclip
+python@3.14
+syncthing

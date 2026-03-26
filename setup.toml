@@ -1,0 +1,12 @@
+# setup.toml — declarative tooling config
+# Packages live in packages/brew.txt and packages/arch.txt.
+# This file covers everything that isn't a package manager install.
+
+[fish]
+# Fisher plugins to install. Run `fisher list` to see what's currently installed.
+plugins = []
+
+[tmux]
+# TPM plugins to install headlessly via ~/.tmux/plugins/tpm/bin/install_plugins.
+# Format: "owner/repo" matching the TPM convention.
+plugins = []

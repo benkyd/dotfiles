@@ -1,0 +1,3 @@
+[submodule "themes/catppuccin-iterm"]
+	path = themes/catppuccin-iterm
+	url = https://github.com/catppuccin/iterm
