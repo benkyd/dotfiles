@@ -173,16 +173,31 @@ OS_ONLY: dict[str, list[str]] = {
     "arch":  [".config/wezterm/"],
 }
 
+def _load_dotignore() -> list[str]:
+    """
+    Read ~/.dotignore and return patterns to exclude from syncing.
+    Each non-blank, non-comment line becomes an rsync --exclude pattern.
+    """
+    p = Path.home() / ".dotignore"
+    if not p.exists():
+        return []
+    return [
+        ln.strip() for ln in p.read_text().splitlines()
+        if ln.strip() and not ln.startswith("#")
+    ]
+
 def home_excludes() -> list[str]:
     """
-    Build rsync --exclude flags for paths that don't belong on this OS.
-    For each entry in OS_ONLY, if we're NOT on that OS, exclude those paths.
+    Build rsync --exclude flags for paths that don't belong on this OS
+    and paths listed in ~/.dotignore on this machine.
     """
     flags: list[str] = []
     for owner_os, paths in OS_ONLY.items():
         if OS != owner_os:
             for p in paths:
                 flags += ["--exclude", p]
+    for p in _load_dotignore():
+        flags += ["--exclude", p]
     return flags
 
 # ── rsync helpers ─────────────────────────────────────────────────────────────
