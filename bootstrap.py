@@ -200,6 +200,52 @@ def home_excludes() -> list[str]:
         flags += ["--exclude", p]
     return flags
 
+# ── git timestamp helpers ────────────────────────────────────────────────────
+# Filesystem mtime is unreliable for git repos: clone/checkout sets all mtimes
+# to "now". We use `git log` to get the real last-commit time for each file,
+# which reflects when the content actually changed.
+
+_git_mtime_cache: dict[str, dict[str, float]] = {}
+
+def _git_file_mtimes(repo_root: Path) -> dict[str, float]:
+    key = str(repo_root)
+    if key in _git_mtime_cache:
+        return _git_mtime_cache[key]
+
+    times: dict[str, float] = {}
+    try:
+        result = subprocess.run(
+            ["git", "log", "--format=%ct", "--name-only", "--diff-filter=ACMR"],
+            cwd=repo_root, capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            _git_mtime_cache[key] = times
+            return times
+
+        current_ts: float | None = None
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if line.isdigit() and len(line) >= 9:
+                current_ts = float(line)
+            elif current_ts is not None and line not in times:
+                times[line] = current_ts
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+
+    _git_mtime_cache[key] = times
+    return times
+
+
+def _repo_mtime(file_path: Path, repo_root: Path, git_times: dict[str, float]) -> float:
+    try:
+        rel = str(file_path.relative_to(repo_root))
+    except ValueError:
+        return file_path.stat().st_mtime
+    return git_times.get(rel, file_path.stat().st_mtime)
+
+
 # ── rsync helpers ─────────────────────────────────────────────────────────────
 # We use rsync for all file syncing because it handles:
 #   - incremental transfers (only changed files)
@@ -267,6 +313,7 @@ def confirm_rsync(src: str, dst: str, flags: list[str], *, sudo: bool = False, l
     if overwrites:
         src_p = Path(src.rstrip("/"))
         dst_p = Path(dst.rstrip("/"))
+        git_times = _git_file_mtimes(DOTFILES_DIR)
 
         newer_at_dst: list[str] = []   # dst is newer → needs review
         auto_count = 0                 # dst is older → safe to overwrite
@@ -274,7 +321,7 @@ def confirm_rsync(src: str, dst: str, flags: list[str], *, sudo: bool = False, l
         for rel in overwrites:
             src_f, dst_f = src_p / rel, dst_p / rel
             if (dst_f.exists() and src_f.exists()
-                    and dst_f.stat().st_mtime > src_f.stat().st_mtime):
+                    and dst_f.stat().st_mtime > _repo_mtime(src_f, DOTFILES_DIR, git_times)):
                 newer_at_dst.append(rel)
             else:
                 auto_count += 1
@@ -732,13 +779,14 @@ def _status_dotfiles() -> None:
     new_files     = [p for kind, p in changes if kind == "new"]
     changed_files = [p for kind, p in changes if kind == "changed"]
 
-    # For each changed file, decide which side is "ahead" by mtime
+    # For each changed file, decide which side is "ahead" by git commit time
+    git_times = _git_file_mtimes(DOTFILES_DIR)
     repo_ahead   = []
     system_ahead = []
     for rel in changed_files:
         dst_f = dst / rel
         src_f = src / rel
-        if dst_f.exists() and src_f.exists() and dst_f.stat().st_mtime > src_f.stat().st_mtime:
+        if dst_f.exists() and src_f.exists() and dst_f.stat().st_mtime > _repo_mtime(src_f, DOTFILES_DIR, git_times):
             system_ahead.append(rel)
         else:
             repo_ahead.append(rel)
