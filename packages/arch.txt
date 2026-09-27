@@ -1,6 +1,7 @@
 fish
 tmux
 neovim
+tree-sitter-cli
 wezterm
 fastfetch
 btop

@@ -135,8 +135,13 @@ return {
     },
     {
         'nvim-treesitter/nvim-treesitter',
-        branch = 'master',
+        branch = 'main',
+        lazy = false,
         build = ':TSUpdate',
+        dependencies = {
+            -- Treesitter text objects (select/move by function, class, parameter)
+            { 'nvim-treesitter/nvim-treesitter-textobjects', branch = 'main' },
+        },
         config = function()
             require('plugin-config/nvim-treesitter')
         end
@@ -163,6 +168,28 @@ return {
         'gorbit99/codewindow.nvim',
         lazy = false,
         dependencies = { 'nvim-treesitter/nvim-treesitter' },
+        init = function()
+            -- codewindow still requires nvim-treesitter.ts_utils, which the
+            -- treesitter main branch removed; shim the one function it uses
+            package.preload['nvim-treesitter.ts_utils'] = function()
+                return {
+                    get_vim_range = function(range, buf)
+                        local srow, scol, erow, ecol = unpack(range)
+                        srow, scol, erow = srow + 1, scol + 1, erow + 1
+                        if ecol == 0 then
+                            erow = erow - 1
+                            if not buf or buf == 0 then
+                                ecol = vim.fn.col({ erow, '$' }) - 1
+                            else
+                                ecol = #vim.api.nvim_buf_get_lines(buf, erow - 1, erow, false)[1]
+                            end
+                            ecol = math.max(ecol, 1)
+                        end
+                        return srow, scol, erow, ecol
+                    end,
+                }
+            end
+        end,
         config = function()
             require('codewindow').apply_default_keybinds()
         end
@@ -328,24 +355,6 @@ return {
             vim.g.vimtex_view_method = 'zathura'
         end,
     },
-    {
-        url = 'https://git.sr.ht/~whynothugo/lsp_lines.nvim',
-        config = function()
-            require('lsp_lines').setup()
-            vim.keymap.set('', '<leader>x', function()
-                local config = vim.diagnostic.config()
-                vim.diagnostic.config({
-                    virtual_text = not config.virtual_text,
-                    virtual_lines = not config.virtual_lines,
-                })
-            end, { desc = 'Toggle Line Diagnostics' })
-
-            vim.diagnostic.config({
-                virtual_text = true,
-                virtual_lines = false,
-            })
-        end,
-    },
     -- Rust (replaces rust-tools.nvim)
     {
         'mrcjkb/rustaceanvim',
@@ -356,11 +365,6 @@ return {
     {
         'j-hui/fidget.nvim',
         opts = {},
-    },
-    -- Treesitter text objects (select/move by function, class, parameter)
-    {
-        'nvim-treesitter/nvim-treesitter-textobjects',
-        dependencies = { 'nvim-treesitter/nvim-treesitter' },
     },
     -- Format on save / manual format (clang-format, prettier, etc.)
     {

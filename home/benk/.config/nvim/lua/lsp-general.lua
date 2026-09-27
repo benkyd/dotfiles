@@ -106,8 +106,8 @@ vim.api.nvim_create_autocmd('LspAttach', {
         vim.keymap.set('n', 'gR', '<Cmd>lua vim.lsp.buf.references()<CR>', opts)
 
         -- diagnostics
-        vim.keymap.set('n', 'gn', '<Cmd>lua vim.diagnostic.goto_next()<CR>', opts)
-        vim.keymap.set('n', 'gN', '<Cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+        vim.keymap.set('n', 'gn', function() vim.diagnostic.jump({ count = 1, float = true }) end, opts)
+        vim.keymap.set('n', 'gN', function() vim.diagnostic.jump({ count = -1, float = true }) end, opts)
 
         -- action & rename
         vim.keymap.set('n', '<A-CR>', '<Cmd>Lspsaga code_action<CR>', opts)
@@ -124,7 +124,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
         -- Sexy LSP
         vim.keymap.set('n', 'gd', '<CMD>Lspsaga peek_definition<CR>', opts)
         vim.keymap.set('n', 'gt', '<CMD>Lspsaga peek_type_definition<CR>', opts)
-        vim.keymap.set('n', 'gr', '<CMD>Lspsaga lsp_finder<CR>', opts)
+        vim.keymap.set('n', 'gr', '<CMD>Lspsaga finder<CR>', opts)
 
         -- Format with conform (falls back to LSP)
         vim.keymap.set('n', 'gf', function()
@@ -363,10 +363,22 @@ cmp.setup.cmdline(':', {
 vim.api.nvim_set_hl(0, "CmpItemMenu", { italic = true })
 vim.diagnostic.config({
     virtual_text = true,
+    virtual_lines = false,
     signs = {
-        [vim.diagnostic.severity.ERROR] = '',
-        [vim.diagnostic.severity.WARN] = '',
-        [vim.diagnostic.severity.HINT] = '',
-        [vim.diagnostic.severity.INFO] = ''
+        text = {
+            [vim.diagnostic.severity.ERROR] = '',
+            [vim.diagnostic.severity.WARN] = '',
+            [vim.diagnostic.severity.HINT] = '',
+            [vim.diagnostic.severity.INFO] = ''
+        },
     }
 })
+
+-- Diagnostics as virtual lines are native since 0.11 (replaced lsp_lines.nvim)
+vim.keymap.set('', '<leader>x', function()
+    local config = vim.diagnostic.config()
+    vim.diagnostic.config({
+        virtual_text = not config.virtual_text,
+        virtual_lines = not config.virtual_lines,
+    })
+end, { desc = 'Toggle Line Diagnostics' })

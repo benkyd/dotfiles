@@ -2,6 +2,7 @@
 fish
 tmux
 neovim
+tree-sitter-cli
 btop
 ripgrep
 fd
