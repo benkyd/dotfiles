@@ -355,11 +355,65 @@ return {
             vim.g.vimtex_view_method = 'zathura'
         end,
     },
-    -- Rust (replaces rust-tools.nvim)
+    -- Rust (replaces rust-tools.nvim). Owns rust-analyzer, don't vim.lsp.enable it.
+    -- Needs `rustup component add rust-analyzer`; debugging needs codelldb or lldb-dap.
     {
         'mrcjkb/rustaceanvim',
-        version = '^5',
-        lazy = false,
+        version = '^9',
+        lazy = false, -- it lazy-loads itself on ft=rust
+        init = function()
+            vim.g.rustaceanvim = {
+                server = {
+                    on_attach = function(_, bufnr)
+                        local function map(lhs, rhs, desc)
+                            vim.keymap.set('n', lhs, rhs, { buffer = bufnr, desc = desc })
+                        end
+                        -- grouped code actions (rust-analyzer specific)
+                        map('<A-CR>', function() vim.cmd.RustLsp('codeAction') end, 'Rust code action')
+                        map('J', function() vim.cmd.RustLsp('joinLines') end, 'Rust join lines')
+                        map('<leader>Rr', function() vim.cmd.RustLsp('runnables') end, 'Rust runnables')
+                        map('<leader>Rt', function() vim.cmd.RustLsp('testables') end, 'Rust testables')
+                        map('<leader>Rd', function() vim.cmd.RustLsp('debuggables') end, 'Rust debuggables')
+                        map('<leader>Rl', function() vim.cmd.RustLsp({ 'runnables', bang = true }) end, 'Rerun last runnable')
+                        map('<leader>Rm', function() vim.cmd.RustLsp('expandMacro') end, 'Expand macro')
+                        map('<leader>Re', function() vim.cmd.RustLsp('explainError') end, 'Explain error')
+                        map('<leader>RD', function() vim.cmd.RustLsp('renderDiagnostic') end, 'Render diagnostic')
+                        map('<leader>Rc', function() vim.cmd.RustLsp('openCargo') end, 'Open Cargo.toml')
+                        map('<leader>Rp', function() vim.cmd.RustLsp('parentModule') end, 'Parent module')
+                        map('<leader>Ro', function() vim.cmd.RustLsp('openDocs') end, 'Open docs.rs')
+                        map('<leader>Rh', function()
+                            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+                        end, 'Toggle inlay hints')
+                        vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+                    end,
+                    default_settings = {
+                        ['rust-analyzer'] = {
+                            cargo = { allFeatures = true, buildScripts = { enable = true } },
+                            check = { command = 'clippy' },
+                            procMacro = { enable = true },
+                            inlayHints = {
+                                closureReturnTypeHints = { enable = 'with_block' },
+                                lifetimeElisionHints = { enable = 'skip_trivial' },
+                            },
+                        },
+                    },
+                },
+            }
+        end,
+    },
+    -- Cargo.toml: crate versions, features, completion via in-process LSP
+    {
+        'saecki/crates.nvim',
+        tag = 'stable',
+        event = { 'BufRead Cargo.toml' },
+        opts = {
+            lsp = {
+                enabled = true,
+                actions = true,
+                completion = true,
+                hover = true,
+            },
+        },
     },
     -- LSP progress indicator
     {

@@ -4,6 +4,8 @@
 require('nvim-treesitter').install({
     "c",
     "cpp",
+    "rust",
+    "toml",
     "lua",
     "python",
     "javascript",
