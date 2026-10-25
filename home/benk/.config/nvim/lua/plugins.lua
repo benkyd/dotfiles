@@ -10,10 +10,17 @@ return {
                 keywordsStyle = { italic = true },
                 statementStyle = { bold = true },
             })
+            -- Transparent bg so catppuccin mocha terminal bg shows through.
+            -- nvim_set_hl replaces the whole group, so keep the theme's fg.
+            local function clear_bg()
+                for _, group in ipairs({ 'Normal', 'NormalFloat' }) do
+                    local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+                    hl.bg = nil
+                    vim.api.nvim_set_hl(0, group, hl)
+                end
+            end
             vim.cmd('colorscheme kanagawa')
-            -- Transparent bg so catppuccin mocha terminal bg shows through
-            vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
-            vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
+            clear_bg()
 
             vim.keymap.set('n', '<leader>tt', function()
                 if vim.o.background == 'dark' then
@@ -22,8 +29,7 @@ return {
                 else
                     vim.o.background = 'dark'
                     vim.cmd('colorscheme kanagawa')
-                    vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
-                    vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
+                    clear_bg()
                 end
             end, { desc = 'Toggle light/dark theme' })
         end
@@ -39,6 +45,8 @@ return {
     {
         'folke/snacks.nvim',
         lazy = false,
+        priority = 1000,
+        opts = {},
     },
     {
         'tzachar/local-highlight.nvim',
@@ -295,6 +303,13 @@ return {
     },
     {
         'benkyd/nvim-hardline',
+        init = function()
+            -- hardline's lsp part still calls vim.lsp.buf_get_clients(),
+            -- which 0.12 removed; point it at the replacement
+            vim.lsp.buf_get_clients = function(bufnr)
+                return vim.lsp.get_clients({ bufnr = bufnr or 0 })
+            end
+        end,
         opts = {},
     },
     -- FUNCTIONAL CODING STUFF
@@ -356,13 +371,19 @@ return {
         end,
     },
     -- Rust (replaces rust-tools.nvim). Owns rust-analyzer, don't vim.lsp.enable it.
-    -- Needs `rustup component add rust-analyzer`; debugging needs codelldb or lldb-dap.
+    -- Needs Neovim >= 0.12 and rust-analyzer on PATH (brew/pacman rust-analyzer,
+    -- or `rustup component add rust-analyzer`). Debugging uses lldb-dap.
     {
         'mrcjkb/rustaceanvim',
         version = '^9',
         lazy = false, -- it lazy-loads itself on ft=rust
         init = function()
             vim.g.rustaceanvim = {
+                dap = {
+                    adapter = function()
+                        return require('lldb').adapter() or false
+                    end,
+                },
                 server = {
                     on_attach = function(_, bufnr)
                         local function map(lhs, rhs, desc)

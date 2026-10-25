@@ -16,6 +16,8 @@ typescript-language-server
 pyright
 bash-language-server
 cmake
+rust
+rust-analyzer
 node
 python@3.14
 syncthing

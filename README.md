@@ -30,24 +30,38 @@ Dependencies (`rich`, `questionary`) are auto-installed on first run.
 
 Running `python3 bootstrap.py` drops you into a TUI. Pick a mode:
 
-- **Set up this machine** — install packages, shell tooling, sync dotfiles. use this on a fresh machine.
-- **Apply dotfiles** — push repo → `$HOME`. skips packages.
-- **Save changes** — pull edits you made on this machine back into the repo.
+- **Sync** — `git pull`, then move every change in whichever direction it needs to go. the everyday option.
 - **Check status** — see what's drifted. nothing is changed.
+- **Show diffs** — see exactly what differs, file by file.
+- **Apply dotfiles** — repo → machine only. local edits are kept.
+- **Save changes** — machine → repo only, then offers to commit.
+- **Set up this machine** — install missing packages, deploy dotfiles, set up shell tooling. use this on a fresh machine.
 
 Or pass a mode directly to skip the TUI:
 
 ```bash
-python3 bootstrap.py install
-python3 bootstrap.py copy
-python3 bootstrap.py pull
+python3 bootstrap.py sync
 python3 bootstrap.py status
-python3 bootstrap.py add ~/.config/something.conf   # start tracking a new file
+python3 bootstrap.py diff [path...]
+python3 bootstrap.py apply                          # alias: copy
+python3 bootstrap.py save                           # alias: pull
+python3 bootstrap.py install
+python3 bootstrap.py add ~/.config/something.conf   # start tracking files or dirs
 ```
 
-## per-file variation
+## how sync decides what's newer
 
-If you've edited something on a work machine and don't want to clobber it or pull it back, the sync steps show a per-file checkbox for any file that's newer on the machine than in the repo. just uncheck what you want to skip.
+Not by timestamps — git clone/checkout/pull stamp everything with "now". Files are compared by content against the version last synced on this machine (kept in `~/.local/state/dotfiles/state.json`):
+
+- only the repo changed → deployed
+- only this machine changed → saved into the repo
+- both changed → you choose: view the diff, take either side, or merge in `nvim -d`
+
+On a machine with no sync state yet, a file matching any version in its git history counts as "repo is newer"; anything else asks. Non-interactive runs never guess — they skip and list what needs a decision. Anything overwritten is backed up to `~/dotfiles.bak/<timestamp>/`.
+
+## per-machine exclusions
+
+List paths in `~/.dotignore` to never sync them on that machine (gitignore-style: `dir/`, `/anchored/path`, `*.glob`).
 
 ## OS-specific paths
 
@@ -55,6 +69,7 @@ Some paths only make sense on one OS and are excluded automatically:
 
 - `Library/` — macOS only (iTerm2 prefs, etc.)
 - `.config/wezterm/` — Linux only (iTerm2 is used on Mac)
+- `etc/` — Linux only, applied with sudo (`*.md` files there are notes and aren't deployed)
 
 ## themes
 

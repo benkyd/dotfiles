@@ -16,6 +16,9 @@ typescript-language-server
 pyright
 bash-language-server
 cmake
+rust
+rust-analyzer
+lldb
 nodejs
 python
 nginx

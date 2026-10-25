@@ -3,30 +3,29 @@ local luasnip = require('luasnip')
 local dap = require('dap')
 local dapui = require('dapui')
 
-dap.configurations = {
-    cpp = {
-        {
-            name = "Launch",
-            type = "codelldb",
-            request = "launch",
-            program = function()
-                return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/', 'file')
-            end,
-            cwd = '${workspaceFolder}',
-            stopOnEntry = true,
-        },
+local cpp_launch = {
+    {
+        name = "Launch",
+        type = "lldb",
+        request = "launch",
+        program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/', 'file')
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = true,
     },
 }
+dap.configurations.c = cpp_launch
+dap.configurations.cpp = cpp_launch
 
-dap.adapters.codelldb = {
-    type = 'server',
-    port = '13000',
-    host = '127.0.0.1',
-    executable = {
-        command = vim.fn.stdpath('data') .. '/mason/bin/codelldb',
-        args = {"--port", "13000"}
-    }
-}
+-- Resolved lazily so startup doesn't shell out to xcrun (see lua/lldb.lua)
+dap.adapters.lldb = function(callback)
+    local adapter = require('lldb').adapter()
+    if not adapter then
+        return vim.notify('lldb-dap not found (install Xcode or the lldb package)', vim.log.levels.ERROR)
+    end
+    callback(adapter)
+end
 
 dapui.setup({
     icons = { expanded = "➡️", collapsed = "⬇️" },
