@@ -1,0 +1,16 @@
+# Environment Variables (macOS Homebrew PATH)
+env = PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+# Theme & Cursor
+theme = Catppuccin Mocha
+cursor-color = #c6a0f6
+cursor-text = #000000
+
+# Font & Sizing
+font-size = 10
+adjust-cell-height = 0
+window-step-resize = false
+
+# Keybindings
+keybind = alt+enter=unbind
+
