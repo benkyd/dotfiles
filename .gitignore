@@ -6,3 +6,6 @@ node_modules/
 /target
 .DS_Store
 __pycache__/
+
+# per-machine: which trust profile this machine uses (set on first run)
+/.machine

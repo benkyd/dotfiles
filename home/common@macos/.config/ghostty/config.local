@@ -1,0 +1,4 @@
+# macOS: Ghostty launched from Finder/Dock has a minimal PATH, so it can't find
+# Homebrew's fish. Point at it directly.
+command = /opt/homebrew/bin/fish
+shell-integration = fish

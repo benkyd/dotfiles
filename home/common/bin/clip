@@ -1,0 +1,13 @@
+#!/bin/sh
+data=$(cat)
+
+# Try local display tools first
+printf '%s' "$data" | wl-copy 2>/dev/null && exit 0
+printf '%s' "$data" | xclip -selection clipboard 2>/dev/null && exit 0
+printf '%s' "$data" | xsel --clipboard --input 2>/dev/null && exit 0
+printf '%s' "$data" | pbcopy 2>/dev/null && exit 0
+
+# Fallback: OSC 52 — passes through tmux → SSH → iTerm2
+encoded=$(printf '%s' "$data" | base64 | tr -d '\n')
+printf '\033]52;c;%s\007' "$encoded" > /dev/tty
+

@@ -18,6 +18,8 @@ bash-language-server
 cmake
 rust
 rust-analyzer
+zig
+zls
 node
 python@3.14
 syncthing

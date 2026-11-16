@@ -17,6 +17,7 @@ local cpp_launch = {
 }
 dap.configurations.c = cpp_launch
 dap.configurations.cpp = cpp_launch
+dap.configurations.zig = cpp_launch -- zig emits DWARF; lldb-dap debugs it like C
 
 -- Resolved lazily so startup doesn't shell out to xcrun (see lua/lldb.lua)
 dap.adapters.lldb = function(callback)
@@ -240,6 +241,18 @@ vim.lsp.config('lua_ls', {
     },
 })
 
+-- Zig: AST checks come for free; real compiler errors need build-on-save, which runs
+-- `zig build check` (add a `check` step to build.zig to get them in a project).
+vim.lsp.config('zls', {
+    settings = {
+        zls = {
+            enable_build_on_save = true,
+            build_on_save_step = 'check',
+            warn_style = true,
+        },
+    },
+})
+
 -- Enable all servers — just need the binaries on PATH
 -- (rust_analyzer is managed by rustaceanvim)
 vim.lsp.enable({
@@ -252,6 +265,7 @@ vim.lsp.enable({
     'jsonls',
     'bashls',
     'cmake',
+    'zls', -- Zig; zls must match your zig version (brew installs them together)
 })
 
 local cmp_kinds = {

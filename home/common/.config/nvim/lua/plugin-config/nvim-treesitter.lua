@@ -1,3 +1,15 @@
+-- macOS: if a newer SDK than the active Xcode toolchain is installed (e.g. a macOS 27 SDK
+-- under /Library/Developer/CommandLineTools with Xcode 26), plain `cc` picks that SDK and
+-- the linker rejects it ("unknown architecture arm64e.x1"), so every parser build fails.
+-- Pin builds spawned from nvim to the SDK that belongs to the active toolchain.
+if vim.fn.has('mac') == 1 and (vim.env.SDKROOT or '') == '' then
+    local out = vim.system({ 'xcrun', '--sdk', 'macosx', '--show-sdk-path' }, { text = true }):wait(5000)
+    local sdk = out.code == 0 and vim.trim(out.stdout) or ''
+    if sdk ~= '' then
+        vim.env.SDKROOT = sdk
+    end
+end
+
 -- nvim-treesitter `main` branch: it only installs parsers/queries now,
 -- highlighting is neovim's own vim.treesitter.start().
 -- Needs `tree-sitter-cli` (>= 0.26.1) and a C compiler to build parsers.
@@ -6,6 +18,7 @@ require('nvim-treesitter').install({
     "cpp",
     "rust",
     "toml",
+    "zig",
     "lua",
     "python",
     "javascript",

@@ -1,0 +1,23 @@
+# profiles.toml — trust levels.
+#
+# `ladder` lists trust levels lowest → highest. A machine's profile names the
+# highest level it is trusted with and receives every level up to it, so
+# `work` ⊂ `personal`. Each level is a directory of files, plus OS variants:
+#
+#     home/<level>/…        mirrors $HOME      (everywhere at that trust level)
+#     home/<level>@<os>/…   only on that OS    (os = macos | linux | arch)
+#     etc/<level>[@<os>]/…  mirrors /etc, Linux only
+#
+# Layers apply lowest first and later ones override earlier ones. A file in a
+# layer a machine doesn't apply never reaches it — so new files fail closed:
+# `dot add` puts them in the highest layer; promote with `dot move`.
+
+ladder = ["common", "personal"]
+
+[profiles.work]
+trust = "common"
+desc  = "work / shared machine — editor, shell and terminal config only"
+
+[profiles.personal]
+trust = "personal"
+desc  = "my own machines — everything"

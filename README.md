@@ -1,76 +1,77 @@
 # dotfiles
 
-Centralized database of how my machines should be set up. All Macs are identical to each other, all Arch machines are identical to each other. OS is the only axis of variation.
+How my machines should be set up. Two variables, handled differently:
+
+- **Trust** is a *ladder*. `work` ⊂ `personal`: each level adds a layer on top of the one below.
+- **OS** is a *filter*. It adds OS-specific variants on top.
 
 ```
 dotfiles/
-  home/benk/            mirrors $HOME — files here get synced to the machine
-  etc/                  mirrors /etc — applied with sudo on Linux
-  packages/
-    brew.txt            Homebrew formulae (all Macs)
-    brew-casks.txt      Homebrew casks (all Macs)
-    arch.txt            yay packages (all Arch machines)
-  themes/
-    catppuccin-iterm/   submodule: catppuccin/iterm
-  setup.toml            declarative tooling config (fish + tmux plugins)
-  bootstrap.py          the manager — run this
+  dot                   launcher — symlink to ~/.local/bin/dot and run `dot` anywhere
+  dot.py                the manager
+  profiles.toml         the trust ladder and the profiles
+  home/<layer>/         mirrors $HOME
+  etc/<layer>/          mirrors /etc (Linux only, applied with sudo)
+  packages/             brew.txt, brew-casks.txt, arch.txt — new-machine setup, split by OS only
+  setup.toml            fish + tmux plugins
+  themes/               submodules
 ```
+
+## layers
+
+A layer is a directory named `<level>` or `<level>@<os>` (os = `macos`, `linux`, `arch`). A machine applies, for every level it's trusted with, `<level>` then `<level>@<os>`. Later layers override earlier ones.
+
+| machine      | layers applied                                                          |
+|--------------|-------------------------------------------------------------------------|
+| work Mac     | `common`, `common@macos`                                                |
+| personal Mac | `common`, `common@macos`, `personal`, `personal@macos`                  |
+| Arch PC      | `common`, `common@linux`, `common@arch`, `personal`, `personal@linux`, `personal@arch` |
+
+```
+home/common/            nvim, fish, ghostty, zed, tmux, vim      → every machine
+home/personal/          zshrc, btop, kitty, wallpapers, ssh      → personal machines
+home/personal@linux/    i3, polybar, awesome, rofi, wezterm ...  → my Linux PC
+home/personal@macos/    iTerm2 prefs                             → personal Mac
+etc/personal@linux/     fstab, nginx                             → my Linux PC
+```
+
+Only layers that exist matter. A file in a layer your machine doesn't apply **never reaches it**, so new files fail closed. Typo'd layer names are ignored with a warning.
+
+**Per-OS differences without templates:** prefer configs that adapt at runtime (tmux `if-shell`, wezterm Lua, ghostty's fish-finding `command`). Otherwise put the OS bit in an OS layer — as a `conf.d/` drop-in, an include file (ghostty's `config-file = ?config.local`), or the same path overriding the generic one.
 
 ## setup
 
 ```bash
 git clone --recurse-submodules git@github.com:benkyd/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-python3 bootstrap.py
+ln -s ~/dotfiles/dot ~/.local/bin/dot
+dot
 ```
 
-Dependencies (`rich`, `questionary`) are auto-installed on first run.
+`dot` keeps a private venv (`~/.local/share/dotfiles/venv`), so it works regardless of the system Python or an active venv. First run asks what kind of machine this is (`work` / `personal`) and saves it to `~/dotfiles/.machine` — gitignored, so each machine keeps its own. Change it any time with `dot profile`; switching never deletes files.
 
 ## usage
 
-Running `python3 bootstrap.py` drops you into a TUI. Pick a mode:
-
-- **Sync** — `git pull`, then move every change in whichever direction it needs to go. the everyday option.
-- **Check status** — see what's drifted. nothing is changed.
-- **Show diffs** — see exactly what differs, file by file.
-- **Apply dotfiles** — repo → machine only. local edits are kept.
-- **Save changes** — machine → repo only, then offers to commit.
-- **Set up this machine** — install missing packages, deploy dotfiles, set up shell tooling. use this on a fresh machine.
-
-Or pass a mode directly to skip the TUI:
-
 ```bash
-python3 bootstrap.py sync
-python3 bootstrap.py status
-python3 bootstrap.py diff [path...]
-python3 bootstrap.py apply                          # alias: copy
-python3 bootstrap.py save                           # alias: pull
-python3 bootstrap.py install
-python3 bootstrap.py add ~/.config/something.conf   # start tracking files or dirs
+dot                         # interactive menu
+dot sync                    # git pull, then sync both ways — the everyday command
+dot status                  # what differs (changes nothing)
+dot diff [path...]          # exactly what differs
+dot apply                   # repo → machine only   (alias: copy)
+dot save                    # machine → repo only   (alias: pull)
+dot install                 # new machine: packages → dotfiles → shell tooling
+dot profile [work|personal]
+dot add [--to LAYER] ~/.config/foo     # start tracking; default layer = highest trust (fail closed)
+dot move ~/.config/foo common          # promote/demote between layers (git mv)
 ```
+
+`~/.dotignore` adds per-machine exclusions (gitignore-style, paths relative to `$HOME`).
 
 ## how sync decides what's newer
 
-Not by timestamps — git clone/checkout/pull stamp everything with "now". Files are compared by content against the version last synced on this machine (kept in `~/.local/state/dotfiles/state.json`):
+Not by timestamps — git stamps everything "now". Files are compared by content against the version last synced on this machine (`~/.local/state/dotfiles/state.json`):
 
 - only the repo changed → deployed
-- only this machine changed → saved into the repo
+- only this machine changed → saved into the repo (into whichever layer provides the file)
 - both changed → you choose: view the diff, take either side, or merge in `nvim -d`
 
-On a machine with no sync state yet, a file matching any version in its git history counts as "repo is newer"; anything else asks. Non-interactive runs never guess — they skip and list what needs a decision. Anything overwritten is backed up to `~/dotfiles.bak/<timestamp>/`.
-
-## per-machine exclusions
-
-List paths in `~/.dotignore` to never sync them on that machine (gitignore-style: `dir/`, `/anchored/path`, `*.glob`).
-
-## OS-specific paths
-
-Some paths only make sense on one OS and are excluded automatically:
-
-- `Library/` — macOS only (iTerm2 prefs, etc.)
-- `.config/wezterm/` — Linux only (iTerm2 is used on Mac)
-- `etc/` — Linux only, applied with sudo (`*.md` files there are notes and aren't deployed)
-
-## themes
-
-Catppuccin Mocha is the colour scheme. The iTerm2 colour preset lives at `themes/catppuccin-iterm/colors/catppuccin-mocha.itermcolors`. Import it via iTerm2 → Profiles → Colors → Color Presets → Import.
+On a machine with no sync state, a file matching any version in its git history counts as "repo is newer"; anything else asks. Non-interactive runs never guess — they skip and list what needs a decision. Anything overwritten is backed up to `~/dotfiles.bak/<timestamp>/`.

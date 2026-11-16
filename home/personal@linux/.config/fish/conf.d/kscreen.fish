@@ -1,11 +1,5 @@
-if test -d /opt/homebrew/bin
-    fish_add_path /opt/homebrew/bin/
-end
-
-if status is-interactive
-    alias v 'nvim'
-
-function svm
+# My Linux PC's monitor layout (KDE). Loaded automatically by fish from conf.d/.
+function svm --description 'lock the session and turn the monitors off'
     loginctl lock-session
     kscreen-doctor \
         output.DP-3.disable \
@@ -13,7 +7,7 @@ function svm
         output.HDMI-A-5.disable
 end
 
-function dtm
+function dtm --description 'turn the monitors back on with the desktop layout'
     kscreen-doctor \
         output.DP-3.enable \
         output.DP-4.enable \
@@ -31,5 +25,3 @@ function dtm
         output.HDMI-A-5.position.0,297 \
         output.HDMI-A-5.rotation.left
 end
-end
-

@@ -1,0 +1,17 @@
+# Shared across every machine — no OS-specific values in here.
+# OS bits come from a layer that provides ~/.config/ghostty/config.local
+# (common@macos/, common@linux/, ...). Missing file is fine (the `?`).
+config-file = ?config.local
+
+# Theme & Cursor
+theme = Catppuccin Mocha
+cursor-color = #c6a0f6
+cursor-text = #000000
+
+# Font & Sizing
+font-size = 10
+adjust-cell-height = 0
+window-step-resize = false
+
+# Keybindings
+keybind = alt+enter=unbind
