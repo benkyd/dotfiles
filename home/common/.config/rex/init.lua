@@ -344,30 +344,24 @@ rex.action{
     end
     rex.client.queue("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
     rex.client.queue("client.setting.developer.experimental.new_quick_switcher", { value = true })
+    -- Text pinned to the bottom of each pane, so nvim's statusline sits on the edge, with
+    -- the leftover strip in the program's background colour
+    rex.client.queue("client.setting.developer.experimental.terminal_anchor", { value = "bottom" })
+    rex.client.queue("client.setting.interface.pane_padding.color", { value = "always" })
   end,
 }
 
--- Font size for every pane at once, as in other terminals: Rex's own cmd+= / cmd+- /
--- cmd+0 only resize the focused pane. One press is 1pt (the setting steps by 0.5pt).
-rex.bind("cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
-rex.bind("shift+cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
-rex.bind("cmd+-", "client.setting.terminal.typography.size", { decrease = 2 })
-rex.bind("cmd+0", "client.setting.terminal.typography.size", { reset = true })
 
--- Font size for the focused pane only (Rex's own pane zoom): C-b + / C-b - then keep
--- pressing + or - in the repeat mode, C-b = puts the pane back to the global size
+-- C-b =: make the global font size match the focused pane's zoom (cmd+= / cmd+- zoom one
+-- pane), so every pane that isn't zoomed on its own follows it. font-sync.py runs in the
+-- background because each step waits for the app to redraw.
 rex.action{
-  name = "tmux_pane_font_repeat",
-  title = "Pane Font Size and Repeat",
-  args = { action = "string" },
+  name = "tmux_font_sync",
+  title = "Sync Font Size to This Pane",
   run = function(ctx, args)
-    rex.client.queue(args.action, {})
-    rex.client.queue("client.mode.enter", { name = "repeat" })
+    local script = os.getenv("HOME") .. "/.config/rex/font-sync.py"
+    rex.exec{ "/bin/sh", "-c", "nohup /usr/bin/python3 \"$0\" \"$1\" \"$2\" \"$3\" >/dev/null 2>&1 &",
+      script, ctx.client_id, ctx.session_id, ctx.block_id }
   end,
 }
-rex.bind("ctrl+b>shift+=", "tmux_pane_font_repeat", { action = "client.font.increase" })
-rex.bind("ctrl+b>-", "tmux_pane_font_repeat", { action = "client.font.decrease" })
-rex.bind("ctrl+b>=", "client.font.reset")
-rex.bind("repeat/shift+=", "client.font.increase")
-rex.bind("repeat/=", "client.font.increase")
-rex.bind("repeat/-", "client.font.decrease")
+rex.bind("ctrl+b>=", "tmux_font_sync")
