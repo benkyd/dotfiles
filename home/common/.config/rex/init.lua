@@ -346,3 +346,10 @@ rex.action{
     rex.client.queue("client.setting.developer.experimental.new_quick_switcher", { value = true })
   end,
 }
+
+-- Font size for every pane at once, as in other terminals: Rex's own cmd+= / cmd+- /
+-- cmd+0 only resize the focused pane. One press is 1pt (the setting steps by 0.5pt).
+rex.bind("cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
+rex.bind("shift+cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
+rex.bind("cmd+-", "client.setting.terminal.typography.size", { decrease = 2 })
+rex.bind("cmd+0", "client.setting.terminal.typography.size", { reset = true })
