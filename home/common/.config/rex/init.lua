@@ -307,15 +307,15 @@ rex.action{
   end,
 }
 
--- Homebrew installs fish under /opt/homebrew on Apple silicon and /usr/local on Intel;
--- Linux packages put it in /usr/bin
-local function find_fish()
-  for _, path in ipairs({ "/opt/homebrew/bin/fish", "/usr/local/bin/fish", "/usr/bin/fish" }) do
-    local f = io.open(path, "r")
-    if f then
-      f:close()
-      return path
-    end
+-- Per-OS settings from ~/.config/rex/local.lua, which the dotfiles keep in an OS layer
+-- (common@macos sets Homebrew's fish). Without one, nothing OS-specific is set.
+local machine = {}
+do
+  local path = os.getenv("HOME") .. "/.config/rex/local.lua"
+  local f = io.open(path, "r")
+  if f then
+    f:close()
+    machine = dofile(path) or {}
   end
 end
 
@@ -338,9 +338,8 @@ rex.action{
   run = function(ctx, args)
     if on_macos() then
       rex.client.queue("client.theme.import", { path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha" })
-      local fish = find_fish()
-      if fish then
-        rex.client.queue("client.setting.terminal.shell.command", { value = fish })
+      if machine.fish then
+        rex.client.queue("client.setting.terminal.shell.command", { value = machine.fish })
       end
     end
     rex.client.queue("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
