@@ -353,3 +353,21 @@ rex.bind("cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
 rex.bind("shift+cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
 rex.bind("cmd+-", "client.setting.terminal.typography.size", { decrease = 2 })
 rex.bind("cmd+0", "client.setting.terminal.typography.size", { reset = true })
+
+-- Font size for the focused pane only (Rex's own pane zoom): C-b + / C-b - then keep
+-- pressing + or - in the repeat mode, C-b = puts the pane back to the global size
+rex.action{
+  name = "tmux_pane_font_repeat",
+  title = "Pane Font Size and Repeat",
+  args = { action = "string" },
+  run = function(ctx, args)
+    rex.client.queue(args.action, {})
+    rex.client.queue("client.mode.enter", { name = "repeat" })
+  end,
+}
+rex.bind("ctrl+b>shift+=", "tmux_pane_font_repeat", { action = "client.font.increase" })
+rex.bind("ctrl+b>-", "tmux_pane_font_repeat", { action = "client.font.decrease" })
+rex.bind("ctrl+b>=", "client.font.reset")
+rex.bind("repeat/shift+=", "client.font.increase")
+rex.bind("repeat/=", "client.font.increase")
+rex.bind("repeat/-", "client.font.decrease")
