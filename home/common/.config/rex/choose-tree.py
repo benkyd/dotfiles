@@ -6,7 +6,7 @@ TREE_JSON is a list of sessions: {id, label, current, active, tabs: [{id, name}]
 
 j/k or arrows move, h/l or left/right fold and unfold a session, g/G go to the top or
 bottom, r renames the session or tab, x kills it after a y/n check, enter goes to it,
-q or escape closes.
+q or escape closes. It also closes when its pane loses focus, as tmux's tree does.
 """
 import curses
 import json
@@ -15,6 +15,25 @@ import subprocess
 import sys
 
 REX = os.path.join(os.environ["REX_BIN_DIR"], "rex") if os.environ.get("REX_BIN_DIR") else "rex"
+
+
+FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
+
+
+def escape(scr):
+    """After an escape byte, tell a focus report (ESC [ I or ESC [ O, sent because this
+    pane turned on mode 1004) from the escape key itself."""
+    scr.nodelay(True)
+    try:
+        if scr.getch() == ord("["):
+            follow = scr.getch()
+            if follow == ord("I"):
+                return FOCUS_IN
+            if follow == ord("O"):
+                return FOCUS_OUT
+        return 27
+    finally:
+        scr.nodelay(False)
 
 
 def rows(sessions, folded):
@@ -56,6 +75,10 @@ def draw(scr, sessions, folded, cursor, status=""):
     scr.refresh()
 
 
+class FocusLost(Exception):
+    pass
+
+
 def prompt(scr, label, value):
     """Edit one line at the bottom of the pane. Returns the text, or None on escape."""
     curses.curs_set(1)
@@ -73,6 +96,11 @@ def prompt(scr, label, value):
             if key in ("\n", "\r", curses.KEY_ENTER):
                 return text.strip()
             if key == "\x1b":
+                seen = escape(scr)
+                if seen == FOCUS_IN:
+                    continue
+                if seen == FOCUS_OUT:
+                    raise FocusLost
                 return None
             if key in ("\x7f", "\b", curses.KEY_BACKSPACE):
                 text = text[:-1]
@@ -113,7 +141,15 @@ def confirm(scr, question):
     scr.clrtoeol()
     scr.addnstr(height - 1, 0, f"{question} (y/n)", width - 1, curses.A_BOLD)
     scr.refresh()
-    return scr.getch() in (ord("y"), ord("Y"))
+    while True:
+        key = scr.getch()
+        if key == 27:
+            seen = escape(scr)
+            if seen == FOCUS_IN:
+                continue
+            if seen == FOCUS_OUT:
+                raise FocusLost
+        return key in (ord("y"), ord("Y"))
 
 
 def kill(scr, sessions, s, kind, ti):
@@ -145,8 +181,16 @@ def kill(scr, sessions, s, kind, ti):
 
 
 def choose(scr, sessions):
+    try:
+        return browse(scr, sessions)
+    except FocusLost:
+        return None
+
+
+def browse(scr, sessions):
     curses.curs_set(0)
     curses.use_default_colors()
+    os.write(sys.stdout.fileno(), b"\x1b[?1004h")  # report focus changes
     folded = set()
     lines = rows(sessions, folded)
     cursor = 0
@@ -161,6 +205,12 @@ def choose(scr, sessions):
         draw(scr, sessions, folded, cursor, status)
         status = ""
         key = scr.getch()
+        if key == 27:
+            key = escape(scr)
+            if key == FOCUS_IN:
+                continue
+            if key == FOCUS_OUT:
+                return None
         kind, si, ti = lines[cursor]
         s = sessions[si]
         if key in (ord("j"), curses.KEY_DOWN):
