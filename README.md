@@ -28,7 +28,7 @@ A layer is a directory named `<level>` or `<level>@<os>` (os = `macos`, `linux`,
 | Arch PC      | `common`, `common@linux`, `common@arch`, `personal`, `personal@linux`, `personal@arch` |
 
 ```
-home/common/            nvim, fish, ghostty, zed, tmux, vim      → every machine
+home/common/            nvim, fish, ghostty, zed, tmux, vim, rex → every machine
 home/personal/          zshrc, btop, kitty, wallpapers, ssh      → personal machines
 home/personal@linux/    i3, polybar, awesome, rofi, wezterm ...  → my Linux PC
 home/personal@macos/    iTerm2 prefs                             → personal Mac

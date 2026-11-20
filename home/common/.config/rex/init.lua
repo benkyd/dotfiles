@@ -307,7 +307,8 @@ rex.action{
   end,
 }
 
--- Homebrew installs fish under /opt/homebrew on Apple silicon and /usr/local on Intel
+-- Homebrew installs fish under /opt/homebrew on Apple silicon and /usr/local on Intel;
+-- Linux packages put it in /usr/bin
 local function find_fish()
   for _, path in ipairs({ "/opt/homebrew/bin/fish", "/usr/local/bin/fish", "/usr/bin/fish" }) do
     local f = io.open(path, "r")
@@ -319,15 +320,28 @@ local function find_fish()
 end
 
 -- One-off setup for settings init.lua cannot hold: run "apply-my-settings" from the
--- command palette (C-b :) on a new machine
+-- command palette (C-b :) on a new machine. The theme file and shell are paths on this
+-- server's machine, which only the Mac app can use when the server is the Mac itself; a
+-- Linux server starts the account's login shell, so set that with chsh there.
+local function on_macos()
+  local f = io.open("/System/Library/CoreServices/SystemVersion.plist", "r")
+  if f then
+    f:close()
+    return true
+  end
+  return false
+end
+
 rex.action{
   name = "apply_my_settings",
   title = "apply-my-settings",
   run = function(ctx, args)
-    rex.client.queue("client.theme.import", { path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha" })
-    local fish = find_fish()
-    if fish then
-      rex.client.queue("client.setting.terminal.shell.command", { value = fish })
+    if on_macos() then
+      rex.client.queue("client.theme.import", { path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha" })
+      local fish = find_fish()
+      if fish then
+        rex.client.queue("client.setting.terminal.shell.command", { value = fish })
+      end
     end
     rex.client.queue("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
     rex.client.queue("client.setting.developer.experimental.new_quick_switcher", { value = true })
