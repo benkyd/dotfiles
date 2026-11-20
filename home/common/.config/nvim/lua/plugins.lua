@@ -10,17 +10,7 @@ return {
                 keywordsStyle = { italic = true },
                 statementStyle = { bold = true },
             })
-            -- Transparent bg so catppuccin mocha terminal bg shows through.
-            -- nvim_set_hl replaces the whole group, so keep the theme's fg.
-            local function clear_bg()
-                for _, group in ipairs({ 'Normal', 'NormalFloat' }) do
-                    local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
-                    hl.bg = nil
-                    vim.api.nvim_set_hl(0, group, hl)
-                end
-            end
             vim.cmd('colorscheme kanagawa')
-            clear_bg()
 
             vim.keymap.set('n', '<leader>tt', function()
                 if vim.o.background == 'dark' then
@@ -29,7 +19,6 @@ return {
                 else
                     vim.o.background = 'dark'
                     vim.cmd('colorscheme kanagawa')
-                    clear_bg()
                 end
             end, { desc = 'Toggle light/dark theme' })
         end
@@ -457,7 +446,6 @@ return {
                 lua = { 'stylua' },
                 python = { 'black' },
                 rust = { 'rustfmt' },
-                zig = { 'zigfmt' }, -- `zig fmt`
             },
         },
     },
