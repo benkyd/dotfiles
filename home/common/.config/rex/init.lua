@@ -351,17 +351,3 @@ rex.action{
   end,
 }
 
-
--- C-b =: make the global font size match the focused pane's zoom (cmd+= / cmd+- zoom one
--- pane), so every pane that isn't zoomed on its own follows it. font-sync.py runs in the
--- background because each step waits for the app to redraw.
-rex.action{
-  name = "tmux_font_sync",
-  title = "Sync Font Size to This Pane",
-  run = function(ctx, args)
-    local script = os.getenv("HOME") .. "/.config/rex/font-sync.py"
-    rex.exec{ "/bin/sh", "-c", "nohup /usr/bin/python3 \"$0\" \"$1\" \"$2\" \"$3\" >/dev/null 2>&1 &",
-      script, ctx.client_id, ctx.session_id, ctx.block_id }
-  end,
-}
-rex.bind("ctrl+b>=", "tmux_font_sync")
