@@ -348,6 +348,14 @@ rex.action{
     -- the leftover strip in the program's background colour
     rex.client.queue("client.setting.developer.experimental.terminal_anchor", { value = "bottom" })
     rex.client.queue("client.setting.interface.pane_padding.color", { value = "always" })
+    -- A pink border on the focused pane instead of dimming the others, as tmux's
+    -- pane-active-border-style fg=#f5bde6 (magenta is Catppuccin pink in the theme)
+    rex.client.queue("client.setting.interface.active_panes.active_border", { value = true })
+    rex.client.queue("client.setting.interface.active_panes.active_border_color", { value = "magenta" })
+    rex.client.queue("client.setting.interface.active_panes.active_border_opacity", { value = 1 })
+    rex.client.queue("client.setting.interface.active_panes.active_border_animation", { value = "off" })
+    rex.client.queue("client.setting.interface.active_panes.fade", { value = "off" })
+    rex.client.queue("client.setting.interface.active_panes.inactive_window", { value = false })
   end,
 }
 
