@@ -4,8 +4,9 @@
 argv: TREE_JSON CLIENT_ID
 TREE_JSON is a list of sessions: {id, label, current, active, tabs: [{id, name}]}.
 
-j/k or arrows move, h/l or left/right fold and unfold a session, g/G go to the top or
-bottom, r renames the session or tab, x kills it after a y/n check, enter goes to it,
+The top row makes a new session. j/k or arrows move, wrapping round at either end, h/l
+or left/right fold and unfold a session, g/G go to the top or bottom, J/K move the session
+or tab down or up the order, r renames it, x kills it after a y/n check, enter goes to it,
 q or escape closes. It also closes when its pane loses focus, as tmux's tree does.
 """
 import curses
@@ -36,8 +37,11 @@ def escape(scr):
         scr.nodelay(False)
 
 
+NEW = ("new", None, None)
+
+
 def rows(sessions, folded):
-    out = []
+    out = [NEW]
     for si, s in enumerate(sessions):
         out.append(("session", si, None))
         if s["id"] not in folded:
@@ -52,8 +56,11 @@ def draw(scr, sessions, folded, cursor, status=""):
     lines = rows(sessions, folded)
     top = max(0, cursor - height + 2)
     for y, (kind, si, ti) in enumerate(lines[top:top + height - 1]):
-        s = sessions[si]
-        if kind == "session":
+        s = sessions[si] if si is not None else None
+        if kind == "new":
+            text = "+ new session"
+            attr = curses.A_DIM
+        elif kind == "session":
             mark = "+" if s["id"] in folded else "-"
             count = len(s["tabs"])
             text = f"{mark} {s['label']}: {count} tab{'' if count == 1 else 's'}"
@@ -70,7 +77,7 @@ def draw(scr, sessions, folded, cursor, status=""):
         if top + y == cursor:
             attr |= curses.A_REVERSE
         scr.addnstr(y, 0, text.ljust(width - 1), width - 1, attr)
-    footer = status or "j/k move  h/l fold  r rename  x kill  enter go  q quit"
+    footer = status or "j/k move  J/K reorder  h/l fold  r rename  x kill  enter go  q quit"
     scr.addnstr(height - 1, 0, footer, width - 1, curses.A_DIM)
     scr.refresh()
 
@@ -152,6 +159,25 @@ def confirm(scr, question):
         return key in (ord("y"), ord("Y"))
 
 
+def reorder(sessions, s, kind, si, ti, step):
+    """Swap the session or tab with its neighbour (step 1 is down, -1 up), stopping at
+    either end. Returns (status, row) with the row it has moved to."""
+    if kind == "session":
+        items, i, cmd = sessions, si, [REX, "session", "move"]
+    else:
+        items, i, cmd = s["tabs"], ti, [REX, "window", "move", "-s", s["id"]]
+    row = (kind, si, ti)
+    other = i + step
+    if not 0 <= other < len(items):
+        return "", row
+    where = "--after" if step > 0 else "--before"
+    if subprocess.run(cmd + [items[i]["id"], where, items[other]["id"]],
+                      capture_output=True).returncode:
+        return "move failed", row
+    items[i], items[other] = items[other], items[i]
+    return "", (kind, other, None) if kind == "session" else (kind, si, other)
+
+
 def kill(scr, sessions, s, kind, ti):
     """Kill a session or tab, as tmux's choose-tree x does. Returns (status, quit)."""
     if kind == "session":
@@ -195,9 +221,10 @@ def browse(scr, sessions):
     lines = rows(sessions, folded)
     cursor = 0
     for i, (kind, si, ti) in enumerate(lines):
-        s = sessions[si]
-        if kind == "tab" and s["current"] and s["tabs"][ti]["id"] == s["active"]:
-            cursor = i
+        if kind == "tab":
+            s = sessions[si]
+            if s["current"] and s["tabs"][ti]["id"] == s["active"]:
+                cursor = i
     status = ""
     while True:
         lines = rows(sessions, folded)
@@ -212,15 +239,20 @@ def browse(scr, sessions):
             if key == FOCUS_OUT:
                 return None
         kind, si, ti = lines[cursor]
-        s = sessions[si]
+        s = sessions[si] if si is not None else None
         if key in (ord("j"), curses.KEY_DOWN):
-            cursor += 1
+            cursor = (cursor + 1) % len(lines)
         elif key in (ord("k"), curses.KEY_UP):
-            cursor -= 1
+            cursor = (cursor - 1) % len(lines)
+        elif key in (ord("q"), 27):
+            return None
         elif key == ord("g"):
             cursor = 0
         elif key == ord("G"):
             cursor = len(lines) - 1
+        elif kind == "new":
+            if key in (10, 13, curses.KEY_ENTER):
+                return ("new",)
         elif key in (ord("h"), curses.KEY_LEFT):
             if kind == "tab":
                 cursor = lines.index(("session", si, None))
@@ -228,6 +260,9 @@ def browse(scr, sessions):
                 folded.add(s["id"])
         elif key in (ord("l"), curses.KEY_RIGHT):
             folded.discard(s["id"])
+        elif key in (ord("J"), ord("K")):
+            status, row = reorder(sessions, s, kind, si, ti, 1 if key == ord("J") else -1)
+            cursor = rows(sessions, folded).index(row)
         elif key == ord("r"):
             status = rename(scr, s, kind, ti)
         elif key == ord("x"):
@@ -239,8 +274,6 @@ def browse(scr, sessions):
         elif key in (10, 13, curses.KEY_ENTER):
             window = s["tabs"][ti]["id"] if kind == "tab" else s["active"]
             return s["id"], window
-        elif key in (ord("q"), 27):
-            return None
 
 
 def main():
@@ -257,6 +290,8 @@ def main():
         commands.append([REX, "block", "close", "-s", session, block])
     if choice and choice[0] == "kill":
         commands.append(choice[1])
+    elif choice and choice[0] == "new":
+        commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
         session_id, window_id = choice
         commands.append([REX, "-C", client, "do", "session.select",

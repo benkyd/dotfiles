@@ -118,7 +118,8 @@ rex.bind("ctrl+b>r", "client.config.reload")
 -- tmux defaults: sessions
 rex.bind("ctrl+b>s", "session.switch")
 -- choose-tree (C-b w): every session with its tabs underneath, in a floating pane run by
--- choose-tree.py so it takes vim keys (j/k move, h/l fold, enter goes, q closes).
+-- choose-tree.py so it takes vim keys (j/k move, J/K reorder, h/l fold, enter goes, q
+-- closes), with a new-session row on top.
 -- find-window (C-b f): the same tree in Rex's picker, to filter by typing.
 -- Unnamed tabs show their program and folder.
 local function tab_name(session_id, window, index)
@@ -285,6 +286,16 @@ rex.action{
 rex.action{
   name = "tmux_new_session",
   title = "new-session",
+  run = function(ctx, args)
+    rex.client.queue("session.new", {})
+  end,
+}
+
+-- tmux's short name for new-session, so "new" in the palette matches it exactly and it
+-- comes above Rex's New Window and New Tab
+rex.action{
+  name = "tmux_new",
+  title = "new",
   run = function(ctx, args)
     rex.client.queue("session.new", {})
   end,
