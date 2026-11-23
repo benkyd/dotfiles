@@ -90,12 +90,25 @@ def escape(scr):
 
 
 def rows(sessions, folded):
+    """Sessions grouped by host, with a divider above each group when there are several.
+    When the app is attached to a host, that host's sessions are the local ones and the
+    laptop is out of reach, so a last group holds a row that opens the switch-host dialog."""
     out = []
+    attached = any(s.get("at") for s in sessions)
+    multi = attached or len({s.get("host") or "" for s in sessions}) > 1
+    group = None
     for si, s in enumerate(sessions):
+        host = s.get("host") or ""
+        if multi and host != group:
+            out.append(("heading", None, host or s.get("at") or "local"))
+        group = host
         out.append(("session", si, None))
         if s["id"] not in folded:
             for ti in range(len(s["tabs"])):
                 out.append(("tab", si, ti))
+    if attached:
+        out.append(("heading", None, "your laptop"))
+        out.append(("back", None, None))
     return out or [("empty", None, None)]
 
 
@@ -109,13 +122,16 @@ def draw(scr, sessions, folded, cursor, status=""):
         if kind == "empty":
             text = "no sessions: n makes one"
             attr = curses.A_DIM
+        elif kind == "heading":
+            text = f"── {ti} " + "─" * max(0, width - len(ti) - 5)
+            attr = curses.A_DIM
+        elif kind == "back":
+            text = "⇄ switch host…"
+            attr = curses.A_DIM
         elif kind == "session":
             mark = "+" if s["id"] in folded else "-"
             count = len(s["tabs"])
-            text = f"{mark} {s['label']}"
-            if s.get("host"):
-                text += f" @{s['host']}"
-            text += f": {count} tab{'' if count == 1 else 's'}"
+            text = f"{mark} {s['label']}: {count} tab{'' if count == 1 else 's'}"
             if s["current"]:
                 text += " (attached)"
             attr = curses.A_BOLD
@@ -311,8 +327,11 @@ def browse(scr, sessions):
             cursor = 0
         elif key == ord("G"):
             cursor = len(lines) - 1
-        elif kind == "empty":
+        elif kind in ("empty", "heading"):
             pass
+        elif kind == "back":
+            if key in (10, 13, curses.KEY_ENTER):
+                return ("switch",)
         elif key in (ord("h"), curses.KEY_LEFT):
             if kind == "tab":
                 cursor = lines.index(("session", si, None))
