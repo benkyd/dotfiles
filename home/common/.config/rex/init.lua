@@ -424,6 +424,7 @@ rex.action{
     end
     rex.client.queue("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
     rex.client.queue("client.setting.developer.experimental.new_quick_switcher", { value = true })
+    rex.client.queue("client.setting.terminal.typography.size", { value = 10.5 })
     -- Text pinned to the bottom of each pane, so nvim's statusline sits on the edge, with
     -- the leftover strip in the program's background colour
     rex.client.queue("client.setting.developer.experimental.terminal_anchor", { value = "bottom" })
