@@ -176,16 +176,21 @@ local function session_tree(ctx)
     pcall(function()
       local remote = rex.server(label)
       local rlist = remote.call("session.list")
+      -- A host whose sessions are already local is the one this app is attached to
+      local here = false
       for _, s in ipairs(rlist and rlist.sessions or {}) do
-        local ok, view = false, nil
-        if seen[s.session_id] then
-          -- this app is attached to that host: its local group is really that host
+        if seen[s.session_id] then here = true end
+      end
+      if here then
+        for _, s in ipairs(rlist.sessions) do
           for _, t in ipairs(tree) do
             if t.id == s.session_id then t.at = label end
           end
-        else
-          ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
         end
+        return
+      end
+      for _, s in ipairs(rlist and rlist.sessions or {}) do
+        local ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
         if ok and view and view.windows then
           local tabs = {}
           for i, w in ipairs(view.windows) do
@@ -231,6 +236,8 @@ rex.action{
   end,
 }
 rex.bind("ctrl+b>w", "tmux_choose_tree")
+-- Switch host without going through the menu: Rex's own dialog, on the client that pressed it
+rex.bind("ctrl+b>shift+w", "client.host.switch")
 
 rex.action{
   name = "tmux_find_window",

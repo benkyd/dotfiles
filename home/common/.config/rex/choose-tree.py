@@ -44,6 +44,23 @@ def remote_select(host, client, session_id, window_id):
     return cmd
 
 
+def client_args(client):
+    """-C for the app client, checked against this server: after the app switches host,
+    the id the action saw may not exist here. Falls back to the only app client."""
+    try:
+        out = subprocess.run([REX, "client", "ls", "--json"], capture_output=True,
+                             text=True, timeout=20).stdout
+        clients = json.loads(out)["clients"]
+        if any(c["client_id"] == client for c in clients):
+            return ["-C", client]
+        apps = [c for c in clients if c.get("info", {}).get("kind") == "app"]
+        if len(apps) == 1:
+            return ["-C", apps[0]["client_id"]]
+    except (KeyError, ValueError, subprocess.SubprocessError):
+        pass
+    return ["-C", client]
+
+
 FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
 
 
@@ -339,7 +356,7 @@ def main():
     if choice and choice[0] == "kill":
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        commands.append([REX, "-C", client, "do", "client.host.switch"])
+        commands.append([REX, *client_args(client), "do", "client.host.switch"])
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
