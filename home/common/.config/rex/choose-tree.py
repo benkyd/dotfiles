@@ -68,6 +68,50 @@ def client_args(client):
     return ["-C", client]
 
 
+# The laptop's Rex socket, forwarded here by the laptop with
+#   ssh -N -R ~/.rex-laptop.sock:~/.rex-air.sock STUDIO
+# A unix socket only your user can open. Don't point this at a TCP port: whoever can reach it
+# controls every terminal on the laptop.
+LAPTOP = os.environ.get("REX_LAPTOP", "unix://" + os.path.expanduser("~/.rex-laptop.sock"))
+LAPTOP_LABEL = "MacBook Air"
+
+
+def laptop_sessions():
+    """When the app is attached to another host, the laptop's own server is reachable only if
+    its socket is forwarded to LAPTOP (ssh -R from the laptop). Lists it like a
+    host; empty if the forward is down."""
+    def call(*args):
+        out = subprocess.run([REX, "-S", LAPTOP, *args, "--json"], capture_output=True,
+                             text=True, timeout=8)
+        if out.returncode:
+            raise ValueError(out.stderr.strip())
+        return json.loads(out.stdout)
+    found = []
+    try:
+        data = call("session", "ls")
+        items = data if isinstance(data, list) else data.get("sessions", [])
+        for item in items:
+            sid = item.get("session_id") or item.get("id")
+            info = call("session", "inspect", sid)
+            info = info.get("view", info.get("session", info))
+            wins = info.get("windows", [])
+            tabs = []
+            for i, w in enumerate(wins, 1):
+                name = w.get("label") or ""
+                if not name or name.startswith("Window "):
+                    name = f"tab {i}"
+                tabs.append({"id": w.get("window_id") or w.get("id"), "name": name})
+            if tabs:
+                found.append({"id": sid, "label": item.get("label") or sid[-6:], "host": LAPTOP,
+                              "host_label": LAPTOP_LABEL, "current": False, "tabs": tabs,
+                              "active": info.get("active_window_id") or tabs[0]["id"]})
+    except (ValueError, KeyError, AttributeError, TypeError, subprocess.SubprocessError, OSError) as e:
+        with open("/tmp/choose-tree.log", "a") as f:
+            f.write(f"laptop {LAPTOP}: {e!r}\n")
+        return []
+    return found
+
+
 FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
 
 
@@ -95,18 +139,19 @@ def rows(sessions, folded):
     laptop is out of reach, so a last group holds a row that opens the switch-host dialog."""
     out = []
     attached = any(s.get("at") for s in sessions)
+    back = attached and not any(s.get("host") for s in sessions)  # laptop not reachable
     multi = attached or len({s.get("host") or "" for s in sessions}) > 1
     group = None
     for si, s in enumerate(sessions):
         host = s.get("host") or ""
         if multi and host != group:
-            out.append(("heading", None, host or s.get("at") or "local"))
+            out.append(("heading", None, s.get("host_label") or host or s.get("at") or "local"))
         group = host
         out.append(("session", si, None))
         if s["id"] not in folded:
             for ti in range(len(s["tabs"])):
                 out.append(("tab", si, ti))
-    if attached:
+    if back:
         out.append(("heading", None, "your laptop"))
         out.append(("back", None, None))
     return out or [("empty", None, None)]
@@ -357,6 +402,8 @@ def browse(scr, sessions):
 
 def main():
     sessions = json.loads(sys.argv[1])
+    if any(s.get("at") for s in sessions):
+        sessions += laptop_sessions()
     client = sys.argv[2]
     os.environ.setdefault("ESCDELAY", "25")
     choice = curses.wrapper(choose, sessions)
