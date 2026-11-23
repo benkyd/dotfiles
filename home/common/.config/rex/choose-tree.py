@@ -359,8 +359,11 @@ def main():
                     commands.append(["sleep", "1"])
                     commands.append(cmd + [f"window_id={window_id}"])
         else:
-            commands.append([REX, "-C", client, "do", "session.select",
-                             f"session_id={session_id}", f"window_id={window_id}"])
+            cmd = [REX, *client_args(client), "do", "session.select", f"session_id={session_id}"]
+            commands.append(cmd)
+            if window_id != active:
+                commands.append(["sleep", "1"])
+                commands.append(cmd + [f"window_id={window_id}"])
     # Output goes to /tmp/choose-tree.log so a switch that does nothing can be diagnosed
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
