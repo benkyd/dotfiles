@@ -107,7 +107,7 @@ def rows(sessions, folded):
             for ti in range(len(s["tabs"])):
                 out.append(("tab", si, ti))
     if attached:
-        out.append(("heading", None, "your laptop"))
+        out.append(("heading", None, "home"))
         out.append(("back", None, None))
     return out or [("empty", None, None)]
 

@@ -122,11 +122,12 @@ rex.bind("ctrl+b>s", "session.switch")
 -- closes), with a new-session row on top.
 -- find-window (C-b f): the same tree in Rex's picker, to filter by typing.
 -- Unnamed tabs show their program and folder.
-local function tab_name(session_id, window, index)
+local function tab_name(session_id, window, index, api)
+  api = api or rex
   if window.label and not window.label:match("^Window %x+$") then
     return window.label
   end
-  local ok, proc = pcall(rex.block.call, "com.superlogical.terminal", "process",
+  local ok, proc = pcall(api.block.call, "com.superlogical.terminal", "process",
     { session_id = session_id, block_id = window.focused_block_id })
   local fg = ok and proc and proc.foreground
   if not fg then
@@ -194,11 +195,7 @@ local function session_tree(ctx)
         if ok and view and view.windows then
           local tabs = {}
           for i, w in ipairs(view.windows) do
-            local name = w.label
-            if not name or name:match("^Window %x+$") then
-              name = "tab " .. i
-            end
-            tabs[#tabs + 1] = { id = w.window_id, name = name }
+            tabs[#tabs + 1] = { id = w.window_id, name = tab_name(s.session_id, w, i, remote) }
           end
           tree[#tree + 1] = {
             id = s.session_id,
