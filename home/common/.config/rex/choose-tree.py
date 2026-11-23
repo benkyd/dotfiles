@@ -4,7 +4,7 @@
 argv: TREE_JSON CLIENT_ID
 TREE_JSON is a list of sessions: {id, label, current, active, tabs: [{id, name}]}.
 
-The top rows make a new session and open the switch-host dialog. j/k or arrows move, wrapping round at either end, h/l
+n makes a new session and H opens the switch-host dialog. j/k or arrows move, wrapping round at either end, h/l
 or left/right fold and unfold a session, g/G go to the top or bottom, J/K move the session
 or tab down or up the order, r renames it, x kills it after a y/n check, enter goes to it,
 q or escape closes. It also closes when its pane loses focus, as tmux's tree does.
@@ -80,23 +80,16 @@ def escape(scr):
         scr.nodelay(False)
 
 
-NEW = ("new", None, None)
-SWITCH = ("switch", None, None)
 
 
 def rows(sessions, folded):
-    out = [NEW, SWITCH]
-    group = None
+    out = []
     for si, s in enumerate(sessions):
-        host = s.get("host") or ""
-        if host != group:
-            group = host
-            out.append(("heading", None, host or s.get("at") or "local"))
         out.append(("session", si, None))
         if s["id"] not in folded:
             for ti in range(len(s["tabs"])):
                 out.append(("tab", si, ti))
-    return out
+    return out or [("empty", None, None)]
 
 
 def draw(scr, sessions, folded, cursor, status=""):
@@ -106,19 +99,16 @@ def draw(scr, sessions, folded, cursor, status=""):
     top = max(0, cursor - height + 2)
     for y, (kind, si, ti) in enumerate(lines[top:top + height - 1]):
         s = sessions[si] if si is not None else None
-        if kind == "new":
-            text = "+ new session"
-            attr = curses.A_DIM
-        elif kind == "switch":
-            text = "⇄ switch host…"
-            attr = curses.A_DIM
-        elif kind == "heading":
-            text = f"── {ti} " + "─" * max(0, width - len(ti) - 5)
+        if kind == "empty":
+            text = "no sessions: n makes one"
             attr = curses.A_DIM
         elif kind == "session":
             mark = "+" if s["id"] in folded else "-"
             count = len(s["tabs"])
-            text = f"{mark} {s['label']}: {count} tab{'' if count == 1 else 's'}"
+            text = f"{mark} {s['label']}"
+            if s.get("host"):
+                text += f" @{s['host']}"
+            text += f": {count} tab{'' if count == 1 else 's'}"
             if s["current"]:
                 text += " (attached)"
             attr = curses.A_BOLD
@@ -132,7 +122,7 @@ def draw(scr, sessions, folded, cursor, status=""):
         if top + y == cursor:
             attr |= curses.A_REVERSE
         scr.addnstr(y, 0, text.ljust(width - 1), width - 1, attr)
-    footer = status or "j/k move  J/K reorder  h/l fold  r rename  x kill  enter go  q quit"
+    footer = status or "j/k move  J/K reorder  h/l fold  r rename  x kill  n new  H host  enter go  q quit"
     scr.addnstr(height - 1, 0, footer, width - 1, curses.A_DIM)
     scr.refresh()
 
@@ -306,18 +296,16 @@ def browse(scr, sessions):
             cursor = (cursor - 1) % len(lines)
         elif key in (ord("q"), 27):
             return None
+        elif key == ord("n"):
+            return ("new",)
+        elif key == ord("H"):
+            return ("switch",)
         elif key == ord("g"):
             cursor = 0
         elif key == ord("G"):
             cursor = len(lines) - 1
-        elif kind == "heading":
+        elif kind == "empty":
             pass
-        elif kind == "switch":
-            if key in (10, 13, curses.KEY_ENTER):
-                return ("switch",)
-        elif kind == "new":
-            if key in (10, 13, curses.KEY_ENTER):
-                return ("new",)
         elif key in (ord("h"), curses.KEY_LEFT):
             if kind == "tab":
                 cursor = lines.index(("session", si, None))
