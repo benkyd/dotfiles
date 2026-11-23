@@ -18,6 +18,32 @@ import sys
 REX = os.path.join(os.environ["REX_BIN_DIR"], "rex") if os.environ.get("REX_BIN_DIR") else "rex"
 
 
+def rx(s):
+    """The rex command line for a session's server: -S HOST for a remote session."""
+    return [REX, "-S", s["host"]] if s.get("host") else [REX]
+
+
+def remote_select(host, client, session_id, window_id):
+    """Command that makes this app show a session on another host. The app is a client of
+    that host's server too, under a different id but the same label, so find it by label."""
+    def clients(base):
+        out = subprocess.run(base + ["client", "ls", "--json"], capture_output=True,
+                             text=True, timeout=30).stdout
+        return json.loads(out)["clients"]
+    try:
+        label = next((c.get("info", {}).get("label") for c in clients([REX])
+                      if c["client_id"] == client), None)
+        apps = [c for c in clients([REX, "-S", host]) if c.get("info", {}).get("kind") == "app"]
+        match = [c for c in apps if label and c["info"].get("label") == label]
+        target = (match or (apps if len(apps) == 1 else []))[0]["client_id"]
+    except (IndexError, KeyError, ValueError, subprocess.SubprocessError):
+        return None
+    cmd = [REX, "-S", host, "-C", target, "do", "session.select", f"session_id={session_id}"]
+    if window_id:
+        cmd.append(f"window_id={window_id}")
+    return cmd
+
+
 FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
 
 
@@ -133,7 +159,7 @@ def rename(scr, s, kind, ti):
     if kind == "session":
         label = prompt(scr, "rename session:", s["label"])
         if label and label != s["label"]:
-            if subprocess.run([REX, "session", "rename", s["id"], label],
+            if subprocess.run(rx(s) + ["session", "rename", s["id"], label],
                               capture_output=True).returncode == 0:
                 s["label"] = label
                 return ""
@@ -142,7 +168,7 @@ def rename(scr, s, kind, ti):
         tab = s["tabs"][ti]
         label = prompt(scr, "rename tab:", tab["name"])
         if label and label != tab["name"]:
-            if subprocess.run([REX, "window", "rename", "-s", s["id"], tab["id"], label],
+            if subprocess.run(rx(s) + ["window", "rename", "-s", s["id"], tab["id"], label],
                               capture_output=True).returncode == 0:
                 tab["name"] = label
                 return ""
@@ -171,9 +197,9 @@ def reorder(sessions, s, kind, si, ti, step):
     """Swap the session or tab with its neighbour (step 1 is down, -1 up), stopping at
     either end. Returns (status, row) with the row it has moved to."""
     if kind == "session":
-        items, i, cmd = sessions, si, [REX, "session", "move"]
+        items, i, cmd = sessions, si, rx(s) + ["session", "move"]
     else:
-        items, i, cmd = s["tabs"], ti, [REX, "window", "move", "-s", s["id"]]
+        items, i, cmd = s["tabs"], ti, rx(s) + ["window", "move", "-s", s["id"]]
     row = (kind, si, ti)
     other = i + step
     if not 0 <= other < len(items):
@@ -196,7 +222,7 @@ def kill(scr, sessions, s, kind, ti):
         # Killing the session this pane is in ends this pane too, so the caller does it last
         if s["current"]:
             return ("kill", [REX, "session", "kill", s["id"]]), True
-        if subprocess.run([REX, "session", "kill", s["id"]], capture_output=True).returncode:
+        if subprocess.run(rx(s) + ["session", "kill", s["id"]], capture_output=True).returncode:
             return "kill failed", False
         sessions.remove(s)
         return "", not sessions
@@ -205,7 +231,7 @@ def kill(scr, sessions, s, kind, ti):
         return "", False
     if s["current"] and len(s["tabs"]) == 1:
         return ("kill", [REX, "session", "kill", s["id"]]), True
-    if subprocess.run([REX, "window", "close", "-s", s["id"], tab["id"]],
+    if subprocess.run(rx(s) + ["window", "close", "-s", s["id"], tab["id"]],
                       capture_output=True).returncode:
         return "kill failed", False
     s["tabs"].pop(ti)
@@ -275,8 +301,6 @@ def browse(scr, sessions):
                 folded.add(s["id"])
         elif key in (ord("l"), curses.KEY_RIGHT):
             folded.discard(s["id"])
-        elif s and s.get("host") and key in (ord("J"), ord("K"), ord("r"), ord("x"), 10, 13, curses.KEY_ENTER):
-            status = f"remote session on {s['host']}: view only for now"
         elif key in (ord("J"), ord("K")):
             status, row = reorder(sessions, s, kind, si, ti, 1 if key == ord("J") else -1)
             cursor = rows(sessions, folded).index(row)
@@ -290,7 +314,7 @@ def browse(scr, sessions):
                 status = ""
         elif key in (10, 13, curses.KEY_ENTER):
             window = s["tabs"][ti]["id"] if kind == "tab" else s["active"]
-            return s["id"], window
+            return s["id"], window, s.get("host")
 
 
 def main():
@@ -310,9 +334,14 @@ def main():
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
-        session_id, window_id = choice
-        commands.append([REX, "-C", client, "do", "session.select",
-                         f"session_id={session_id}", f"window_id={window_id}"])
+        session_id, window_id, host = choice
+        if host:
+            cmd = remote_select(host, client, session_id, window_id)
+            if cmd:
+                commands.append(cmd)
+        else:
+            commands.append([REX, "-C", client, "do", "session.select",
+                             f"session_id={session_id}", f"window_id={window_id}"])
     script = " ; ".join(" ".join(f"'{part}'" for part in cmd) for cmd in commands)
     subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

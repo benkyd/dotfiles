@@ -166,15 +166,21 @@ local function session_tree(ctx)
 
   -- Sessions on the other hosts (rex hosts). Each remote is read with session.view, which
   -- doesn't attach, and wrapped in pcall so a host that is down or slow is just left out.
-  -- Remote rows carry a host label; they are listed only, as switching to one needs
-  -- client.host.switch, whose arguments aren't wired up yet.
+  -- Remote rows carry a host label; choose-tree.py acts on them with rex -S HOST, and goes
+  -- to one by selecting it through this app's client on that host.
+  -- When the app is attached to a host, that host's sessions are already the local ones
+  local seen = {}
+  for _, t in ipairs(tree) do seen[t.id] = true end
   local ok_hosts, hosts = pcall(rex.servers)
   for _, label in ipairs(ok_hosts and hosts or {}) do
     pcall(function()
       local remote = rex.server(label)
       local rlist = remote.call("session.list")
       for _, s in ipairs(rlist and rlist.sessions or {}) do
-        local ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
+        local ok, view = false, nil
+        if not seen[s.session_id] then
+          ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
+        end
         if ok and view and view.windows then
           local tabs = {}
           for i, w in ipairs(view.windows) do
