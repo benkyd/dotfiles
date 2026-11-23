@@ -45,18 +45,25 @@ def remote_select(host, client, session_id, window_id):
 
 
 def client_args(client):
-    """-C for the app client, checked against this server: after the app switches host,
-    the id the action saw may not exist here. Falls back to the only app client."""
+    """-C for the app client, checked against this server. After the app attaches to another
+    host, the id the action saw is from the other server and isn't known here, where the same
+    app has an id of its own. Then pick the app client that is looking at this pane's session,
+    and of those the most recently connected (a remote app attaches after the local one)."""
     try:
         out = subprocess.run([REX, "client", "ls", "--json"], capture_output=True,
                              text=True, timeout=20).stdout
         clients = json.loads(out)["clients"]
+        with open("/tmp/choose-tree.log", "a") as f:
+            f.write("clients=" + json.dumps(clients) + "\n")
         if any(c["client_id"] == client for c in clients):
             return ["-C", client]
         apps = [c for c in clients if c.get("info", {}).get("kind") == "app"]
-        if len(apps) == 1:
-            return ["-C", apps[0]["client_id"]]
-    except (KeyError, ValueError, subprocess.SubprocessError):
+        here = [c for c in apps if os.environ.get("REX_SESSION") in c.get("session_ids", [])]
+        pool = here or apps
+        pool.sort(key=lambda c: c.get("connected_at", ""))
+        if pool:
+            return ["-C", pool[-1]["client_id"]]
+    except (KeyError, ValueError, subprocess.SubprocessError, OSError):
         pass
     return ["-C", client]
 
