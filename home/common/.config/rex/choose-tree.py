@@ -351,7 +351,12 @@ def main():
         else:
             commands.append([REX, "-C", client, "do", "session.select",
                              f"session_id={session_id}", f"window_id={window_id}"])
-    script = " ; ".join(" ".join(f"'{part}'" for part in cmd) for cmd in commands)
+    # Output goes to /tmp/choose-tree.log so a switch that does nothing can be diagnosed
+    log = "/tmp/choose-tree.log"
+    with open(log, "a") as f:
+        f.write(f"--- REX_SERVER={os.environ.get('REX_SERVER')} client={client}\n"
+                f"tree={sys.argv[1]}\nchoice={choice}\ncommands={commands}\n")
+    script = " ; ".join(" ".join(f"'{part}'" for part in cmd) + f" >>{log} 2>&1" for cmd in commands)
     subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
