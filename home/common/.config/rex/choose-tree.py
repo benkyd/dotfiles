@@ -4,7 +4,7 @@
 argv: TREE_JSON CLIENT_ID
 TREE_JSON is a list of sessions: {id, label, current, active, tabs: [{id, name}]}.
 
-The top row makes a new session. j/k or arrows move, wrapping round at either end, h/l
+The top rows make a new session and open the switch-host dialog. j/k or arrows move, wrapping round at either end, h/l
 or left/right fold and unfold a session, g/G go to the top or bottom, J/K move the session
 or tab down or up the order, r renames it, x kills it after a y/n check, enter goes to it,
 q or escape closes. It also closes when its pane loses focus, as tmux's tree does.
@@ -64,10 +64,11 @@ def escape(scr):
 
 
 NEW = ("new", None, None)
+SWITCH = ("switch", None, None)
 
 
 def rows(sessions, folded):
-    out = [NEW]
+    out = [NEW, SWITCH]
     group = None
     for si, s in enumerate(sessions):
         host = s.get("host") or ""
@@ -90,6 +91,9 @@ def draw(scr, sessions, folded, cursor, status=""):
         s = sessions[si] if si is not None else None
         if kind == "new":
             text = "+ new session"
+            attr = curses.A_DIM
+        elif kind == "switch":
+            text = "⇄ switch host…"
             attr = curses.A_DIM
         elif kind == "heading":
             text = f"── {ti} " + "─" * max(0, width - len(ti) - 5)
@@ -291,6 +295,9 @@ def browse(scr, sessions):
             cursor = len(lines) - 1
         elif kind == "heading":
             pass
+        elif kind == "switch":
+            if key in (10, 13, curses.KEY_ENTER):
+                return ("switch",)
         elif kind == "new":
             if key in (10, 13, curses.KEY_ENTER):
                 return ("new",)
@@ -331,6 +338,8 @@ def main():
         commands.append([REX, "block", "close", "-s", session, block])
     if choice and choice[0] == "kill":
         commands.append(choice[1])
+    elif choice and choice[0] == "switch":
+        commands.append([REX, "-C", client, "do", "client.host.switch"])
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
