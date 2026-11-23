@@ -356,11 +356,17 @@ def browse(scr, sessions):
 
 
 def main():
+    if sys.argv[1] == "--go":
+        # find-window's way to a remote row: HOST SESSION WINDOW ACTIVE CLIENT
+        host, session_id, window_id, active, client = sys.argv[2:7]
+        return finish((session_id, window_id, host or None, active), client, "")
     sessions = json.loads(sys.argv[1])
     client = sys.argv[2]
     os.environ.setdefault("ESCDELAY", "25")
-    choice = curses.wrapper(choose, sessions)
+    finish(curses.wrapper(choose, sessions), client, sys.argv[1])
 
+
+def finish(choice, client, tree):
     # Close this pane, then switch. A helper in its own process session does both, since
     # closing the pane ends this process.
     commands = []
@@ -394,7 +400,7 @@ def main():
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
         f.write(f"--- REX_SERVER={os.environ.get('REX_SERVER')} client={client}\n"
-                f"tree={sys.argv[1]}\nchoice={choice}\ncommands={commands}\n")
+                f"tree={tree}\nchoice={choice}\ncommands={commands}\n")
     script = " ; ".join(" ".join(f"'{part}'" for part in cmd) + f" >>{log} 2>&1" for cmd in commands)
     subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

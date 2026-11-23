@@ -241,25 +241,44 @@ rex.action{
   title = "find-window",
   run = function(ctx, args)
     local items = {}
+    -- ids are "host|session|window|active|kind": remote rows need the host to be reached
+    local function id(s, window, kind)
+      return table.concat({ s.host or "", s.id, window, s.active, kind }, "|")
+    end
     for _, s in ipairs(session_tree(ctx)) do
-     if not s.host then -- remote sessions are listed in choose-tree only, for now
-      -- the session's row goes to its active tab; " session" keeps its id apart from that tab's
-      items[#items + 1] = { id = s.id .. " " .. s.active .. " session", title = s.label, icon = s.current and "star" or "folder" }
+      local where = s.host and ("  @" .. s.host) or ""
+      -- the session's row goes to its active tab; kind keeps its id apart from that tab's
+      items[#items + 1] = { id = id(s, s.active, "s"), title = s.label .. where, icon = s.current and "star" or "folder" }
       for i, tab in ipairs(s.tabs) do
         items[#items + 1] = {
-          id = s.id .. " " .. tab.id,
+          id = id(s, tab.id, "t"),
           title = "  " .. i .. " " .. tab.name .. (tab.id == s.active and " *" or ""),
         }
       end
-     end
     end
     local choice = rex.ui.pick{ title = "find-window", placeholder = "Filter sessions and tabs", items = items }
     if not choice then
       return
     end
-    local session_id, window_id = choice:match("^(%S+) ?(%S*)")
-    if window_id == "" then
-      window_id = nil
+    local host, session_id, window_id, active = choice:match("^([^|]*)|([^|]*)|([^|]*)|([^|]*)|")
+    if host ~= "" then
+      -- another host's session is reached through the app's client there, which the CLI
+      -- finds: choose-tree.py --go does it, in a small pane that closes itself
+      rex.session.new_layer{
+        bounds = { 0.4, 0.45, 0.2, 0.1 },
+        focus = false,
+        layout = rex.layout.block{
+          flavor = "com.superlogical.terminal.shell",
+          label = "go",
+          options = {
+            shell = "none",
+            login = false,
+            command = { "/usr/bin/python3", os.getenv("HOME") .. "/.config/rex/choose-tree.py",
+                        "--go", host, session_id, window_id, active, ctx.client_id },
+          },
+        },
+      }
+      return
     end
     rex.client.queue("session.select", { session_id = session_id, window_id = window_id })
   end,
