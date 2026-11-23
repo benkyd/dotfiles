@@ -42,7 +42,12 @@ NEW = ("new", None, None)
 
 def rows(sessions, folded):
     out = [NEW]
+    group = None
     for si, s in enumerate(sessions):
+        host = s.get("host") or ""
+        if host != group:
+            group = host
+            out.append(("heading", None, host or "local"))
         out.append(("session", si, None))
         if s["id"] not in folded:
             for ti in range(len(s["tabs"])):
@@ -59,6 +64,9 @@ def draw(scr, sessions, folded, cursor, status=""):
         s = sessions[si] if si is not None else None
         if kind == "new":
             text = "+ new session"
+            attr = curses.A_DIM
+        elif kind == "heading":
+            text = f"── {ti} " + "─" * max(0, width - len(ti) - 5)
             attr = curses.A_DIM
         elif kind == "session":
             mark = "+" if s["id"] in folded else "-"
@@ -170,6 +178,8 @@ def reorder(sessions, s, kind, si, ti, step):
     other = i + step
     if not 0 <= other < len(items):
         return "", row
+    if kind == "session" and items[other].get("host") != items[i].get("host"):
+        return "", row  # sessions stay within their host's group
     where = "--after" if step > 0 else "--before"
     if subprocess.run(cmd + [items[i]["id"], where, items[other]["id"]],
                       capture_output=True).returncode:
@@ -221,10 +231,13 @@ def browse(scr, sessions):
     lines = rows(sessions, folded)
     cursor = 0
     for i, (kind, si, ti) in enumerate(lines):
-        if kind == "tab":
+        if kind == "session" and sessions[si]["current"]:
+            cursor = i  # fallback: the current session's row
+        elif kind == "tab":
             s = sessions[si]
             if s["current"] and s["tabs"][ti]["id"] == s["active"]:
                 cursor = i
+                break
     status = ""
     while True:
         lines = rows(sessions, folded)
@@ -250,6 +263,8 @@ def browse(scr, sessions):
             cursor = 0
         elif key == ord("G"):
             cursor = len(lines) - 1
+        elif kind == "heading":
+            pass
         elif kind == "new":
             if key in (10, 13, curses.KEY_ENTER):
                 return ("new",)
@@ -260,6 +275,8 @@ def browse(scr, sessions):
                 folded.add(s["id"])
         elif key in (ord("l"), curses.KEY_RIGHT):
             folded.discard(s["id"])
+        elif s and s.get("host") and key in (ord("J"), ord("K"), ord("r"), ord("x"), 10, 13, curses.KEY_ENTER):
+            status = f"remote session on {s['host']}: view only for now"
         elif key in (ord("J"), ord("K")):
             status, row = reorder(sessions, s, kind, si, ti, 1 if key == ord("J") else -1)
             cursor = rows(sessions, folded).index(row)

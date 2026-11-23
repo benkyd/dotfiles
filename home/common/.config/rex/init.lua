@@ -163,6 +163,39 @@ local function session_tree(ctx)
       }
     end
   end
+
+  -- Sessions on the other hosts (rex hosts). Each remote is read with session.view, which
+  -- doesn't attach, and wrapped in pcall so a host that is down or slow is just left out.
+  -- Remote rows carry a host label; they are listed only, as switching to one needs
+  -- client.host.switch, whose arguments aren't wired up yet.
+  local ok_hosts, hosts = pcall(rex.servers)
+  for _, label in ipairs(ok_hosts and hosts or {}) do
+    pcall(function()
+      local remote = rex.server(label)
+      local rlist = remote.call("session.list")
+      for _, s in ipairs(rlist and rlist.sessions or {}) do
+        local ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
+        if ok and view and view.windows then
+          local tabs = {}
+          for i, w in ipairs(view.windows) do
+            local name = w.label
+            if not name or name:match("^Window %x+$") then
+              name = "tab " .. i
+            end
+            tabs[#tabs + 1] = { id = w.window_id, name = name }
+          end
+          tree[#tree + 1] = {
+            id = s.session_id,
+            label = s.label,
+            host = label,
+            current = false,
+            active = view.active_window_id or "",
+            tabs = tabs,
+          }
+        end
+      end
+    end)
+  end
   return tree
 end
 
@@ -194,6 +227,7 @@ rex.action{
   run = function(ctx, args)
     local items = {}
     for _, s in ipairs(session_tree(ctx)) do
+     if not s.host then -- remote sessions are listed in choose-tree only, for now
       -- the session's row goes to its active tab; " session" keeps its id apart from that tab's
       items[#items + 1] = { id = s.id .. " " .. s.active .. " session", title = s.label, icon = s.current and "star" or "folder" }
       for i, tab in ipairs(s.tabs) do
@@ -202,6 +236,7 @@ rex.action{
           title = "  " .. i .. " " .. tab.name .. (tab.id == s.active and " *" or ""),
         }
       end
+     end
     end
     local choice = rex.ui.pick{ title = "find-window", placeholder = "Filter sessions and tabs", items = items }
     if not choice then
