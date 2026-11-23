@@ -326,7 +326,7 @@ def browse(scr, sessions):
                 status = ""
         elif key in (10, 13, curses.KEY_ENTER):
             window = s["tabs"][ti]["id"] if kind == "tab" else s["active"]
-            return s["id"], window, s.get("host")
+            return s["id"], window, s.get("host"), s["active"]
 
 
 def main():
@@ -348,11 +348,16 @@ def main():
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
-        session_id, window_id, host = choice
+        session_id, window_id, host, active = choice
         if host:
-            cmd = remote_select(host, client, session_id, window_id)
+            # Selecting the session alone is what works; a window_id on the same call
+            # didn't switch, so a tab other than the active one is a second step
+            cmd = remote_select(host, client, session_id, None)
             if cmd:
                 commands.append(cmd)
+                if window_id != active:
+                    commands.append(["sleep", "1"])
+                    commands.append(cmd + [f"window_id={window_id}"])
         else:
             commands.append([REX, "-C", client, "do", "session.select",
                              f"session_id={session_id}", f"window_id={window_id}"])
