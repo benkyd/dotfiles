@@ -178,7 +178,12 @@ local function session_tree(ctx)
       local rlist = remote.call("session.list")
       for _, s in ipairs(rlist and rlist.sessions or {}) do
         local ok, view = false, nil
-        if not seen[s.session_id] then
+        if seen[s.session_id] then
+          -- this app is attached to that host: its local group is really that host
+          for _, t in ipairs(tree) do
+            if t.id == s.session_id then t.at = label end
+          end
+        else
           ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
         end
         if ok and view and view.windows then

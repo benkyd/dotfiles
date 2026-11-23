@@ -73,7 +73,7 @@ def rows(sessions, folded):
         host = s.get("host") or ""
         if host != group:
             group = host
-            out.append(("heading", None, host or "local"))
+            out.append(("heading", None, host or s.get("at") or "local"))
         out.append(("session", si, None))
         if s["id"] not in folded:
             for ti in range(len(s["tabs"])):
