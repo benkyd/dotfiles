@@ -222,6 +222,42 @@ local function session_tree(ctx)
   return tree
 end
 
+-- Server-side helpers called by choose-tree.py. rex.client.queue here runs on the
+-- server and is never subject to the Remote Control permission check.
+rex.action{
+  name = "choose_tree_select",
+  title = "choose-tree: go to session",
+  args = { session_id = "string", window_id = "string?" },
+  run = function(ctx, args)
+    rex.client.queue("session.select", {
+      session_id = args.session_id,
+      window_id  = args.window_id or "",
+    })
+  end,
+}
+rex.action{
+  name = "choose_tree_switch_host",
+  title = "choose-tree: switch host",
+  run = function(ctx, args)
+    rex.client.queue("client.host.switch", {})
+  end,
+}
+rex.action{
+  name = "choose_tree_new",
+  title = "choose-tree: new session",
+  run = function(ctx, args)
+    rex.client.queue("session.new", {})
+  end,
+}
+rex.action{
+  name = "choose_tree_zoom",
+  title = "choose-tree: restore zoom",
+  args = { block_id = "string" },
+  run = function(ctx, args)
+    rex.client.queue("pane.zoom", { block_id = args.block_id })
+  end,
+}
+
 rex.action{
   name = "tmux_choose_tree",
   title = "choose-tree",

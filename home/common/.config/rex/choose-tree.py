@@ -340,8 +340,10 @@ def browse(scr, sessions):
             return s["id"], window, s.get("host"), s["active"]
 
 
-def lua_select(session_id, window_id):
-    return f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
+def ct_action(client, action, *kv):
+    """Call a server-side choose-tree helper action. Runs on the server via rex.client.queue —
+    never subject to the Remote Control permission check."""
+    return [REX, "-C", client, "do", action] + list(kv)
 
 
 def main():
@@ -369,41 +371,57 @@ def finish(choice, client, tree):
     if choice and choice[0] == "kill":
         if close_cmd: commands.append(close_cmd)
         commands.append(choice[1])
+
     elif choice and choice[0] == "switch":
-        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("client.host.switch",{})'])
+        commands.append(ct_action(client, "choose_tree_switch_host"))
         if close_cmd: commands.append(close_cmd)
+
     elif choice and choice[0] == "new":
         if close_cmd: commands.append(close_cmd)
-        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("session.new",{})'])
+        commands.append(ct_action(client, "choose_tree_new"))
+
     elif choice:
-        if close_cmd: commands.append(close_cmd)
         session_id, window_id, host, active = choice
+        if close_cmd: commands.append(close_cmd)
         if host:
+            # From local context switching to a remote host: find the Mac app client there
             target = remote_select(host, client, session_id)
             if target:
-                commands.append([REX, "-S", host, "-C", target, "do", "-e",
-                                  lua_select(session_id, window_id)])
+                commands.append([REX, "-S", host, "-C", target, "do",
+                                  "choose_tree_select",
+                                  f"session_id={session_id}",
+                                  f"window_id={window_id}"])
         else:
-            commands.append([REX, "-C", client, "do", "-e", lua_select(session_id, window_id)])
+            commands.append(ct_action(client, "choose_tree_select",
+                                      f"session_id={session_id}",
+                                      f"window_id={window_id}"))
+
     else:
-        # Cancel: re-select original window to override Rex's default focus restore
+        # Cancel (q/esc/focus-lost): close pane then restore original session+window
         if close_cmd: commands.append(close_cmd)
         if orig:
-            commands.append([REX, "-C", client, "do", "-e",
-                             lua_select(orig["id"], orig["active"])])
+            commands.append(ct_action(client, "choose_tree_select",
+                                      f"session_id={orig['id']}",
+                                      f"window_id={orig['active']}"))
 
-    # Restore zoom if the original window was zoomed
+    # Restore zoom if the original window was zoomed before choose-tree opened
     if orig and orig.get("was_zoomed") and orig.get("focused_block"):
-        fb = orig["focused_block"]
-        commands.append([REX, "-C", client, "do", "-e",
-                         f'rex.client.queue("pane.zoom",{{block_id="{fb}"}})'])
+        commands.append(ct_action(client, "choose_tree_zoom",
+                                  f"block_id={orig['focused_block']}"))
+
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
         f.write(f"--- client={client} choice={choice} commands={commands}\n")
-    script = " ; ".join(" ".join(f"'{part}'" for part in cmd) + f" >>{log} 2>&1" for cmd in commands)
+    script = " ; ".join(
+        " ".join(f"'{p.replace(chr(39), chr(39)+chr(92)+chr(39)+chr(39))}'" for p in cmd) + f" >>{log} 2>&1"
+        for cmd in commands
+    )
     subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
