@@ -117,100 +117,85 @@ rex.bind("ctrl+b>r", "client.config.reload")
 
 -- tmux defaults: sessions
 rex.bind("ctrl+b>s", "session.switch")
--- choose-tree (C-b w): every session with its tabs underneath, in a floating pane run by
--- choose-tree.py so it takes vim keys (j/k move, J/K reorder, h/l fold, enter goes, q
--- closes), with a new-session row on top.
--- find-window (C-b f): the same tree in Rex's picker, to filter by typing.
--- Tab name: use user-set label or fallback — skips block.call entirely for speed.
-local function tab_name(window, index)
+
+-- choose-tree (C-b w) and find-window (C-b f) list this server's sessions with their tabs.
+-- When the app is attached to another host, that host's server runs them, so they list its
+-- sessions. Other hosts' sessions aren't listed: switch host first (C-b W, or H in the tree).
+--
+-- choose-tree is choose-tree.py in a floating pane, so it takes vim keys: j/k move, 1-9 go to
+-- that session, enter goes, h/l fold, J/K reorder, r rename, x kill, n new, H switch host,
+-- q closes. The switch is made by choose-tree-watcher.lua, which also puts focus and zoom back.
+-- find-window is the same list in Rex's picker, to filter by typing.
+
+-- A tab's name: its label, or for an unnamed tab its program and folder
+local function tab_name(session_id, window, index)
   if window.label and not window.label:match("^Window %x+$") then
     return window.label
   end
-  return "tab " .. index
+  local ok, proc = pcall(rex.block.call, "com.superlogical.terminal", "process",
+    { session_id = session_id, block_id = window.focused_block_id })
+  local fg = ok and proc and proc.foreground
+  if not fg then
+    return "tab " .. index
+  end
+  local dir = (fg.cwd or ""):match("([^/]+)/?$") or "~"
+  if fg.cwd == os.getenv("HOME") then
+    dir = "~"
+  end
+  return fg.name .. " · " .. dir
 end
 
--- Every session, with its tabs. local_only=true skips remote hosts (choose-tree
--- filters them anyway; find-window passes false to include them).
-local function session_tree(ctx, local_only)
+-- This server's sessions: { id, label, current, active, tabs = { { id, name } } }. The current
+-- one also has block, the block that had focus, and zoomed, whether its window was zoomed, so
+-- choose-tree can put both back. session.view reads a session without attaching to it.
+local function session_tree(ctx)
   local tree = {}
   local list = rex.call("session.list")
   for _, s in ipairs(list and list.sessions or {}) do
     local ok, view = pcall(rex.call, "session.view", { session_id = s.session_id })
     if ok and view and view.windows then
-      local here = s.session_id == ctx.session_id
-      local focused_block = ""
-      local was_zoomed = false
-      local tabs = {}
-      for i, w in ipairs(view.windows) do
-        tabs[#tabs + 1] = { id = w.window_id, name = tab_name(w, i) }
-        if w.window_id == (view.active_window_id or "") then
-          focused_block = w.focused_block_id or ""
-          was_zoomed = w.zoomed or false
-        end
-      end
-      tree[#tree + 1] = {
+      local entry = {
         id = s.session_id,
         label = s.label,
-        current = here,
+        current = s.session_id == ctx.session_id,
         active = view.active_window_id or "",
-        focused_block = focused_block,
-        was_zoomed = was_zoomed,
-        tabs = tabs,
+        tabs = {},
       }
+      for i, w in ipairs(view.windows) do
+        entry.tabs[i] = { id = w.window_id, name = tab_name(s.session_id, w, i) }
+        if entry.current and w.window_id == entry.active then
+          local zoomed = w.zoomed_block_id or ""
+          entry.zoomed = zoomed ~= ""
+          if zoomed ~= "" then
+            entry.block = zoomed
+          else
+            entry.block = ctx.block_id or w.focused_block_id or ""
+          end
+        end
+      end
+      tree[#tree + 1] = entry
     end
-  end
-
-  if local_only then return tree end
-
-  -- Remote hosts for find-window
-  local seen = {}
-  for _, t in ipairs(tree) do seen[t.id] = true end
-  local ok_hosts, hosts = pcall(rex.servers)
-  for _, label in ipairs(ok_hosts and hosts or {}) do
-    pcall(function()
-      local remote = rex.server(label)
-      local rlist = remote.call("session.list")
-      local here = false
-      for _, s in ipairs(rlist and rlist.sessions or {}) do
-        if seen[s.session_id] then here = true end
-      end
-      if here then
-        for _, s in ipairs(rlist.sessions) do
-          for _, t in ipairs(tree) do
-            if t.id == s.session_id then t.at = label end
-          end
-        end
-        return
-      end
-      for _, s in ipairs(rlist and rlist.sessions or {}) do
-        local ok, view = pcall(remote.call, "session.view", { session_id = s.session_id })
-        if ok and view and view.windows then
-          local tabs = {}
-          for i, w in ipairs(view.windows) do
-            tabs[#tabs + 1] = { id = w.window_id, name = tab_name(w, i) }
-          end
-          tree[#tree + 1] = {
-            id = s.session_id,
-            label = s.label,
-            host = label,
-            current = false,
-            active = view.active_window_id or "",
-            tabs = tabs,
-          }
-        end
-      end
-    end)
   end
   return tree
 end
+
+-- The quickest Python on this machine: Homebrew's starts in about half the time of the
+-- system one, which matters for a picker opened many times a day
+local choose_tree_python = "/usr/bin/python3"
+for _, p in ipairs({ "/opt/homebrew/bin/python3", "/usr/local/bin/python3" }) do
+  local f = io.open(p, "r")
+  if f then
+    f:close()
+    choose_tree_python = p
+    break
+  end
+end
+local choose_tree_script = os.getenv("HOME") .. "/.config/rex/choose-tree.py"
 
 rex.action{
   name = "tmux_choose_tree",
   title = "choose-tree",
   run = function(ctx, args)
-    local tmp = os.tmpname() .. ".json"
-    local script = os.getenv("HOME") .. "/.config/rex/choose-tree.py"
-    local tree = session_tree(ctx, true)
     rex.session.new_layer{
       bounds = { 0.2, 0.15, 0.6, 0.6 },
       focus = true,
@@ -220,32 +205,11 @@ rex.action{
         options = {
           shell = "none",
           login = false,
-          command = { "/usr/bin/python3", script, rex.json.encode(tree), tmp },
+          command = { choose_tree_python, "-I", "-S", choose_tree_script,
+                      ctx.client_id or "", rex.json.encode(session_tree(ctx)) },
         },
       },
     }
-    -- Poll for choice file; runs in action context so rex.client.queue works
-    for _ = 1, 600 do
-      rex.sleep(0.1)
-      local f = io.open(tmp, "r")
-      if f then
-        local data = f:read("*a"); f:close(); pcall(os.remove, tmp)
-        local ok, c = pcall(rex.json.decode, data)
-        if ok and c then
-          if c.type == "select" then
-            local opts = { session_id = c.session_id }
-            if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
-            rex.client.queue("session.select", opts)
-          elseif c.type == "switch" then
-            rex.client.queue("client.host.switch", {})
-          elseif c.type == "new" then
-            rex.client.queue("session.new", {})
-          end
-          if c.was_zoomed then rex.client.queue("pane.zoom", {}) end
-        end
-        break
-      end
-    end
   end,
 }
 rex.bind("ctrl+b>w", "tmux_choose_tree")
@@ -257,17 +221,12 @@ rex.action{
   title = "find-window",
   run = function(ctx, args)
     local items = {}
-    -- ids are "host|session|window|active|kind": remote rows need the host to be reached
-    local function id(s, window, kind)
-      return table.concat({ s.host or "", s.id, window, s.active, kind }, "|")
-    end
-    for _, s in ipairs(session_tree(ctx, false)) do
-      local where = s.host and ("  @" .. s.host) or ""
-      -- the session's row goes to its active tab; kind keeps its id apart from that tab's
-      items[#items + 1] = { id = id(s, s.active, "s"), title = s.label .. where, icon = s.current and "star" or "folder" }
+    for _, s in ipairs(session_tree(ctx)) do
+      -- a session's row goes to its active tab; s and t keep its id apart from that tab's
+      items[#items + 1] = { id = "s|" .. s.id .. "|" .. s.active, title = s.label, icon = s.current and "star" or "folder" }
       for i, tab in ipairs(s.tabs) do
         items[#items + 1] = {
-          id = id(s, tab.id, "t"),
+          id = "t|" .. s.id .. "|" .. tab.id,
           title = "  " .. i .. " " .. tab.name .. (tab.id == s.active and " *" or ""),
         }
       end
@@ -276,27 +235,14 @@ rex.action{
     if not choice then
       return
     end
-    local host, session_id, window_id, active = choice:match("^([^|]*)|([^|]*)|([^|]*)|([^|]*)|")
-    if host ~= "" then
-      -- another host's session is reached through the app's client there, which the CLI
-      -- finds: choose-tree.py --go does it, in a small pane that closes itself
-      rex.session.new_layer{
-        bounds = { 0.4, 0.45, 0.2, 0.1 },
-        focus = false,
-        layout = rex.layout.block{
-          flavor = "com.superlogical.terminal.shell",
-          label = "go",
-          options = {
-            shell = "none",
-            login = false,
-            command = { "/usr/bin/python3", os.getenv("HOME") .. "/.config/rex/choose-tree.py",
-                        "--go", host, session_id, window_id, active, ctx.client_id },
-          },
-        },
-      }
-      return
+    local session_id, window_id = choice:match("^[st]|([^|]*)|([^|]*)$")
+    if session_id then
+      local opts = { session_id = session_id }
+      if window_id ~= "" then
+        opts.window_id = window_id
+      end
+      rex.client.queue("session.select", opts)
     end
-    rex.client.queue("session.select", { session_id = session_id, window_id = window_id })
   end,
 }
 rex.bind("ctrl+b>f", "tmux_find_window")
