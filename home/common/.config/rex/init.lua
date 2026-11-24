@@ -228,23 +228,23 @@ rex.action{
     for _ = 1, 600 do
       rex.sleep(0.1)
       local f = io.open(tmp, "r")
-      if not f then goto continue end
-      local data = f:read("*a"); f:close(); pcall(os.remove, tmp)
-      local ok, c = pcall(rex.json.decode, data)
-      if ok and c then
-        if c.type == "select" then
-          local opts = { session_id = c.session_id }
-          if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
-          rex.client.queue("session.select", opts)
-        elseif c.type == "switch" then
-          rex.client.queue("client.host.switch", {})
-        elseif c.type == "new" then
-          rex.client.queue("session.new", {})
+      if f then
+        local data = f:read("*a"); f:close(); pcall(os.remove, tmp)
+        local ok, c = pcall(rex.json.decode, data)
+        if ok and c then
+          if c.type == "select" then
+            local opts = { session_id = c.session_id }
+            if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
+            rex.client.queue("session.select", opts)
+          elseif c.type == "switch" then
+            rex.client.queue("client.host.switch", {})
+          elseif c.type == "new" then
+            rex.client.queue("session.new", {})
+          end
+          if c.was_zoomed then rex.client.queue("pane.zoom", {}) end
         end
-        if c.was_zoomed then rex.client.queue("pane.zoom", {}) end
+        break
       end
-      return
-      ::continue::
     end
   end,
 }
