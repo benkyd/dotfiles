@@ -322,11 +322,10 @@ def browse(scr, sessions):
 
 
 def _start_watcher(client):
-    """Start the choice watcher as a background rex do script. Returns the tmp file path."""
     tmp = tempfile.mktemp(suffix=".json", prefix="rex-ct-")
     watcher = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "choose-tree-watcher.lua")
-    args = json.dumps({"tmp": tmp, "rex": REX, "client": client})
+    args = json.dumps({"tmp": tmp, "client": client})
     subprocess.Popen(
         [REX, "-C", client, "do", watcher, "--args", args],
         start_new_session=True,
@@ -335,27 +334,16 @@ def _start_watcher(client):
     return tmp
 
 
-def _write_choice(tmp, result, orig):
-    if orig and orig.get("was_zoomed"):
-        result["was_zoomed"] = True
-    with open(tmp, "w") as f:
-        json.dump(result, f)
-
-
 def main():
     import signal
-    # Ignore SIGHUP so Rex closing the pane doesn't kill us before we write the choice
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
     if sys.argv[1] == "--go":
         host, session_id, window_id, active, client = sys.argv[2:7]
         tmp = _start_watcher(client)
-        _write_choice(tmp, {
-            "type": "select",
-            "session_id": session_id,
-            "window_id": window_id,
-            "host": "",
-        }, None)
+        with open(tmp, "w") as f:
+            json.dump({"type": "select", "session_id": session_id,
+                       "window_id": window_id, "host": ""}, f)
         return
 
     sessions = json.loads(sys.argv[1])
@@ -365,8 +353,6 @@ def main():
     orig = next((s for s in sessions if s.get("current")), None)
     tmp = _start_watcher(client)
 
-    # Run TUI — write the choice file INSIDE curses.wrapper so it's written
-    # before the terminal is restored (Rex may send SIGHUP at that point)
     result_holder = [{}]
 
     def run(scr):
@@ -379,9 +365,7 @@ def main():
             r = {"type": "kill", "cmd": list(choice[1])}
         elif choice:
             sid, wid, host, active = choice
-            # Remote sessions: store for subprocess handling after curses exits
-            r = {"type": "select", "session_id": sid,
-                 "window_id": wid or "", "host": host or ""}
+            r = {"type": "select", "session_id": sid, "window_id": wid or "", "host": ""}
         elif orig:
             r = {"type": "select", "session_id": orig["id"],
                  "window_id": orig.get("active", ""), "host": ""}
@@ -390,38 +374,13 @@ def main():
         if orig and orig.get("was_zoomed"):
             r["was_zoomed"] = True
         result_holder[0] = r
-        # Write NOW while still inside curses (terminal not yet restored)
         try:
             with open(tmp, "w") as f:
                 json.dump(r, f)
-        except Exception as e:
-            with open("/tmp/choose-tree-watcher.log", "a") as lf:
-                lf.write(f"py write error: {e}\n")
-
-    curses.wrapper(run)
-
-    # Handle remote sessions synchronously after curses exits
-    result = result_holder[0]
-    if result.get("type") == "select" and result.get("host"):
-        host = result["host"]
-        sid = result["session_id"]
-        wid = result.get("window_id", "")
-        target = remote_select(host, client, sid)
-        with open("/tmp/choose-tree-watcher.log", "a") as lf:
-            lf.write(f"py remote: host={host} target={target}\n")
-        if target:
-            lua = (f'rex.client.queue("session.select",'
-                   f'{{session_id="{sid}",window_id="{wid}"}})' )
-            r2 = subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
-                                capture_output=True, text=True, timeout=10)
-            with open("/tmp/choose-tree-watcher.log", "a") as lf:
-                lf.write(f"py remote result: {r2.returncode} {r2.stderr.strip()}\n")
-        # Overwrite with done so watcher doesn't also try remote
-        try:
-            with open(tmp, "w") as f:
-                json.dump({"type": "done"}, f)
         except Exception:
             pass
+
+    curses.wrapper(run)
     # Python exits here → Rex auto-closes the pane
 
 
