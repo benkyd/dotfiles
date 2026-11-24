@@ -341,9 +341,12 @@ def browse(scr, sessions):
 
 
 def ct_action(client, action, *kv):
-    """Call a server-side choose-tree helper action. Runs on the server via rex.client.queue —
-    never subject to the Remote Control permission check."""
+    """Call a server-side choose-tree helper action — no Remote Control check."""
     return [REX, "-C", client, "do", action] + list(kv)
+
+
+def shell_quote(s):
+    return "'" + s.replace("'", "'\\''") + "'"
 
 
 def main():
@@ -357,9 +360,7 @@ def main():
 
 
 def finish(choice, client, tree):
-    commands = []
     block, session = os.environ.get("REX_BLOCK"), os.environ.get("REX_SESSION")
-    close_cmd = [REX, "block", "close", "-s", session, block] if block and session else None
 
     orig = None
     if tree:
@@ -368,55 +369,62 @@ def finish(choice, client, tree):
         except Exception:
             pass
 
-    if choice and choice[0] == "kill":
-        if close_cmd: commands.append(close_cmd)
-        commands.append(choice[1])
+    log = "/tmp/choose-tree.log"
 
-    elif choice and choice[0] == "switch":
-        commands.append(ct_action(client, "choose_tree_switch_host"))
-        if close_cmd: commands.append(close_cmd)
+    def run(cmd):
+        """Run synchronously while pane is still alive — switch happens before pane closes."""
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            if r.returncode:
+                with open(log, "a") as f:
+                    f.write(f"err {r.returncode}: {r.stderr.strip()}\n")
+        except Exception as e:
+            with open(log, "a") as f:
+                f.write(f"exc: {e}\n")
+
+    # ── Main action (synchronous) ────────────────────────────────────────────
+    if choice and choice[0] == "switch":
+        run(ct_action(client, "choose_tree_switch_host"))
 
     elif choice and choice[0] == "new":
-        if close_cmd: commands.append(close_cmd)
-        commands.append(ct_action(client, "choose_tree_new"))
+        run(ct_action(client, "choose_tree_new"))
 
-    elif choice:
+    elif choice and choice[0] != "kill":
         session_id, window_id, host, active = choice
-        if close_cmd: commands.append(close_cmd)
         if host:
-            # From local context switching to a remote host: find the Mac app client there
             target = remote_select(host, client, session_id)
             if target:
-                commands.append([REX, "-S", host, "-C", target, "do",
-                                  "choose_tree_select",
-                                  f"session_id={session_id}",
-                                  f"window_id={window_id}"])
+                run([REX, "-S", host, "-C", target, "do", "choose_tree_select",
+                     f"session_id={session_id}", f"window_id={window_id}"])
         else:
-            commands.append(ct_action(client, "choose_tree_select",
-                                      f"session_id={session_id}",
-                                      f"window_id={window_id}"))
+            run(ct_action(client, "choose_tree_select",
+                          f"session_id={session_id}", f"window_id={window_id}"))
 
-    else:
-        # Cancel (q/esc/focus-lost): close pane then restore original session+window
-        if close_cmd: commands.append(close_cmd)
-        if orig:
-            commands.append(ct_action(client, "choose_tree_select",
-                                      f"session_id={orig['id']}",
-                                      f"window_id={orig['active']}"))
+    elif choice is None and orig:
+        # Cancel: restore original focus
+        run(ct_action(client, "choose_tree_select",
+                      f"session_id={orig['id']}", f"window_id={orig['active']}"))
 
-    # Restore zoom if the original window was zoomed before choose-tree opened
+    # Restore zoom after re-focusing
     if orig and orig.get("was_zoomed"):
-        commands.append(ct_action(client, "choose_tree_zoom"))
+        run(ct_action(client, "choose_tree_zoom"))
 
-    log = "/tmp/choose-tree.log"
+    # ── Async cleanup (close pane, kill if needed) ───────────────────────────
+    cleanup = []
+    if block and session:
+        cleanup.append([REX, "block", "close", "-s", session, block])
+    if choice and choice[0] == "kill":
+        cleanup.append(choice[1])
+
     with open(log, "a") as f:
-        f.write(f"--- client={client} choice={choice} commands={commands}\n")
-    script = " ; ".join(
-        " ".join(f"'{p.replace(chr(39), chr(39)+chr(92)+chr(39)+chr(39))}'" for p in cmd) + f" >>{log} 2>&1"
-        for cmd in commands
-    )
-    subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
-                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        f.write(f"--- client={client} choice={choice}\n")
+
+    if cleanup:
+        script = " ; ".join(" ".join(shell_quote(p) for p in cmd) + f" >>{log} 2>&1"
+                            for cmd in cleanup)
+        subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
 
 if __name__ == "__main__":
