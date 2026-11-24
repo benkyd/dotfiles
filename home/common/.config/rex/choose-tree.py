@@ -358,11 +358,18 @@ def finish(choice, client, tree):
     commands = []
     block, session = os.environ.get("REX_BLOCK"), os.environ.get("REX_SESSION")
     close_cmd = [REX, "block", "close", "-s", session, block] if block and session else None
+
+    orig = None
+    if tree:
+        try:
+            orig = next((s for s in json.loads(tree) if s.get("current")), None)
+        except Exception:
+            pass
+
     if choice and choice[0] == "kill":
         if close_cmd: commands.append(close_cmd)
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        # Fire before closing so Rex still has focus when the dialog opens
         commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("client.host.switch",{})'])
         if close_cmd: commands.append(close_cmd)
     elif choice and choice[0] == "new":
@@ -379,7 +386,17 @@ def finish(choice, client, tree):
         else:
             commands.append([REX, "-C", client, "do", "-e", lua_select(session_id, window_id)])
     else:
+        # Cancel: re-select original window to override Rex's default focus restore
         if close_cmd: commands.append(close_cmd)
+        if orig:
+            commands.append([REX, "-C", client, "do", "-e",
+                             lua_select(orig["id"], orig["active"])])
+
+    # Restore zoom if the original window was zoomed
+    if orig and orig.get("was_zoomed") and orig.get("focused_block"):
+        fb = orig["focused_block"]
+        commands.append([REX, "-C", client, "do", "-e",
+                         f'rex.client.queue("pane.zoom",{{block_id="{fb}"}})'])
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
         f.write(f"--- client={client} choice={choice} commands={commands}\n")

@@ -153,15 +153,23 @@ local function session_tree(ctx)
     local ok, view = pcall(rex.call, "session.view", { session_id = s.session_id })
     if ok and view and view.windows then
       local here = s.session_id == ctx.session_id
+      local focused_block = ""
+      local was_zoomed = false
       local tabs = {}
       for i, w in ipairs(view.windows) do
         tabs[#tabs + 1] = { id = w.window_id, name = tab_name(s.session_id, w, i) }
+        if w.window_id == (view.active_window_id or "") then
+          focused_block = w.focused_block_id or ""
+          was_zoomed = w.zoomed or false
+        end
       end
       tree[#tree + 1] = {
         id = s.session_id,
         label = s.label,
         current = here,
         active = view.active_window_id or "",
+        focused_block = focused_block,
+        was_zoomed = was_zoomed,
         tabs = tabs,
       }
     end
