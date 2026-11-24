@@ -204,13 +204,40 @@ local function session_tree(ctx, local_only)
   return tree
 end
 
+-- choice file path set by tmux_choose_tree; read by the rex.on handler below
+local _choose_tree_tmp = nil
+
+-- Registered at load time (required). Fires on every block exit; processes the
+-- choice only when our file is set and exists. Runs in app context so
+-- rex.client.queue bypasses Remote Control entirely.
+rex.on("block.exit", function(evt)
+  if not _choose_tree_tmp then return end
+  local tmp = _choose_tree_tmp
+  local f = io.open(tmp, "r")
+  if not f then return end
+  _choose_tree_tmp = nil
+  local data = f:read("*a"); f:close(); pcall(os.remove, tmp)
+  local ok, c = pcall(rex.json.decode, data)
+  if not (ok and c) then return end
+  if c.type == "select" then
+    local opts = { session_id = c.session_id }
+    if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
+    rex.client.queue("session.select", opts)
+  elseif c.type == "switch" then
+    rex.client.queue("client.host.switch", {})
+  elseif c.type == "new" then
+    rex.client.queue("session.new", {})
+  end
+  if c.was_zoomed then rex.client.queue("pane.zoom", {}) end
+end)
+
 rex.action{
   name = "tmux_choose_tree",
   title = "choose-tree",
   run = function(ctx, args)
     local tmp = os.tmpname() .. ".json"
+    _choose_tree_tmp = tmp
     local script = os.getenv("HOME") .. "/.config/rex/choose-tree.py"
-    -- local_only=true: skip remote session.view calls, they get filtered anyway
     local tree = session_tree(ctx, true)
     rex.session.new_layer{
       bounds = { 0.2, 0.15, 0.6, 0.6 },
@@ -225,29 +252,6 @@ rex.action{
         },
       },
     }
-    -- When any block exits, check if our choice file appeared.
-    -- This runs in app context so rex.client.queue bypasses Remote Control.
-    rex.on("block.exit", function(evt)
-      local f = io.open(tmp, "r")
-      if not f then return end
-      local data = f:read("*a")
-      f:close()
-      pcall(os.remove, tmp)
-      local ok, c = pcall(rex.json.decode, data)
-      if ok and c then
-        if c.type == "select" then
-          local opts = { session_id = c.session_id }
-          if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
-          rex.client.queue("session.select", opts)
-        elseif c.type == "switch" then
-          rex.client.queue("client.host.switch", {})
-        elseif c.type == "new" then
-          rex.client.queue("session.new", {})
-        end
-        if c.was_zoomed then rex.client.queue("pane.zoom", {}) end
-      end
-      rex.stop(0)
-    end)
   end,
 }
 rex.bind("ctrl+b>w", "tmux_choose_tree")
