@@ -371,11 +371,16 @@ def finish(choice, client, tree):
 
     log = "/tmp/choose-tree.log"
 
-    def run(cmd):
+    def run(cmd, fallback=None):
         """Run synchronously while pane is still alive — switch happens before pane closes."""
         try:
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if r.returncode:
+            if r.returncode and fallback:
+                r2 = subprocess.run(fallback, capture_output=True, text=True, timeout=10)
+                if r2.returncode:
+                    with open(log, "a") as f:
+                        f.write(f"err(fallback) {r2.returncode}: {r2.stderr.strip()}\n")
+            elif r.returncode:
                 with open(log, "a") as f:
                     f.write(f"err {r.returncode}: {r.stderr.strip()}\n")
         except Exception as e:
@@ -394,8 +399,10 @@ def finish(choice, client, tree):
         if host:
             target = remote_select(host, client, session_id)
             if target:
+                lua = f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
                 run([REX, "-S", host, "-C", target, "do", "choose_tree_select",
-                     f"session_id={session_id}", f"window_id={window_id}"])
+                     f"session_id={session_id}", f"window_id={window_id}"],
+                    fallback=[REX, "-S", host, "-C", target, "do", "-e", lua])
         else:
             run(ct_action(client, "choose_tree_select",
                           f"session_id={session_id}", f"window_id={window_id}"))
