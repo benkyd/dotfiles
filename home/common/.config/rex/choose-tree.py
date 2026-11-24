@@ -405,9 +405,8 @@ def finish(choice, client, tree):
                                       f"window_id={orig['active']}"))
 
     # Restore zoom if the original window was zoomed before choose-tree opened
-    if orig and orig.get("was_zoomed") and orig.get("focused_block"):
-        commands.append(ct_action(client, "choose_tree_zoom",
-                                  f"block_id={orig['focused_block']}"))
+    if orig and orig.get("was_zoomed"):
+        commands.append(ct_action(client, "choose_tree_zoom"))
 
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:

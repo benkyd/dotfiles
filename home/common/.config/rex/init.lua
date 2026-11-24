@@ -227,12 +227,11 @@ end
 rex.action{
   name = "choose_tree_select",
   title = "choose-tree: go to session",
-  args = { session_id = "string", window_id = "string?" },
+  args = { session_id = "string", window_id = "string" },
   run = function(ctx, args)
-    rex.client.queue("session.select", {
-      session_id = args.session_id,
-      window_id  = args.window_id or "",
-    })
+    local opts = { session_id = args.session_id }
+    if args.window_id ~= "" then opts.window_id = args.window_id end
+    rex.client.queue("session.select", opts)
   end,
 }
 rex.action{
@@ -252,9 +251,8 @@ rex.action{
 rex.action{
   name = "choose_tree_zoom",
   title = "choose-tree: restore zoom",
-  args = { block_id = "string" },
   run = function(ctx, args)
-    rex.client.queue("pane.zoom", { block_id = args.block_id })
+    rex.client.queue("pane.zoom", {})
   end,
 }
 
