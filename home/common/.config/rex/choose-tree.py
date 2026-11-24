@@ -347,6 +347,8 @@ def main():
         return
 
     sessions = [s for s in json.loads(sys.argv[1]) if not s.get("host")]
+    for s in sessions:
+        s.pop("at", None)  # remove switch-host row and remote headings
     client = sys.argv[2]
     os.environ.setdefault("ESCDELAY", "25")
 
