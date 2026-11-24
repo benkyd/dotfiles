@@ -338,23 +338,13 @@ def main():
     import signal
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
-    if sys.argv[1] == "--go":
-        host, session_id, window_id, active, client = sys.argv[2:7]
-        tmp = _start_watcher(client)
-        with open(tmp, "w") as f:
-            json.dump({"type": "select", "session_id": session_id,
-                       "window_id": window_id, "host": ""}, f)
-        return
-
     sessions = [s for s in json.loads(sys.argv[1]) if not s.get("host")]
     for s in sessions:
-        s.pop("at", None)  # remove switch-host row and remote headings
-    client = sys.argv[2]
+        s.pop("at", None)
+    tmp = sys.argv[2]  # file path; init.lua's rex.on reads it after pane closes
     os.environ.setdefault("ESCDELAY", "25")
 
     orig = next((s for s in sessions if s.get("current")), None)
-    tmp = _start_watcher(client)
-
     result_holder = [{}]
 
     def run(scr):
@@ -367,10 +357,10 @@ def main():
             r = {"type": "kill", "cmd": list(choice[1])}
         elif choice:
             sid, wid, host, active = choice
-            r = {"type": "select", "session_id": sid, "window_id": wid or "", "host": ""}
+            r = {"type": "select", "session_id": sid, "window_id": wid or ""}
         elif orig:
             r = {"type": "select", "session_id": orig["id"],
-                 "window_id": orig.get("active", ""), "host": ""}
+                 "window_id": orig.get("active", "")}
         else:
             r = {"type": "done"}
         if orig and orig.get("was_zoomed"):
@@ -379,14 +369,11 @@ def main():
 
     curses.wrapper(run)
 
-    # Write AFTER curses exits (pane terminal restored, Python still alive via SIGHUP ignore)
-    # so when the watcher fires the pane is already gone and Rex won't undo the switch
     try:
         with open(tmp, "w") as f:
             json.dump(result_holder[0], f)
     except Exception:
         pass
-    # Python exits here → Rex auto-closes the pane
 
 
 if __name__ == "__main__":
