@@ -147,9 +147,8 @@ local function session_tree(ctx)
   local tree = {}
   local list = rex.call("session.list")
   for _, s in ipairs(list and list.sessions or {}) do
-    local attached = rex.call("session.attach", { session_id = s.session_id })
-    local view = attached and attached.view
-    if view then
+    local ok, view = pcall(rex.call, "session.view", { session_id = s.session_id })
+    if ok and view and view.windows then
       local here = s.session_id == ctx.session_id
       local tabs = {}
       for i, w in ipairs(view.windows) do

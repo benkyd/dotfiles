@@ -17,15 +17,20 @@ import sys
 
 REX = os.path.join(os.environ["REX_BIN_DIR"], "rex") if os.environ.get("REX_BIN_DIR") else "rex"
 
+# Color pair indices (initialised in browse())
+C_SESSION  = 1  # cyan   – session rows
+C_ACTIVE   = 2  # green  – active tab
+C_HERE     = 3  # yellow – attached/current session
+C_HEADING  = 4  # blue   – host-group headings
+
 
 def rx(s):
     """The rex command line for a session's server: -S HOST for a remote session."""
     return [REX, "-S", s["host"]] if s.get("host") else [REX]
 
 
-def remote_select(host, client, session_id, window_id):
-    """Command that makes this app show a session on another host. The app is a client of
-    that host's server too, under a different id but the same label, so find it by label."""
+def remote_select(host, client, session_id):
+    """Return (remote_server_flag, client_flag) to target the right app on HOST, or None."""
     def clients(base):
         out = subprocess.run(base + ["client", "ls", "--json"], capture_output=True,
                              text=True, timeout=30).stdout
@@ -36,44 +41,16 @@ def remote_select(host, client, session_id, window_id):
         apps = [c for c in clients([REX, "-S", host]) if c.get("info", {}).get("kind") == "app"]
         match = [c for c in apps if label and c["info"].get("label") == label]
         target = (match or (apps if len(apps) == 1 else []))[0]["client_id"]
+        return target
     except (IndexError, KeyError, ValueError, subprocess.SubprocessError):
         return None
-    cmd = [REX, "-S", host, "-C", target, "do", "session.select", f"session_id={session_id}"]
-    if window_id:
-        cmd.append(f"window_id={window_id}")
-    return cmd
-
-
-def client_args(client):
-    """-C for the app client, checked against this server. After the app attaches to another
-    host, the id the action saw is from the other server and isn't known here, where the same
-    app has an id of its own. Then pick the app client that is looking at this pane's session,
-    and of those the most recently connected (a remote app attaches after the local one)."""
-    try:
-        out = subprocess.run([REX, "client", "ls", "--json"], capture_output=True,
-                             text=True, timeout=20).stdout
-        clients = json.loads(out)["clients"]
-        with open("/tmp/choose-tree.log", "a") as f:
-            f.write("clients=" + json.dumps(clients) + "\n")
-        if any(c["client_id"] == client for c in clients):
-            return ["-C", client]
-        apps = [c for c in clients if c.get("info", {}).get("kind") == "app"]
-        here = [c for c in apps if os.environ.get("REX_SESSION") in c.get("session_ids", [])]
-        pool = here or apps
-        pool.sort(key=lambda c: c.get("connected_at", ""))
-        if pool:
-            return ["-C", pool[-1]["client_id"]]
-    except (KeyError, ValueError, subprocess.SubprocessError, OSError):
-        pass
-    return ["-C", client]
 
 
 FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
 
 
 def escape(scr):
-    """After an escape byte, tell a focus report (ESC [ I or ESC [ O, sent because this
-    pane turned on mode 1004) from the escape key itself."""
+    """After an escape byte, tell a focus report from the escape key itself."""
     scr.nodelay(True)
     try:
         if scr.getch() == ord("["):
@@ -87,12 +64,7 @@ def escape(scr):
         scr.nodelay(False)
 
 
-
-
 def rows(sessions, folded):
-    """Sessions grouped by host, with a divider above each group when there are several.
-    When the app is attached to a host, that host's sessions are the local ones and the
-    laptop is out of reach, so a last group holds a row that opens the switch-host dialog."""
     out = []
     attached = any(s.get("at") for s in sessions)
     multi = attached or len({s.get("host") or "" for s in sessions}) > 1
@@ -124,7 +96,7 @@ def draw(scr, sessions, folded, cursor, status=""):
             attr = curses.A_DIM
         elif kind == "heading":
             text = f"── {ti} " + "─" * max(0, width - len(ti) - 5)
-            attr = curses.A_DIM
+            attr = curses.color_pair(C_HEADING) | curses.A_DIM
         elif kind == "back":
             text = "⇄ switch host…"
             attr = curses.A_DIM
@@ -132,17 +104,22 @@ def draw(scr, sessions, folded, cursor, status=""):
             mark = "+" if s["id"] in folded else "-"
             count = len(s["tabs"])
             n = next(i + 1 for i, sess in enumerate(sessions) if sess["id"] == s["id"])
-            text = f"{mark} {n}: {s['label']}: {count} tab{'' if count == 1 else 's'}"
+            active_name = next((t["name"] for t in s["tabs"] if t["id"] == s["active"]), "")
+            text = f"{mark} {n}: {s['label']}  · {active_name} ({count})"
             if s["current"]:
                 text += " (attached)"
-            attr = curses.A_BOLD
+                attr = curses.color_pair(C_HERE) | curses.A_BOLD
+            else:
+                attr = curses.color_pair(C_SESSION) | curses.A_BOLD
         else:
             tab = s["tabs"][ti]
             branch = "└─>" if ti == len(s["tabs"]) - 1 else "├─>"
             text = f"  {branch} {ti + 1}: {tab['name']}"
             if tab["id"] == s["active"]:
-                text += "*"
-            attr = curses.A_NORMAL
+                text += " ●"
+                attr = curses.color_pair(C_ACTIVE)
+            else:
+                attr = curses.A_NORMAL
         if top + y == cursor:
             attr |= curses.A_REVERSE
         scr.addnstr(y, 0, text.ljust(width - 1), width - 1, attr)
@@ -180,9 +157,9 @@ def prompt(scr, label, value):
                 return None
             if key in ("\x7f", "\b", curses.KEY_BACKSPACE):
                 text = text[:-1]
-            elif key == "\x15":  # ctrl+u clears, as in a shell
+            elif key == "\x15":
                 text = ""
-            elif key == "\x17":  # ctrl+w deletes a word
+            elif key == "\x17":
                 text = text.rstrip().rpartition(" ")[0]
             elif isinstance(key, str) and key.isprintable():
                 text += key
@@ -229,8 +206,6 @@ def confirm(scr, question):
 
 
 def reorder(sessions, s, kind, si, ti, step):
-    """Swap the session or tab with its neighbour (step 1 is down, -1 up), stopping at
-    either end. Returns (status, row) with the row it has moved to."""
     if kind == "session":
         items, i, cmd = sessions, si, rx(s) + ["session", "move"]
     else:
@@ -240,7 +215,7 @@ def reorder(sessions, s, kind, si, ti, step):
     if not 0 <= other < len(items):
         return "", row
     if kind == "session" and items[other].get("host") != items[i].get("host"):
-        return "", row  # sessions stay within their host's group
+        return "", row
     where = "--after" if step > 0 else "--before"
     if subprocess.run(cmd + [items[i]["id"], where, items[other]["id"]],
                       capture_output=True).returncode:
@@ -250,11 +225,9 @@ def reorder(sessions, s, kind, si, ti, step):
 
 
 def kill(scr, sessions, s, kind, ti):
-    """Kill a session or tab, as tmux's choose-tree x does. Returns (status, quit)."""
     if kind == "session":
         if not confirm(scr, f"kill session {s['label']}?"):
             return "", False
-        # Killing the session this pane is in ends this pane too, so the caller does it last
         if s["current"]:
             return ("kill", [REX, "session", "kill", s["id"]]), True
         if subprocess.run(rx(s) + ["session", "kill", s["id"]], capture_output=True).returncode:
@@ -287,13 +260,19 @@ def choose(scr, sessions):
 def browse(scr, sessions):
     curses.curs_set(0)
     curses.use_default_colors()
+    if curses.has_colors():
+        curses.start_color()
+        curses.init_pair(C_SESSION, curses.COLOR_CYAN,    -1)
+        curses.init_pair(C_ACTIVE,  curses.COLOR_GREEN,   -1)
+        curses.init_pair(C_HERE,    curses.COLOR_YELLOW,  -1)
+        curses.init_pair(C_HEADING, curses.COLOR_BLUE,    -1)
     os.write(sys.stdout.fileno(), b"\x1b[?1004h")  # report focus changes
     folded = set()
     lines = rows(sessions, folded)
     cursor = 0
     for i, (kind, si, ti) in enumerate(lines):
         if kind == "session" and sessions[si]["current"]:
-            cursor = i  # fallback: the current session's row
+            cursor = i
         elif kind == "tab":
             s = sessions[si]
             if s["current"] and s["tabs"][ti]["id"] == s["active"]:
@@ -361,9 +340,12 @@ def browse(scr, sessions):
             return s["id"], window, s.get("host"), s["active"]
 
 
+def lua_select(session_id, window_id):
+    return f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
+
+
 def main():
     if sys.argv[1] == "--go":
-        # find-window's way to a remote row: HOST SESSION WINDOW ACTIVE CLIENT
         host, session_id, window_id, active, client = sys.argv[2:7]
         return finish((session_id, window_id, host or None, active), client, "")
     sessions = json.loads(sys.argv[1])
@@ -373,8 +355,6 @@ def main():
 
 
 def finish(choice, client, tree):
-    # Close this pane, then switch. A helper in its own process session does both, since
-    # closing the pane ends this process.
     commands = []
     block, session = os.environ.get("REX_BLOCK"), os.environ.get("REX_SESSION")
     if block and session:
@@ -382,21 +362,18 @@ def finish(choice, client, tree):
     if choice and choice[0] == "kill":
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        commands.append([REX, "-C", client, "do", "client.host.switch"])
+        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("client.host.switch",{})'])
     elif choice and choice[0] == "new":
-        commands.append([REX, "-C", client, "do", "session.new"])
+        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("session.new",{})'])
     elif choice:
         session_id, window_id, host, active = choice
         if host:
-            cmd = remote_select(host, client, session_id, None)
-            if cmd:
-                commands.append(cmd)
-                if window_id != active:
-                    commands.append(["sleep", "0.5"])
-                    commands.append(cmd + [f"window_id={window_id}"])
+            target = remote_select(host, client, session_id)
+            if target:
+                commands.append([REX, "-S", host, "-C", target, "do", "-e",
+                                  lua_select(session_id, window_id)])
         else:
-            lua = f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
-            commands.append([REX, "-C", client, "do", "-e", lua])
+            commands.append([REX, "-C", client, "do", "-e", lua_select(session_id, window_id)])
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
         f.write(f"--- client={client} choice={choice} commands={commands}\n")
