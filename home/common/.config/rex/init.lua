@@ -120,12 +120,14 @@ rex.bind("ctrl+b>s", "session.switch")
 
 -- choose-tree (C-b w) and find-window (C-b f) list this server's sessions with their tabs.
 -- When the app is attached to another host, that host's server runs them, so they list its
--- sessions. Other hosts' sessions aren't listed: switch host first (C-b W, or H in the tree).
+-- sessions. choose-tree also lists the other hosts' sessions, read in the background once
+-- it's open; jumping to one needs the app to agree, which it does only through its home
+-- host, and the tree says so when it doesn't.
 --
 -- choose-tree is choose-tree.py in a floating pane, so it takes vim keys: j/k move, 1-9 go to
 -- that session, enter goes, h/l fold, J/K reorder, r rename, x kill, n new, H switch host,
 -- q closes. The switch is made by choose-tree-watcher.lua, which also puts focus and zoom back.
--- find-window is the same list in Rex's picker, to filter by typing.
+-- find-window is this server's list in Rex's picker, to filter by typing.
 
 -- A tab's name: its label, or for an unnamed tab its program and folder
 local function tab_name(session_id, window, index)
@@ -145,9 +147,10 @@ local function tab_name(session_id, window, index)
   return fg.name .. " · " .. dir
 end
 
--- This server's sessions: { id, label, current, active, tabs = { { id, name } } }. The current
--- one also has block, the block that had focus, and zoomed, whether its window was zoomed, so
--- choose-tree can put both back. session.view reads a session without attaching to it.
+-- This server's sessions: { id, label, current, active, tabs = { { id, name, block } } }, block
+-- being the tab's focused block. The current session also has block, the block that had
+-- focus, and zoomed, whether its window was zoomed, so choose-tree can put both back.
+-- session.view reads a session without attaching to it.
 local function session_tree(ctx)
   local tree = {}
   local list = rex.call("session.list")
@@ -162,7 +165,7 @@ local function session_tree(ctx)
         tabs = {},
       }
       for i, w in ipairs(view.windows) do
-        entry.tabs[i] = { id = w.window_id, name = tab_name(s.session_id, w, i) }
+        entry.tabs[i] = { id = w.window_id, name = tab_name(s.session_id, w, i), block = w.focused_block_id or "" }
         if entry.current and w.window_id == entry.active then
           local zoomed = w.zoomed_block_id or ""
           entry.zoomed = zoomed ~= ""
@@ -196,6 +199,10 @@ rex.action{
   name = "tmux_choose_tree",
   title = "choose-tree",
   run = function(ctx, args)
+    -- The other hosts' labels only: the picker reads their sessions itself, in the
+    -- background, as waiting on them here would hold up every key until they answered
+    local ok_hosts, hosts = pcall(rex.servers)
+    local others = { hosts = ok_hosts and hosts or {}, server = ctx.server or "" }
     rex.session.new_layer{
       bounds = { 0.2, 0.15, 0.6, 0.6 },
       focus = true,
@@ -206,7 +213,7 @@ rex.action{
           shell = "none",
           login = false,
           command = { choose_tree_python, "-I", "-S", choose_tree_script,
-                      ctx.client_id or "", rex.json.encode(session_tree(ctx)) },
+                      ctx.client_id or "", rex.json.encode(session_tree(ctx)), rex.json.encode(others) },
         },
       },
     }
