@@ -357,16 +357,19 @@ def main():
 def finish(choice, client, tree):
     commands = []
     block, session = os.environ.get("REX_BLOCK"), os.environ.get("REX_SESSION")
-    if block and session:
-        commands.append([REX, "block", "close", "-s", session, block])
+    close_cmd = [REX, "block", "close", "-s", session, block] if block and session else None
     if choice and choice[0] == "kill":
+        if close_cmd: commands.append(close_cmd)
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        commands.append(["sleep", "0.3"])
-        commands.append([REX, "-C", client, "do", "client.host.switch", "--origin", "key"])
+        # Fire before closing so Rex still has focus when the dialog opens
+        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("client.host.switch",{})'])
+        if close_cmd: commands.append(close_cmd)
     elif choice and choice[0] == "new":
+        if close_cmd: commands.append(close_cmd)
         commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("session.new",{})'])
     elif choice:
+        if close_cmd: commands.append(close_cmd)
         session_id, window_id, host, active = choice
         if host:
             target = remote_select(host, client, session_id)
@@ -375,6 +378,8 @@ def finish(choice, client, tree):
                                   lua_select(session_id, window_id)])
         else:
             commands.append([REX, "-C", client, "do", "-e", lua_select(session_id, window_id)])
+    else:
+        if close_cmd: commands.append(close_cmd)
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
         f.write(f"--- client={client} choice={choice} commands={commands}\n")
