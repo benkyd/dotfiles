@@ -127,6 +127,9 @@ local function tab_name(session_id, window, index, api)
   if window.label and not window.label:match("^Window %x+$") then
     return window.label
   end
+  if api ~= rex then
+    return "tab " .. index  -- skip network round-trip for remote tabs
+  end
   local ok, proc = pcall(api.block.call, "com.superlogical.terminal", "process",
     { session_id = session_id, block_id = window.focused_block_id })
   local fg = ok and proc and proc.foreground

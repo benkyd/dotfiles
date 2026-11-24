@@ -362,7 +362,7 @@ def finish(choice, client, tree):
     if choice and choice[0] == "kill":
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("client.host.switch",{})'])
+        commands.append([REX, "-C", client, "do", "client.host.switch"])
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "-e", 'rex.client.queue("session.new",{})'])
     elif choice:
