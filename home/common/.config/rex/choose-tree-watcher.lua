@@ -22,9 +22,9 @@ for _ = 1, 1200 do
     local ok, c = pcall(rex.json.decode, data)
     log("choice=" .. data)
     if ok and c and c.type and c.type ~= "done" then
-      -- Small delay so the floating pane closes before we switch —
-      -- otherwise Rex restores focus to the original session after the switch.
-      rex.sleep(0.15)
+      -- Wait for the floating pane to fully close before switching so Rex
+      -- doesn't restore the previous session after the switch.
+      rex.sleep(0.3)
       if c.type == "select" then
         local opts = { session_id = c.session_id }
         if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end

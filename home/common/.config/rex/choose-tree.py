@@ -376,13 +376,16 @@ def main():
         if orig and orig.get("was_zoomed"):
             r["was_zoomed"] = True
         result_holder[0] = r
-        try:
-            with open(tmp, "w") as f:
-                json.dump(r, f)
-        except Exception:
-            pass
 
     curses.wrapper(run)
+
+    # Write AFTER curses exits (pane terminal restored, Python still alive via SIGHUP ignore)
+    # so when the watcher fires the pane is already gone and Rex won't undo the switch
+    try:
+        with open(tmp, "w") as f:
+            json.dump(result_holder[0], f)
+    except Exception:
+        pass
     # Python exits here → Rex auto-closes the pane
 
 
