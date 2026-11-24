@@ -343,9 +343,11 @@ def _write_choice(tmp, result, orig):
 
 
 def main():
+    import signal
+    # Ignore SIGHUP so Rex closing the pane doesn't kill us before we write the choice
+    signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
     if sys.argv[1] == "--go":
-        # find-window's way to a remote row — this pane runs ON the remote host,
-        # so the session is local from here (host = "")
         host, session_id, window_id, active, client = sys.argv[2:7]
         tmp = _start_watcher(client)
         _write_choice(tmp, {
@@ -361,46 +363,65 @@ def main():
     os.environ.setdefault("ESCDELAY", "25")
 
     orig = next((s for s in sessions if s.get("current")), None)
-
-    # Start watcher before the TUI so it's ready when the user picks
     tmp = _start_watcher(client)
 
-    choice = curses.wrapper(choose, sessions)
+    # Run TUI — write the choice file INSIDE curses.wrapper so it's written
+    # before the terminal is restored (Rex may send SIGHUP at that point)
+    result_holder = [{}]
 
-    # Build the result dict.
-    # Local sessions → watcher handles via rex.client.queue (instant, no RC).
-    # Remote sessions → run subprocess synchronously right here before exiting;
-    # rex -S host -C target do -e 'lua' bypasses Remote Control from Python.
-    if choice and choice[0] == "switch":
-        result = {"type": "switch"}
-    elif choice and choice[0] == "new":
-        result = {"type": "new"}
-    elif choice and choice[0] == "kill":
-        result = {"type": "kill", "cmd": list(choice[1])}
-    elif choice:
-        sid, wid, host, active = choice
-        if host:
-            target = remote_select(host, client, sid)
-            with open("/tmp/choose-tree-watcher.log", "a") as _f:
-                _f.write(f"py remote: host={host} target={target}\n")
-            if target:
-                lua = (f'rex.client.queue("session.select",'
-                       f'{{session_id="{sid}",window_id="{wid or ""}"}})' )
-                r = subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
-                                   capture_output=True, text=True, timeout=10)
-                with open("/tmp/choose-tree-watcher.log", "a") as _f:
-                    _f.write(f"py remote result: {r.returncode} {r.stderr.strip()}\n")
-            result = {"type": "done"}
+    def run(scr):
+        choice = choose(scr, sessions)
+        if choice and choice[0] == "switch":
+            r = {"type": "switch"}
+        elif choice and choice[0] == "new":
+            r = {"type": "new"}
+        elif choice and choice[0] == "kill":
+            r = {"type": "kill", "cmd": list(choice[1])}
+        elif choice:
+            sid, wid, host, active = choice
+            # Remote sessions: store for subprocess handling after curses exits
+            r = {"type": "select", "session_id": sid,
+                 "window_id": wid or "", "host": host or ""}
+        elif orig:
+            r = {"type": "select", "session_id": orig["id"],
+                 "window_id": orig.get("active", ""), "host": ""}
         else:
-            result = {"type": "select", "session_id": sid,
-                      "window_id": wid or "", "host": ""}
-    elif orig:
-        result = {"type": "select", "session_id": orig["id"],
-                  "window_id": orig.get("active", ""), "host": ""}
-    else:
-        result = {"type": "done"}
+            r = {"type": "done"}
+        if orig and orig.get("was_zoomed"):
+            r["was_zoomed"] = True
+        result_holder[0] = r
+        # Write NOW while still inside curses (terminal not yet restored)
+        try:
+            with open(tmp, "w") as f:
+                json.dump(r, f)
+        except Exception as e:
+            with open("/tmp/choose-tree-watcher.log", "a") as lf:
+                lf.write(f"py write error: {e}\n")
 
-    _write_choice(tmp, result, orig)
+    curses.wrapper(run)
+
+    # Handle remote sessions synchronously after curses exits
+    result = result_holder[0]
+    if result.get("type") == "select" and result.get("host"):
+        host = result["host"]
+        sid = result["session_id"]
+        wid = result.get("window_id", "")
+        target = remote_select(host, client, sid)
+        with open("/tmp/choose-tree-watcher.log", "a") as lf:
+            lf.write(f"py remote: host={host} target={target}\n")
+        if target:
+            lua = (f'rex.client.queue("session.select",'
+                   f'{{session_id="{sid}",window_id="{wid}"}})' )
+            r2 = subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
+                                capture_output=True, text=True, timeout=10)
+            with open("/tmp/choose-tree-watcher.log", "a") as lf:
+                lf.write(f"py remote result: {r2.returncode} {r2.stderr.strip()}\n")
+        # Overwrite with done so watcher doesn't also try remote
+        try:
+            with open(tmp, "w") as f:
+                json.dump({"type": "done"}, f)
+        except Exception:
+            pass
     # Python exits here → Rex auto-closes the pane
 
 
