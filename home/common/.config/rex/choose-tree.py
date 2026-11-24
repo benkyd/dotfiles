@@ -344,14 +344,15 @@ def _write_choice(tmp, result, orig):
 
 def main():
     if sys.argv[1] == "--go":
-        # find-window's way to a remote row
+        # find-window's way to a remote row — this pane runs ON the remote host,
+        # so the session is local from here (host = "")
         host, session_id, window_id, active, client = sys.argv[2:7]
         tmp = _start_watcher(client)
         _write_choice(tmp, {
             "type": "select",
             "session_id": session_id,
             "window_id": window_id,
-            "host": host or "",
+            "host": "",
         }, None)
         return
 

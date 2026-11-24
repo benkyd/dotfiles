@@ -2,59 +2,15 @@
 -- rex.client.queue here is server→client and never needs Remote Control.
 -- Called: rex -C CLIENT do choose-tree-watcher.lua --args '{"tmp":"...","rex":"...","client":"..."}'
 
-local tmp     = rex.args and rex.args.tmp
-local REX_BIN = rex.args and rex.args.rex or "rex"
+local tmp        = rex.args and rex.args.tmp
 local our_client = rex.args and rex.args.client or ""
-local LOG     = "/tmp/choose-tree-watcher.log"
+local LOG        = "/tmp/choose-tree-watcher.log"
 
 if not tmp then rex.stop(1); return end
-
-local function q(s)
-  return "'" .. tostring(s):gsub("'", "'\\''") .. "'"
-end
 
 local function log(msg)
   local f = io.open(LOG, "a")
   if f then f:write(msg .. "\n"); f:close() end
-end
-
-local function pread(cmd)
-  local h = io.popen(cmd .. " 2>/dev/null")
-  if not h then return nil end
-  local s = h:read("*a")
-  h:close()
-  return s
-end
-
--- Find the right app client on a remote host (matches our app by label)
-local function remote_client(host)
-  -- Get our label from local client list
-  local my_label = nil
-  local ok, lc = pcall(rex.json.decode, pread(q(REX_BIN) .. " client ls --json") or "")
-  if ok and lc then
-    for _, c in ipairs(lc.clients or {}) do
-      if c.client_id == our_client and c.info then
-        my_label = c.info.label; break
-      end
-    end
-  end
-  log("our_label=" .. tostring(my_label))
-
-  -- Get clients on the remote host
-  local ok2, rc = pcall(rex.json.decode,
-    pread(q(REX_BIN) .. " -S " .. q(host) .. " client ls --json") or "")
-  if not ok2 or not rc then log("client ls on " .. host .. " failed"); return nil end
-
-  local apps, best = {}, nil
-  for _, c in ipairs(rc.clients or {}) do
-    if c.info and c.info.kind == "app" then
-      apps[#apps + 1] = c
-      if my_label and c.info.label == my_label then best = c.client_id end
-    end
-  end
-  if not best and #apps == 1 then best = apps[1].client_id end
-  log("remote target=" .. tostring(best) .. " (#apps=" .. #apps .. ")")
-  return best
 end
 
 log("--- watcher start tmp=" .. tmp)
@@ -71,26 +27,81 @@ for _ = 1, 1200 do          -- poll up to 60 s
     if ok and c and c.type then
 
       if c.type == "select" and (not c.host or c.host == "") then
-        -- ── Local session ── direct queue, no Remote Control check ──────────
-        log("local select " .. (c.session_id or "") .. " " .. (c.window_id or ""))
+        -- ── Local session ── direct queue, no Remote Control ────────────────
+        log("local select " .. (c.session_id or ""))
         local opts = { session_id = c.session_id }
         if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
-        rex.client.queue("session.select", opts)
+        local ok2, err = pcall(rex.client.queue, "session.select", opts)
+        log("queue result: " .. tostring(ok2) .. " " .. tostring(err))
 
       elseif c.type == "select" and c.host and c.host ~= "" then
-        -- ── Remote session ── find the right app client on that host ─────────
+        -- ── Remote session ── use rex.server() to reach the right host ──────
         log("remote select host=" .. c.host)
-        local target = remote_client(c.host)
-        if target then
-          local lua = string.format(
-            'rex.client.queue("session.select",{session_id=%q,window_id=%q})',
-            c.session_id, c.window_id or "")
-          local cmd = table.concat({
-            q(REX_BIN), "-S", q(c.host), "-C", q(target),
-            "do", "-e", q(lua), ">>" .. q(LOG), "2>&1"
-          }, " ")
-          log("running: " .. cmd)
-          os.execute(cmd)
+        local opts = { session_id = c.session_id }
+        if c.window_id and c.window_id ~= "" then opts.window_id = c.window_id end
+
+        -- Try queuing via the remote server (client context carries over)
+        local ok2, err = pcall(function()
+          rex.server(c.host).client.queue("session.select", opts)
+        end)
+        log("remote queue: " .. tostring(ok2) .. " " .. tostring(err))
+
+        if not ok2 then
+          -- Fallback: find the Mac app on the remote host by label matching,
+          -- then open a tiny hidden pane there to do the switch
+          log("trying new_layer fallback")
+          local my_label = nil
+          local ok3, lc = pcall(rex.call, "client.ls")
+          if ok3 and lc then
+            for _, cl in ipairs(lc.clients or {}) do
+              if cl.client_id == our_client and cl.info then
+                my_label = cl.info.label; break
+              end
+            end
+          end
+          log("our_label=" .. tostring(my_label))
+
+          local ok4, rc = pcall(function()
+            return rex.server(c.host).call("client.ls")
+          end)
+          if ok4 and rc then
+            local target = nil
+            local apps = {}
+            for _, cl in ipairs(rc.clients or {}) do
+              if cl.info and cl.info.kind == "app" then
+                apps[#apps+1] = cl
+                if my_label and cl.info.label == my_label then target = cl.client_id end
+              end
+            end
+            if not target and #apps == 1 then target = apps[1].client_id end
+            log("remote target=" .. tostring(target))
+
+            if target then
+              -- Open a tiny hidden pane on the remote host to dispatch the action
+              local go_py = os.getenv("HOME") .. "/.config/rex/choose-tree.py"
+              local ok5, err5 = pcall(function()
+                rex.server(c.host).session.new_layer{
+                  bounds = {0.45, 0.48, 0.1, 0.05},
+                  focus = false,
+                  layout = rex.layout.block{
+                    flavor = "com.superlogical.terminal.shell",
+                    label = "go",
+                    options = {
+                      shell = "none", login = false,
+                      command = {
+                        "/usr/bin/python3", go_py,
+                        "--go", "", c.session_id, c.window_id or "",
+                        c.session_id, target
+                      }
+                    }
+                  }
+                }
+              end)
+              log("new_layer: " .. tostring(ok5) .. " " .. tostring(err5))
+            end
+          else
+            log("remote client.ls failed: " .. tostring(rc))
+          end
         end
 
       elseif c.type == "switch" then
@@ -102,8 +113,11 @@ for _ = 1, 1200 do          -- poll up to 60 s
         rex.client.queue("session.new", {})
 
       elseif c.type == "kill" and c.cmd then
+        log("kill")
         local parts = {}
-        for _, p in ipairs(c.cmd) do parts[#parts + 1] = q(p) end
+        for _, p in ipairs(c.cmd) do
+          parts[#parts+1] = "'" .. tostring(p):gsub("'", "'\\''") .. "'"
+        end
         os.execute(table.concat(parts, " "))
       end
 
