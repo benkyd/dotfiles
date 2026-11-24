@@ -14,6 +14,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 
 REX = os.path.join(os.environ["REX_BIN_DIR"], "rex") if os.environ.get("REX_BIN_DIR") else "rex"
 
@@ -25,32 +26,13 @@ C_HEADING  = 4  # blue   – host-group headings
 
 
 def rx(s):
-    """The rex command line for a session's server: -S HOST for a remote session."""
     return [REX, "-S", s["host"]] if s.get("host") else [REX]
-
-
-def remote_select(host, client, session_id):
-    """Return (remote_server_flag, client_flag) to target the right app on HOST, or None."""
-    def clients(base):
-        out = subprocess.run(base + ["client", "ls", "--json"], capture_output=True,
-                             text=True, timeout=30).stdout
-        return json.loads(out)["clients"]
-    try:
-        label = next((c.get("info", {}).get("label") for c in clients([REX])
-                      if c["client_id"] == client), None)
-        apps = [c for c in clients([REX, "-S", host]) if c.get("info", {}).get("kind") == "app"]
-        match = [c for c in apps if label and c["info"].get("label") == label]
-        target = (match or (apps if len(apps) == 1 else []))[0]["client_id"]
-        return target
-    except (IndexError, KeyError, ValueError, subprocess.SubprocessError):
-        return None
 
 
 FOCUS_IN, FOCUS_OUT = "focus_in", "focus_out"
 
 
 def escape(scr):
-    """After an escape byte, tell a focus report from the escape key itself."""
     scr.nodelay(True)
     try:
         if scr.getch() == ord("["):
@@ -133,7 +115,6 @@ class FocusLost(Exception):
 
 
 def prompt(scr, label, value):
-    """Edit one line at the bottom of the pane. Returns the text, or None on escape."""
     curses.curs_set(1)
     text = value
     try:
@@ -262,11 +243,11 @@ def browse(scr, sessions):
     curses.use_default_colors()
     if curses.has_colors():
         curses.start_color()
-        curses.init_pair(C_SESSION, curses.COLOR_CYAN,    -1)
-        curses.init_pair(C_ACTIVE,  curses.COLOR_GREEN,   -1)
-        curses.init_pair(C_HERE,    curses.COLOR_YELLOW,  -1)
-        curses.init_pair(C_HEADING, curses.COLOR_BLUE,    -1)
-    os.write(sys.stdout.fileno(), b"\x1b[?1004h")  # report focus changes
+        curses.init_pair(C_SESSION, curses.COLOR_CYAN,   -1)
+        curses.init_pair(C_ACTIVE,  curses.COLOR_GREEN,  -1)
+        curses.init_pair(C_HERE,    curses.COLOR_YELLOW, -1)
+        curses.init_pair(C_HEADING, curses.COLOR_BLUE,   -1)
+    os.write(sys.stdout.fileno(), b"\x1b[?1004h")
     folded = set()
     lines = rows(sessions, folded)
     cursor = 0
@@ -340,102 +321,72 @@ def browse(scr, sessions):
             return s["id"], window, s.get("host"), s["active"]
 
 
-def ct_action(client, action, *kv):
-    """Call a server-side choose-tree helper action — no Remote Control check."""
-    return [REX, "-C", client, "do", action] + list(kv)
+def _start_watcher(client):
+    """Start the choice watcher as a background rex do script. Returns the tmp file path."""
+    tmp = tempfile.mktemp(suffix=".json", prefix="rex-ct-")
+    watcher = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "choose-tree-watcher.lua")
+    args = json.dumps({"tmp": tmp, "rex": REX})
+    subprocess.Popen(
+        [REX, "-C", client, "do", watcher, "--args", args],
+        start_new_session=True,
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    return tmp
 
 
-def shell_quote(s):
-    return "'" + s.replace("'", "'\\''") + "'"
+def _write_choice(tmp, result, orig):
+    if orig and orig.get("was_zoomed"):
+        result["was_zoomed"] = True
+    with open(tmp, "w") as f:
+        json.dump(result, f)
 
 
 def main():
     if sys.argv[1] == "--go":
+        # find-window's way to a remote row
         host, session_id, window_id, active, client = sys.argv[2:7]
-        return finish((session_id, window_id, host or None, active), client, "")
+        tmp = _start_watcher(client)
+        _write_choice(tmp, {
+            "type": "select",
+            "session_id": session_id,
+            "window_id": window_id,
+            "host": host or "",
+        }, None)
+        return
+
     sessions = json.loads(sys.argv[1])
     client = sys.argv[2]
     os.environ.setdefault("ESCDELAY", "25")
-    finish(curses.wrapper(choose, sessions), client, sys.argv[1])
 
+    orig = next((s for s in sessions if s.get("current")), None)
 
-def finish(choice, client, tree):
-    block, session = os.environ.get("REX_BLOCK"), os.environ.get("REX_SESSION")
+    # Start watcher before the TUI so it's ready when the user picks
+    tmp = _start_watcher(client)
 
-    orig = None
-    if tree:
-        try:
-            orig = next((s for s in json.loads(tree) if s.get("current")), None)
-        except Exception:
-            pass
+    choice = curses.wrapper(choose, sessions)
 
-    log = "/tmp/choose-tree.log"
-
-    def run(cmd, fallback=None):
-        """Run synchronously while pane is still alive — switch happens before pane closes."""
-        try:
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if r.returncode and fallback:
-                r2 = subprocess.run(fallback, capture_output=True, text=True, timeout=10)
-                if r2.returncode:
-                    with open(log, "a") as f:
-                        f.write(f"err(fallback) {r2.returncode}: {r2.stderr.strip()}\n")
-            elif r.returncode:
-                with open(log, "a") as f:
-                    f.write(f"err {r.returncode}: {r.stderr.strip()}\n")
-        except Exception as e:
-            with open(log, "a") as f:
-                f.write(f"exc: {e}\n")
-
-    # ── Main action (synchronous) ────────────────────────────────────────────
+    # Build the result dict — watcher does all rex calls in app context
     if choice and choice[0] == "switch":
-        run(ct_action(client, "choose_tree_switch_host"))
-
+        result = {"type": "switch"}
     elif choice and choice[0] == "new":
-        run(ct_action(client, "choose_tree_new"))
-
-    elif choice and choice[0] != "kill":
-        session_id, window_id, host, active = choice
-        if host:
-            target = remote_select(host, client, session_id)
-            if target:
-                lua = f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
-                run([REX, "-S", host, "-C", target, "do", "choose_tree_select",
-                     f"session_id={session_id}", f"window_id={window_id}"],
-                    fallback=[REX, "-S", host, "-C", target, "do", "-e", lua])
-        else:
-            run(ct_action(client, "choose_tree_select",
-                          f"session_id={session_id}", f"window_id={window_id}"))
-
-    elif choice is None and orig:
+        result = {"type": "new"}
+    elif choice and choice[0] == "kill":
+        result = {"type": "kill", "cmd": list(choice[1])}
+    elif choice:
+        sid, wid, host, active = choice
+        result = {"type": "select", "session_id": sid,
+                  "window_id": wid or "", "host": host or ""}
+    elif orig:
         # Cancel: restore original focus
-        run(ct_action(client, "choose_tree_select",
-                      f"session_id={orig['id']}", f"window_id={orig['active']}"))
+        result = {"type": "select", "session_id": orig["id"],
+                  "window_id": orig.get("active", ""), "host": ""}
+    else:
+        result = {}
 
-    # Restore zoom after re-focusing
-    if orig and orig.get("was_zoomed"):
-        run(ct_action(client, "choose_tree_zoom"))
+    _write_choice(tmp, result, orig)
+    # Python exits here → Rex auto-closes the pane
 
-    # ── Async cleanup (close pane, kill if needed) ───────────────────────────
-    cleanup = []
-    if block and session:
-        cleanup.append([REX, "block", "close", "-s", session, block])
-    if choice and choice[0] == "kill":
-        cleanup.append(choice[1])
-
-    with open(log, "a") as f:
-        f.write(f"--- client={client} choice={choice}\n")
-
-    if cleanup:
-        script = " ; ".join(" ".join(shell_quote(p) for p in cmd) + f" >>{log} 2>&1"
-                            for cmd in cleanup)
-        subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
-                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
-
-
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
