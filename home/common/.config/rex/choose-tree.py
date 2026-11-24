@@ -346,7 +346,7 @@ def main():
                        "window_id": window_id, "host": ""}, f)
         return
 
-    sessions = json.loads(sys.argv[1])
+    sessions = [s for s in json.loads(sys.argv[1]) if not s.get("host")]
     client = sys.argv[2]
     os.environ.setdefault("ESCDELAY", "25")
 
