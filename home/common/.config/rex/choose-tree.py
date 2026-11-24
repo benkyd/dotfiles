@@ -381,11 +381,15 @@ def main():
         sid, wid, host, active = choice
         if host:
             target = remote_select(host, client, sid)
+            with open("/tmp/choose-tree-watcher.log", "a") as _f:
+                _f.write(f"py remote: host={host} target={target}\n")
             if target:
                 lua = (f'rex.client.queue("session.select",'
                        f'{{session_id="{sid}",window_id="{wid or ""}"}})' )
-                subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
-                               capture_output=True, timeout=10)
+                r = subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
+                                   capture_output=True, text=True, timeout=10)
+                with open("/tmp/choose-tree-watcher.log", "a") as _f:
+                    _f.write(f"py remote result: {r.returncode} {r.stderr.strip()}\n")
             result = {"type": "done"}
         else:
             result = {"type": "select", "session_id": sid,
