@@ -131,7 +131,8 @@ def draw(scr, sessions, folded, cursor, status=""):
         elif kind == "session":
             mark = "+" if s["id"] in folded else "-"
             count = len(s["tabs"])
-            text = f"{mark} {s['label']}: {count} tab{'' if count == 1 else 's'}"
+            n = next(i + 1 for i, sess in enumerate(sessions) if sess["id"] == s["id"])
+            text = f"{mark} {n}: {s['label']}: {count} tab{'' if count == 1 else 's'}"
             if s["current"]:
                 text += " (attached)"
             attr = curses.A_BOLD
@@ -145,7 +146,7 @@ def draw(scr, sessions, folded, cursor, status=""):
         if top + y == cursor:
             attr |= curses.A_REVERSE
         scr.addnstr(y, 0, text.ljust(width - 1), width - 1, attr)
-    footer = status or "j/k move  J/K reorder  h/l fold  r rename  x kill  n new  H host  enter go  q quit"
+    footer = status or "j/k move  1-9 session  J/K reorder  h/l fold  r rename  x kill  n new  H host  enter go  q quit"
     scr.addnstr(height - 1, 0, footer, width - 1, curses.A_DIM)
     scr.refresh()
 
@@ -327,6 +328,11 @@ def browse(scr, sessions):
             cursor = 0
         elif key == ord("G"):
             cursor = len(lines) - 1
+        elif ord("1") <= key <= ord("9"):
+            n = key - ord("1")
+            if n < len(sessions):
+                sv = sessions[n]
+                return sv["id"], sv["active"], sv.get("host"), sv["active"]
         elif kind in ("empty", "heading"):
             pass
         elif kind == "back":
@@ -376,31 +382,24 @@ def finish(choice, client, tree):
     if choice and choice[0] == "kill":
         commands.append(choice[1])
     elif choice and choice[0] == "switch":
-        commands.append([REX, *client_args(client), "do", "client.host.switch"])
+        commands.append([REX, "-C", client, "do", "client.host.switch"])
     elif choice and choice[0] == "new":
         commands.append([REX, "-C", client, "do", "session.new"])
     elif choice:
         session_id, window_id, host, active = choice
         if host:
-            # Selecting the session alone is what works; a window_id on the same call
-            # didn't switch, so a tab other than the active one is a second step
             cmd = remote_select(host, client, session_id, None)
             if cmd:
                 commands.append(cmd)
                 if window_id != active:
-                    commands.append(["sleep", "1"])
+                    commands.append(["sleep", "0.5"])
                     commands.append(cmd + [f"window_id={window_id}"])
         else:
-            cmd = [REX, *client_args(client), "do", "session.select", f"session_id={session_id}"]
-            commands.append(cmd)
-            if window_id != active:
-                commands.append(["sleep", "1"])
-                commands.append(cmd + [f"window_id={window_id}"])
-    # Output goes to /tmp/choose-tree.log so a switch that does nothing can be diagnosed
+            lua = f'rex.client.queue("session.select",{{session_id="{session_id}",window_id="{window_id}"}})'
+            commands.append([REX, "-C", client, "do", "-e", lua])
     log = "/tmp/choose-tree.log"
     with open(log, "a") as f:
-        f.write(f"--- REX_SERVER={os.environ.get('REX_SERVER')} client={client}\n"
-                f"tree={tree}\nchoice={choice}\ncommands={commands}\n")
+        f.write(f"--- client={client} choice={choice} commands={commands}\n")
     script = " ; ".join(" ".join(f"'{part}'" for part in cmd) + f" >>{log} 2>&1" for cmd in commands)
     subprocess.Popen(["/bin/sh", "-c", script], start_new_session=True,
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
