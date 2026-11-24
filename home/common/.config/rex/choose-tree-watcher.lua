@@ -24,7 +24,7 @@ for _ = 1, 1200 do          -- poll up to 60 s
     log("choice=" .. data)
 
     local ok, c = pcall(rex.json.decode, data)
-    if ok and c and c.type then
+    if ok and c and c.type and c.type ~= "done" then
 
       if c.type == "select" and (not c.host or c.host == "") then
         -- ── Local session ── direct queue, no Remote Control ────────────────

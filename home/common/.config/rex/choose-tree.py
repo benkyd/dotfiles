@@ -367,7 +367,10 @@ def main():
 
     choice = curses.wrapper(choose, sessions)
 
-    # Build the result dict — watcher does all rex calls in app context
+    # Build the result dict.
+    # Local sessions → watcher handles via rex.client.queue (instant, no RC).
+    # Remote sessions → run subprocess synchronously right here before exiting;
+    # rex -S host -C target do -e 'lua' bypasses Remote Control from Python.
     if choice and choice[0] == "switch":
         result = {"type": "switch"}
     elif choice and choice[0] == "new":
@@ -376,14 +379,22 @@ def main():
         result = {"type": "kill", "cmd": list(choice[1])}
     elif choice:
         sid, wid, host, active = choice
-        result = {"type": "select", "session_id": sid,
-                  "window_id": wid or "", "host": host or ""}
+        if host:
+            target = remote_select(host, client, sid)
+            if target:
+                lua = (f'rex.client.queue("session.select",'
+                       f'{{session_id="{sid}",window_id="{wid or ""}"}})' )
+                subprocess.run([REX, "-S", host, "-C", target, "do", "-e", lua],
+                               capture_output=True, timeout=10)
+            result = {"type": "done"}
+        else:
+            result = {"type": "select", "session_id": sid,
+                      "window_id": wid or "", "host": ""}
     elif orig:
-        # Cancel: restore original focus
         result = {"type": "select", "session_id": orig["id"],
                   "window_id": orig.get("active", ""), "host": ""}
     else:
-        result = {}
+        result = {"type": "done"}
 
     _write_choice(tmp, result, orig)
     # Python exits here → Rex auto-closes the pane
