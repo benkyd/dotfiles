@@ -326,7 +326,7 @@ def _start_watcher(client):
     tmp = tempfile.mktemp(suffix=".json", prefix="rex-ct-")
     watcher = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "choose-tree-watcher.lua")
-    args = json.dumps({"tmp": tmp, "rex": REX})
+    args = json.dumps({"tmp": tmp, "rex": REX, "client": client})
     subprocess.Popen(
         [REX, "-C", client, "do", watcher, "--args", args],
         start_new_session=True,
