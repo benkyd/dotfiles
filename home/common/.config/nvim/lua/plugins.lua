@@ -26,32 +26,7 @@ return {
     },
     {
         'jovanlanik/fsplash.nvim',
-        opts = {
-            lines = {
-                "▄▄▄▄· ▄▄▄ . ▐ ▄  ▌ ▐·▪  • ▌ ▄ ·. ",
-                "▐█ ▀█▪▀▄.▀·•█▌▐█▪█·█▌██ ·██ ▐███▪",
-                "▐█▀▀█▄▐▀▀▪▄▐█▐▐▌▐█▐█•▐█·▐█ ▌▐▌▐█·",
-                "██▄▪▐█▐█▄▄▌██▐█▌ ███ ▐█▌██ ██▌▐█▌",
-                "·▀▀▀▀  ▀▀▀ ▀▀ █▪. ▀  ▀▀▀▀▀  █▪▀▀▀",
-                '',
-                'NVIM v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
-                'Nvim is open Source and freely distributable',
-                '',
-                'type  :checkhealth<Enter>     to optimize Nvim',
-                'type  :q<Enter>               to exit         ',
-                'type  :help<Enter>            for help        ',
-                '',
-                'type  :help news<Enter> to see changes in v'
-                .. vim.version().major .. '.' .. vim.version().minor,
-            },
-            border = 'none',
-        },
-        config = function(_, opts)
-            require('fsplash').setup(opts)
-            vim.api.nvim_create_autocmd('VimEnter', {
-                callback = function() require('fsplash').open_window() end,
-            })
-        end,
+        config = function() require('splash') end, -- the BENVIM splash, lua/splash.lua
     },
     { 'benkyd/nvim-hardline', opts = {} },
     {
