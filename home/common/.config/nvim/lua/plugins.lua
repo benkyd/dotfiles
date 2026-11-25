@@ -1,4 +1,5 @@
 return {
+    -- LOOK
     {
         'rebelot/kanagawa.nvim',
         lazy = false,
@@ -7,236 +8,22 @@ return {
             require('kanagawa').setup({
                 undercurl = true,
                 commentStyle = { italic = true },
-                keywordsStyle = { italic = true },
+                keywordStyle = { italic = true },
                 statementStyle = { bold = true },
             })
-            vim.cmd('colorscheme kanagawa')
+            vim.cmd.colorscheme('kanagawa')
 
             vim.keymap.set('n', '<leader>tt', function()
                 if vim.o.background == 'dark' then
                     vim.o.background = 'light'
-                    vim.cmd('colorscheme kanagawa-lotus')
+                    vim.cmd.colorscheme('kanagawa-lotus')
                 else
                     vim.o.background = 'dark'
-                    vim.cmd('colorscheme kanagawa')
+                    vim.cmd.colorscheme('kanagawa')
                 end
             end, { desc = 'Toggle light/dark theme' })
-        end
-    },
-    -- QUALITY OF LIFE INTEGRATIONS
-    {
-        'tpope/vim-fugitive',
-    },
-    {
-        'hat0uma/csvview.nvim',
-        lazy = true,
-    },
-    {
-        'folke/snacks.nvim',
-        lazy = false,
-        priority = 1000,
-        opts = {},
-    },
-    {
-        'tzachar/local-highlight.nvim',
-        config = function()
-            require('local-highlight').setup({
-                hlgroup = 'Search',
-                cw_hlgroup = nil,
-                -- Whether to display highlights in INSERT mode or not
-                insert_mode = true,
-                min_match_len = 1,
-                max_match_len = math.huge,
-                highlight_single_match = true,
-            })
-            vim.api.nvim_create_autocmd('BufRead', {
-                pattern = {'*.*'},
-                callback = function(data)
-                    require('local-highlight').attach(data.buf)
-                end
-            })
-        end
-    },
-    {
-        'lewis6991/gitsigns.nvim',
-        config = function()
-            require('plugin-config/gitsigns')
-        end
-    },
-    {
-        -- Window picker
-        "yorickpeterse/nvim-window",
-        keys = {
-            { "<C-w>e", "<cmd>lua require('nvim-window').pick()<cr>", desc = "nvim-window: Jump to window" },
-        },
-        config = true,
-    },
-    {
-        -- colourise colour codes
-        'NvChad/nvim-colorizer.lua',
-        lazy = false,
-        opts = {}
-    },
-    {
-        -- Vim vinegar - better netrw
-        'stevearc/oil.nvim',
-        opts = {
-            float = {
-                max_width = 80,
-                max_height = 20,
-                border = 'rounded',
-                win_options = {
-                    winblend = 0,
-                },
-            },
-        },
-        keys = {
-            { '<C-b>', '<cmd>lua require("oil").open_float()<cr>', desc = "Toggle Oil" },
-        },
-        -- Optional dependencies
-        dependencies = { "nvim-tree/nvim-web-devicons" }
-    },
-    {
-        -- EPIC HARPOON MOMENT
-        'ThePrimeagen/harpoon',
-        lazy = false,
-        keys = {
-            { '<leader>hh', '<cmd>lua require("harpoon.ui").toggle_quick_menu()<cr>', desc = "Toggle harpoon menu" },
-            { '<leader>hg', '<cmd>lua require("harpoon.mark").toggle_file() <cr>',    desc = "Add file to harpoon list" },
-        },
-        config = function()
-            require('harpoon').setup({ tabline = true })
-
-            for pos = 1, 9 do
-                vim.keymap.set("n", "<C-w>" .. pos, function()
-                    require("harpoon.ui").nav_file(pos)
-                end, { desc = "Move to harpoon mark #" .. pos })
-            end
-        end
-    },
-    {
-        'nvim-telescope/telescope.nvim',
-        dependencies = {
-            'nvim-tree/nvim-web-devicons',
-            'nvim-lua/plenary.nvim',
-            'nvim-telescope/telescope-ui-select.nvim',
-            'debugloop/telescope-undo.nvim',
-            'folke/todo-comments.nvim',
-            'kevinhwang91/nvim-bqf',
-            'rcarriga/nvim-notify',
-        },
-        config = function()
-            require('plugin-config/telescope')
-            require('todo-comments').setup({})
-        end
-    },
-    {
-        'nvim-treesitter/nvim-treesitter',
-        branch = 'main',
-        lazy = false,
-        build = ':TSUpdate',
-        dependencies = {
-            -- Treesitter text objects (select/move by function, class, parameter)
-            { 'nvim-treesitter/nvim-treesitter-textobjects', branch = 'main' },
-        },
-        config = function()
-            require('plugin-config/nvim-treesitter')
-        end
-    },
-    {
-        'nvim-treesitter/nvim-treesitter-context',
-        dependencies = { 'nvim-treesitter/nvim-treesitter' },
-    },
-    {
-        'mrjones2014/smart-splits.nvim',
-        config = function()
-            require('plugin-config/smart-splits')
-        end
-    },
-    {
-        'folke/zen-mode.nvim',
-        lazy = true,
-        opts = {},
-        keys = {
-            { '<leader>z', '<cmd>lua require("zen-mode").toggle()<cr>', desc = "Toggle zen mode" },
-        },
-    },
-    {
-        'gorbit99/codewindow.nvim',
-        lazy = false,
-        dependencies = { 'nvim-treesitter/nvim-treesitter' },
-        init = function()
-            -- codewindow still requires nvim-treesitter.ts_utils, which the
-            -- treesitter main branch removed; shim the one function it uses
-            package.preload['nvim-treesitter.ts_utils'] = function()
-                return {
-                    get_vim_range = function(range, buf)
-                        local srow, scol, erow, ecol = unpack(range)
-                        srow, scol, erow = srow + 1, scol + 1, erow + 1
-                        if ecol == 0 then
-                            erow = erow - 1
-                            if not buf or buf == 0 then
-                                ecol = vim.fn.col({ erow, '$' }) - 1
-                            else
-                                ecol = #vim.api.nvim_buf_get_lines(buf, erow - 1, erow, false)[1]
-                            end
-                            ecol = math.max(ecol, 1)
-                        end
-                        return srow, scol, erow, ecol
-                    end,
-                }
-            end
         end,
-        config = function()
-            require('codewindow').apply_default_keybinds()
-        end
     },
-    {
-        'numToStr/Comment.nvim',
-        opts = {
-            padding = true,
-            toggler = {
-                line = '<leader>cc',
-                block = '<leader>bb',
-            },
-            opleader = {
-                line = '<leader>c',
-                block = '<leader>b',
-            },
-            extra = {
-                above = '<leader>cO',
-                below = '<leader>co',
-                eol = '<leader>ca',
-            },
-            mappings = {
-                basic = true,
-                extra = true,
-            },
-        },
-    },
-    {
-        'glepnir/lspsaga.nvim',
-        lazy = false,
-        opts = {
-            symbol_in_winbar = {
-                enable = false,
-            },
-            lightbulb = {
-                enable = false,
-            },
-            rename = {
-                whole_project = false,
-            }
-        },
-    },
-    {
-        'ntpeters/vim-better-whitespace'
-    },
-    {
-        'windwp/nvim-autopairs',
-        opts = {},
-    },
-    -- VISUAL CHANGES
     {
         'jovanlanik/fsplash.nvim',
         opts = {
@@ -247,12 +34,7 @@ return {
                 "██▄▪▐█▐█▄▄▌██▐█▌ ███ ▐█▌██ ██▌▐█▌",
                 "·▀▀▀▀  ▀▀▀ ▀▀ █▪. ▀  ▀▀▀▀▀  █▪▀▀▀",
                 '',
-                'NVIM v'
-                .. vim.version().major
-                .. '.'
-                .. vim.version().minor
-                .. '.'
-                .. vim.version().patch,
+                'NVIM v' .. vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
                 'Nvim is open Source and freely distributable',
                 '',
                 'type  :checkhealth<Enter>     to optimize Nvim',
@@ -260,130 +42,226 @@ return {
                 'type  :help<Enter>            for help        ',
                 '',
                 'type  :help news<Enter> to see changes in v'
-                .. vim.version().major
-                .. '.'
-                .. vim.version().minor
+                .. vim.version().major .. '.' .. vim.version().minor,
             },
             border = 'none',
         },
+        config = function(_, opts)
+            require('fsplash').setup(opts)
+            vim.api.nvim_create_autocmd('VimEnter', {
+                callback = function() require('fsplash').open_window() end,
+            })
+        end,
     },
+    { 'benkyd/nvim-hardline', opts = {} },
     {
         'lukas-reineke/indent-blankline.nvim',
         main = 'ibl',
         opts = {
             debounce = 100,
             indent = { char = '│' },
-            whitespace = { highlight = { "Whitespace", "NonText" } },
-        }
-    },
-    {
-        'echasnovski/mini.indentscope',
-        opts = {
-            symbol = '│',
-            options = { try_as_border = true },
+            whitespace = { highlight = { 'Whitespace', 'NonText' } },
         },
     },
-    {
-        'ecthelionvi/NeoColumn.nvim',
-        opts = {
-            NeoColumn = '80',
-            always_on = true,
-        },
-    },
-    {
-        'benkyd/nvim-hardline',
-        init = function()
-            -- hardline's lsp part still calls vim.lsp.buf_get_clients(),
-            -- which 0.12 removed; point it at the replacement
-            vim.lsp.buf_get_clients = function(bufnr)
-                return vim.lsp.get_clients({ bufnr = bufnr or 0 })
-            end
-        end,
-        opts = {},
-    },
-    -- FUNCTIONAL CODING STUFF
-    {
-        "L3MON4D3/LuaSnip",
-        build = "make install_jsregexp"
-    },
-    {
-        'neovim/nvim-lspconfig',
-        dependencies = {
-            { 'nvim-neotest/nvim-nio' },
-            { 'mfussenegger/nvim-dap' },
+    { 'NvChad/nvim-colorizer.lua', opts = {} },
 
-            -- Autocompletion
-            { 'hrsh7th/nvim-cmp' },
-            { 'hrsh7th/cmp-nvim-lsp' },
-            { 'hrsh7th/cmp-nvim-lua' },
-            { 'hrsh7th/cmp-buffer' },
-            { 'hrsh7th/cmp-path' },
-            { 'hrsh7th/cmp-cmdline' },
-            { 'saadparwaiz1/cmp_luasnip' },
-
-            -- Snippets
-            { 'rafamadriz/friendly-snippets' },
-        },
-        config = function()
-            require('lsp-general')
-        end
-    },
+    -- GIT
+    { 'tpope/vim-fugitive' },
     {
-        'ray-x/lsp_signature.nvim',
+        'lewis6991/gitsigns.nvim',
         opts = {
-            hint_prefix = '🚀'
+            attach_to_untracked = true,
+            current_line_blame_opts = { delay = 100 },
+            current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
+            on_attach = function(bufnr)
+                vim.keymap.set('n', '<leader>gb', require('gitsigns').toggle_current_line_blame,
+                    { buffer = bufnr, desc = 'Toggle line blame' })
+            end,
         },
     },
+
+    -- FINDING THINGS
     {
-        'rcarriga/nvim-dap-ui',
+        'nvim-telescope/telescope.nvim',
         dependencies = {
-            'mfussenegger/nvim-dap',
+            'nvim-lua/plenary.nvim',
+            'nvim-tree/nvim-web-devicons',
+            'nvim-telescope/telescope-ui-select.nvim', -- code actions in a picker
         },
-        keys = {
-            { '<leader>db', '<cmd>lua require("dap").toggle_breakpoint()<cr>', desc = "Toggle DAP UI" },
-            { '<leader>dc', '<cmd>lua require("dap").continue()<cr>' },
-            { '<leader>dn', '<cmd>lua require("dap").step_over()<cr>' },
-            { '<leader>di', '<cmd>lua require("dap").step_into()<cr>' },
-            { '<leader>do', '<cmd>lua require("dap").step_out()<cr>' },
-        },
-        lazy = false
+        config = function() require('plugin-config/telescope') end,
     },
+
+    -- MOVING AROUND
     {
-        "lervag/vimtex",
+        'ThePrimeagen/harpoon',
         lazy = false,
         keys = {
-            { '<leader>ll', '<cmd>VimtexCompileSS<cr>', desc = "Compile LaTeX" },
-            { '<leader>lc', '<cmd>VimtexCompile<cr>',   desc = "Compile LaTeX Continuously" },
+            { '<leader>hh', function() require('harpoon.ui').toggle_quick_menu() end, desc = 'Harpoon menu' },
+            { '<leader>hg', function() require('harpoon.mark').toggle_file() end, desc = 'Harpoon this file' },
         },
         config = function()
-            vim.g.vimtex_view_method = 'zathura'
+            require('harpoon').setup({ tabline = true })
+            for pos = 1, 9 do
+                vim.keymap.set('n', '<C-w>' .. pos, function() require('harpoon.ui').nav_file(pos) end,
+                    { desc = 'Harpoon mark ' .. pos })
+            end
         end,
     },
-    -- Rust (replaces rust-tools.nvim). Owns rust-analyzer, don't vim.lsp.enable it.
-    -- Needs Neovim >= 0.12 and rust-analyzer on PATH (brew/pacman rust-analyzer,
-    -- or `rustup component add rust-analyzer`). Debugging uses lldb-dap.
     {
+        'yorickpeterse/nvim-window',
+        keys = {
+            { '<C-w>e', function() require('nvim-window').pick() end, desc = 'Jump to window' },
+        },
+        config = true,
+    },
+    {
+        -- Tree you can edit like oil. Enter unfolds a folder in place; files
+        -- open in the main window, never in the tree
+        'FylerOrg/fyler.nvim',
+        lazy = false, -- it opens directories, e.g. `nvim .`
+        dependencies = { 'nvim-tree/nvim-web-devicons' },
+        keys = {
+            { '<C-b>', function() require('fyler').toggle({ kind = 'split_left_most' }) end, desc = 'File tree' },
+        },
+        opts = {
+            follow_root_dir = false, -- don't change the working directory
+            integrations = { icon = 'nvim_web_devicons' },
+            extensions = { git = { enabled = true } },
+            kind_presets = {
+                split_left_most = {
+                    width = 35,
+                    mappings = {
+                        n = {
+                            ['<CR>'] = { action = 'select', args = { pick = false } },
+                            ['<2-LeftMouse>'] = { action = 'select', args = { pick = false } },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    {
+        'stevearc/oil.nvim',
+        dependencies = { 'nvim-tree/nvim-web-devicons' },
+        keys = {
+            { '-', function() require('oil').open_float() end, desc = "Oil: this file's folder" },
+        },
+        opts = {
+            default_file_explorer = false, -- fyler opens directories
+            float = {
+                max_width = 80,
+                max_height = 20,
+                border = 'rounded',
+                win_options = { winblend = 0 },
+            },
+        },
+    },
+
+    -- EDITING
+    {
+        'nvim-treesitter/nvim-treesitter',
+        branch = 'main',
+        lazy = false,
+        build = ':TSUpdate',
+        dependencies = {
+            { 'nvim-treesitter/nvim-treesitter-textobjects', branch = 'main' },
+        },
+        config = function() require('plugin-config/treesitter') end,
+    },
+    { 'nvim-treesitter/nvim-treesitter-context' },
+    { 'windwp/nvim-autopairs', opts = {} },
+    {
+        'ntpeters/vim-better-whitespace',
+        config = function()
+            vim.keymap.set('n', '<leader>W', '<Cmd>StripWhitespace<CR>', { desc = 'Strip trailing whitespace' })
+        end,
+    },
+    {
+        -- Highlight other uses of the word under the cursor (snacks does the fade)
+        'tzachar/local-highlight.nvim',
+        dependencies = { { 'folke/snacks.nvim', opts = {} } },
+        config = function()
+            require('local-highlight').setup({
+                hlgroup = 'Search',
+                cw_hlgroup = nil,
+                insert_mode = true,
+                min_match_len = 1,
+                max_match_len = math.huge,
+                highlight_single_match = true,
+            })
+            vim.api.nvim_create_autocmd('BufRead', {
+                pattern = { '*.*' },
+                callback = function(data) require('local-highlight').attach(data.buf) end,
+            })
+        end,
+    },
+    { 'folke/which-key.nvim', event = 'VeryLazy', opts = {} },
+
+    -- LANGUAGE SERVERS (servers and keys are in lua/lsp.lua)
+    {
+        'neovim/nvim-lspconfig',
+        dependencies = { 'saghen/blink.cmp' },
+        config = function() require('lsp') end,
+    },
+    {
+        'saghen/blink.cmp',
+        version = '1.*', -- release tags come with a prebuilt fuzzy matcher
+        opts = {
+            keymap = {
+                preset = 'default', -- <C-y> accept, <C-e> close, <C-space> open
+                ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+                ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+            },
+            completion = {
+                list = { selection = { preselect = false, auto_insert = true } },
+                documentation = { auto_show = true },
+            },
+            -- Snippets still come from the language servers, via vim.snippet
+            sources = { default = { 'lsp', 'path', 'buffer' } },
+            fuzzy = { implementation = 'prefer_rust_with_warning' },
+        },
+    },
+    { 'j-hui/fidget.nvim', opts = {} }, -- language server progress
+    {
+        'stevearc/conform.nvim',
+        keys = {
+            { '<leader>F', function() require('conform').format({ lsp_format = 'fallback' }) end, desc = 'Format' },
+        },
+        opts = {
+            formatters_by_ft = {
+                c = { 'clang-format' },
+                cpp = { 'clang-format' },
+                rust = { 'rustfmt' },
+                zig = { 'zigfmt' },
+                lua = { 'stylua' },
+                python = { 'black' },
+                javascript = { 'prettier' },
+                typescript = { 'prettier' },
+                html = { 'prettier' },
+                css = { 'prettier' },
+                json = { 'prettier' },
+                yaml = { 'prettier' },
+            },
+        },
+    },
+
+    -- LANGUAGES
+    {
+        -- Rust: owns rust-analyzer, so it isn't in lua/lsp.lua
         'mrcjkb/rustaceanvim',
         version = '^9',
-        lazy = false, -- it lazy-loads itself on ft=rust
+        lazy = false, -- it loads itself for Rust files
         init = function()
             vim.g.rustaceanvim = {
-                dap = {
-                    adapter = function()
-                        return require('lldb').adapter() or false
-                    end,
-                },
                 server = {
                     on_attach = function(_, bufnr)
                         local function map(lhs, rhs, desc)
                             vim.keymap.set('n', lhs, rhs, { buffer = bufnr, desc = desc })
                         end
-                        -- grouped code actions (rust-analyzer specific)
                         map('<A-CR>', function() vim.cmd.RustLsp('codeAction') end, 'Rust code action')
                         map('J', function() vim.cmd.RustLsp('joinLines') end, 'Rust join lines')
                         map('<leader>Rr', function() vim.cmd.RustLsp('runnables') end, 'Rust runnables')
                         map('<leader>Rt', function() vim.cmd.RustLsp('testables') end, 'Rust testables')
-                        map('<leader>Rd', function() vim.cmd.RustLsp('debuggables') end, 'Rust debuggables')
                         map('<leader>Rl', function() vim.cmd.RustLsp({ 'runnables', bang = true }) end, 'Rerun last runnable')
                         map('<leader>Rm', function() vim.cmd.RustLsp('expandMacro') end, 'Expand macro')
                         map('<leader>Re', function() vim.cmd.RustLsp('explainError') end, 'Explain error')
@@ -411,58 +289,25 @@ return {
             }
         end,
     },
-    -- Cargo.toml: crate versions, features, completion via in-process LSP
     {
+        -- Cargo.toml: crate versions and features
         'saecki/crates.nvim',
         tag = 'stable',
         event = { 'BufRead Cargo.toml' },
         opts = {
-            lsp = {
-                enabled = true,
-                actions = true,
-                completion = true,
-                hover = true,
-            },
+            lsp = { enabled = true, actions = true, completion = true, hover = true },
         },
     },
-    -- LSP progress indicator
     {
-        'j-hui/fidget.nvim',
-        opts = {},
-    },
-    -- Format on save / manual format (clang-format, prettier, etc.)
-    {
-        'stevearc/conform.nvim',
-        opts = {
-            formatters_by_ft = {
-                c = { 'clang-format' },
-                cpp = { 'clang-format' },
-                javascript = { 'prettier' },
-                typescript = { 'prettier' },
-                html = { 'prettier' },
-                css = { 'prettier' },
-                json = { 'prettier' },
-                yaml = { 'prettier' },
-                lua = { 'stylua' },
-                python = { 'black' },
-                rust = { 'rustfmt' },
-            },
-        },
-    },
-    -- Better diff/merge UI
-    {
-        'sindrets/diffview.nvim',
+        'lervag/vimtex',
+        lazy = false, -- vimtex loads itself for TeX files
         keys = {
-            { '<leader>gd', '<cmd>DiffviewOpen<cr>', desc = 'Open diffview' },
-            { '<leader>gh', '<cmd>DiffviewFileHistory %<cr>', desc = 'File history' },
-            { '<leader>gq', '<cmd>DiffviewClose<cr>', desc = 'Close diffview' },
+            { '<leader>ll', '<Cmd>VimtexCompileSS<CR>', desc = 'Compile LaTeX' },
+            { '<leader>lc', '<Cmd>VimtexCompile<CR>', desc = 'Compile LaTeX continuously' },
         },
+        init = function()
+            -- zathura on Linux; macOS uses the default viewer
+            if vim.fn.has('mac') == 0 then vim.g.vimtex_view_method = 'zathura' end
+        end,
     },
-    -- Keybinding cheat sheet
-    {
-        'folke/which-key.nvim',
-        event = 'VeryLazy',
-        opts = {},
-    },
-
 }

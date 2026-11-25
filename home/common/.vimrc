@@ -98,11 +98,6 @@ nn <Esc> :nohlsearch<cr>
 nn U <C-r>
 nn <C-r> <nop>
 
-" Peep the registers
-nn <leader>r :Telescope registers<cr>
-" Peep the marks
-nn <leader>m :Telescope marks<cr>
-
 " Paste and keep the " register
 nn <leader>p "_dP
 
