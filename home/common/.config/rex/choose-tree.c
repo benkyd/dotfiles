@@ -8,7 +8,8 @@
  * Arguments, in any order:
  *   client:ID            the app client that pressed C-b w
  *   RS...                this server's sessions as records (below)
- *   hosts:A<US>B...      other hosts, whose sessions are read in the background
+ *   hosts:A<US>B...      other hosts: their sessions as last seen (~/.cache/rex/hosts) show
+ *                        at once, marked (cached), and are read again in the background
  *   server:LABEL         this server's own label, left out of hosts
  *   watcher:PATH         choose-tree-watcher.lua
  * Records are separated by RS (0x1e) and fields by US (0x1f):
@@ -43,7 +44,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define VERSION "11"
+#define VERSION "12"
 #define RS '\x1e'
 #define US '\x1f'
 
@@ -55,6 +56,7 @@ static const char *FOOTER =
 /* Another host's sessions, read with the CLI connected to that host directly, as records.
  * Tab names are labels only: a process lookup per tab would be a network round trip each. */
 static const char *REMOTE_LUA =
+    "local a = rex.args or {}\n"
     "local RS, US = string.char(30), string.char(31)\n"
     "local bad = '[' .. RS .. US .. ']'\n"
     "local function clean(s) return (tostring(s or ''):gsub(bad, ' ')) end\n"
@@ -71,7 +73,13 @@ static const char *REMOTE_LUA =
     "    end\n"
     "  end\n"
     "end\n"
-    "local text = string.char(2) .. table.concat(parts) .. string.char(3)\n"
+    "local text = table.concat(parts)\n"
+    "if a.cache and a.cache ~= '' then\n"
+    "  local f = io.open(a.cache .. '.tmp', 'w')\n"
+    "  if f then f:write(text) f:close() if not pcall(os.rename, a.cache .. '.tmp', a.cache) then\n"
+    "    local g = io.open(a.cache, 'w') if g then g:write(text) g:close() end end end\n"
+    "end\n"
+    "text = string.char(2) .. text .. string.char(3)\n"
     "if not pcall(io.write, text) then return text end\n";
 
 /* The app's client on this server, when the one C-b w gave isn't known here: the app client
@@ -172,7 +180,7 @@ static void note(const char *fmt, ...) {
 typedef struct { char *id, *name, *block; } Tab;
 typedef struct {
     char *id, *label, *active, *block, *host;
-    int current, zoomed, folded, ntabs, captabs;
+    int current, zoomed, folded, ntabs, captabs, stale;
     Tab *tabs;
 } Sess;
 
@@ -368,7 +376,7 @@ static void row_line(Buf *line, int r, int width) {
         bputs(&text, "no sessions: n makes one");
         style = "\x1b[2m";
     } else if (row->kind == 'h') {
-        bprintf(&text, "── %s ", S[row->si].host);
+        bprintf(&text, "── %s%s ", S[row->si].host, S[row->si].stale ? " (cached)" : "");
         for (int i = cells_of(text.p); i < width; i++) bputs(&text, "─");
         style = "\x1b[2m";
     } else if (row->kind == 's') {
@@ -507,25 +515,117 @@ static int run_rex(const char *host, ...) {
 
 /* ---- other hosts -------------------------------------------------------------------- */
 
-typedef struct { char *host; pid_t pid; int fd; Buf buf; } Fetch;
+typedef struct { char *host; pid_t pid; int fd; Buf buf; double started; } Fetch;
 static Fetch F[16];
 static int NF;
 
+/* Where a host's sessions are kept between opens: ~/.cache/rex/hosts/LABEL */
+static void cache_path(const char *host, char *out, size_t size) {
+    char name[256];
+    size_t n = 0;
+    for (const char *p = host; *p && n < sizeof name - 1; p++)
+        name[n++] = (*p == '/' || *p == '.' || (unsigned char)*p < 0x20) ? '_' : *p;
+    name[n] = 0;
+    snprintf(out, size, "%s/.cache/rex/hosts/%s", getenv("HOME") ? getenv("HOME") : "", name);
+}
+
+/* A host's group, read from somewhere: dropped if that host is this server, whose sessions
+ * are here already. Returns how many sessions it added. */
+static int add_host(const char *text, size_t len, const char *host, int stale) {
+    int base = NS, got = parse_records(text, len, host);
+    for (int x = base; x < NS; x++) {
+        S[x].stale = stale;
+        for (int l = 0; l < base; l++)
+            if (!S[l].host && !strcmp(S[x].id, S[l].id)) { NS = base; return 0; }
+    }
+    return got;
+}
+
+static void load_cached(const char *host) {
+    char path[4096];
+    cache_path(host, path, sizeof path);
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    Buf b = {0};
+    char tmp[8192];
+    size_t n;
+    while ((n = fread(tmp, 1, sizeof tmp, f)) > 0) bput(&b, tmp, n);
+    fclose(f);
+    if (b.p) add_host(b.p, b.n, host, 1);
+    free(b.p);
+}
+
+/* Read HOST's sessions again, in a session of its own, so it finishes and updates the
+ * cache even when the tree has closed first. */
 static void start_fetch(const char *host) {
     int fds[2];
     if (NF >= 16 || cloexec_pipe(fds)) return;
-    char *argv[] = {REX, "-S", (char *)host, "--timeout", "4s", "do", "-e", (char *)REMOTE_LUA, NULL};
-    pid_t pid = spawn_argv(argv, fds[1], 0);
+    char dir[4096], path[4096];
+    snprintf(dir, sizeof dir, "%s/.cache/rex/hosts", getenv("HOME") ? getenv("HOME") : "");
+    mkdir(dir, 0755);
+    cache_path(host, path, sizeof path);
+    Buf args = {0};
+    bputs(&args, "{\"cache\":");
+    bjson(&args, path);
+    bputs(&args, "}");
+    char *argv[] = {REX, "-S", (char *)host, "--timeout", "8s", "do", "-e", (char *)REMOTE_LUA, "--args", args.p, NULL};
+    pid_t pid = spawn_argv(argv, fds[1], 1);
     close(fds[1]);
+    free(args.p);
     if (pid < 0) { close(fds[0]); return; }
     fcntl(fds[0], F_SETFL, O_NONBLOCK);
     memset(&F[NF], 0, sizeof F[NF]);
     F[NF].host = xstrdup(host);
     F[NF].pid = pid;
     F[NF].fd = fds[0];
+    F[NF].started = now();
     NF++;
 }
-/* Read what fetch i sent; at its end, add its sessions. 1 if sessions were added. */
+
+static void replace_host(const char *host, const char *text, size_t len) {
+    /* keep the cursor on the same session or tab across the swap */
+    const char *sid = NULL, *tid = NULL;
+    if (cursor < NR && R[cursor].si >= 0) {
+        sid = S[R[cursor].si].id;
+        if (R[cursor].kind == 't') tid = S[R[cursor].si].tabs[R[cursor].ti].id;
+    }
+    char *keep_s = sid ? xstrdup(sid) : NULL, *keep_t = tid ? xstrdup(tid) : NULL;
+    for (int i = NS - 1; i >= 0; i--)
+        if (S[i].host && !strcmp(S[i].host, host)) remove_session(i);
+    add_host(text, len, host, 0);
+    build_rows();
+    if (keep_s)
+        for (int i = 0; i < NR; i++) {
+            if (R[i].si < 0 || strcmp(S[R[i].si].id, keep_s)) continue;
+            if (!keep_t && R[i].kind == 's') { cursor = i; break; }
+            if (keep_t && R[i].kind == 't' && !strcmp(S[R[i].si].tabs[R[i].ti].id, keep_t)) { cursor = i; break; }
+        }
+    free(keep_s);
+    free(keep_t);
+}
+/* Answers that have come in, applied by browse: never under a prompt, which holds a
+ * pointer into the session list that adding to it can move. */
+typedef struct { char *host, *text; size_t len; double took; int ok; } Answer;
+static Answer DONE[16];
+static int NDONE;
+
+static void apply_answers(void) {
+    for (int i = 0; i < NDONE; i++) {
+        Answer *d = &DONE[i];
+        if (!d->ok) {
+            note("couldn't read %s's sessions (%.0fms)", d->host, d->took);
+        } else {
+            replace_host(d->host, d->text, d->len);
+            int n = 0;
+            for (int x = 0; x < NS; x++) n += S[x].host && !strcmp(S[x].host, d->host);
+            note("%s: %d sessions in %.0fms", d->host, n, d->took);
+        }
+        free(d->text);
+    }
+    NDONE = 0;
+}
+
+/* Read what fetch i sent; at its end, keep its answer for browse. 1 at the end. */
 static int fetch_read(int i) {
     char tmp[8192];
     ssize_t n = read(F[i].fd, tmp, sizeof tmp);
@@ -533,24 +633,22 @@ static int fetch_read(int i) {
     if (n < 0 && (errno == EAGAIN || errno == EINTR)) return 0;
     close(F[i].fd);
     waitpid(F[i].pid, NULL, WNOHANG);
-    int added = 0;
     char *b = F[i].buf.p, *stx = b ? memchr(b, 2, F[i].buf.n) : NULL;
     char *etx = stx ? memchr(stx, 3, F[i].buf.n - (size_t)(stx - b)) : NULL;
-    if (!stx || !etx) {
-        note("couldn't read %s's sessions", F[i].host);
-    } else {
-        int base = NS, got = parse_records(stx + 1, (size_t)(etx - stx - 1), F[i].host);
-        int self = 0; /* a host that is this server: its sessions are already here */
-        for (int x = base; x < NS && !self; x++)
-            for (int l = 0; l < base; l++)
-                if (!S[l].host && !strcmp(S[x].id, S[l].id)) { self = 1; break; }
-        if (self) NS = base;
-        else added = got > 0;
+    if (NDONE < 16) {
+        Answer *d = &DONE[NDONE++];
+        d->host = F[i].host;
+        d->took = (now() - F[i].started) * 1000;
+        d->ok = stx && etx;
+        d->len = d->ok ? (size_t)(etx - stx - 1) : 0;
+        d->text = malloc(d->len + 1);
+        if (d->ok) memcpy(d->text, stx + 1, d->len);
+        d->text[d->len] = 0;
     }
     free(F[i].buf.p);
     memmove(&F[i], &F[i + 1], (size_t)(NF - i - 1) * sizeof *F);
     NF--;
-    return added;
+    return 1;
 }
 
 /* ---- keys --------------------------------------------------------------------------- */
@@ -777,6 +875,7 @@ static int kill_row(Row row) {
 static int browse(void) {
     int redraw = 1;
     for (;;) {
+        if (NDONE) { apply_answers(); redraw = 1; }
         if (redraw) { draw(STATUS); STATUS[0] = 0; }
         redraw = 1;
         int k = next_key(-1);
@@ -1036,6 +1135,16 @@ int main(int argc, char **argv) {
     sa.sa_handler = on_winch; /* no SA_RESTART: poll wakes up to redraw */
     sigaction(SIGWINCH, &sa, NULL);
 
+    /* Other hosts as last seen, so they're in the first frame */
+    char *host_list[16];
+    int nhosts = 0;
+    if (hosts && *hosts) {
+        char *copy = xstrdup(hosts), *f[16];
+        int n = split(copy, US, f, 16);
+        for (int i = 0; i < n; i++)
+            if (*f[i] && strcmp(f[i], server)) { host_list[nhosts++] = f[i]; load_cached(f[i]); }
+    }
+
     term_raw();
     build_rows();
     for (int i = 0; i < NR; i++) {
@@ -1045,13 +1154,11 @@ int main(int argc, char **argv) {
     }
     draw(NULL);
 
-    /* Other hosts only now, so starting them doesn't slow the first frame */
+    /* Read them again only now, so starting that doesn't slow the first frame */
     Buf hostlist = {0};
-    if (hosts && *hosts) {
-        char *copy = xstrdup(hosts), *f[16];
-        int n = split(copy, US, f, 16);
-        for (int i = 0; i < n; i++)
-            if (*f[i] && strcmp(f[i], server)) { start_fetch(f[i]); bprintf(&hostlist, "%s%s", hostlist.n ? "," : "", f[i]); }
+    for (int i = 0; i < nhosts; i++) {
+        start_fetch(host_list[i]);
+        bprintf(&hostlist, "%s%s", hostlist.n ? "," : "", host_list[i]);
     }
     {
         struct stat st;
