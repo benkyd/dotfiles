@@ -92,6 +92,45 @@ local function focused_in(session_id, window_id)
   end
 end
 
+-- The window a session shows and the block that window has focused, read from the server
+local function showing(session_id)
+  local okv, view = call("session.view", { session_id = session_id }, true)
+  if not okv or type(view) ~= "table" then
+    return nil
+  end
+  local block
+  for _, w in ipairs(view.windows or {}) do
+    if w.window_id == view.active_window_id then
+      block = w.focused_block_id
+    end
+  end
+  return view.active_window_id, block
+end
+
+-- Focus a tab of this session and keep it there: the app moves focus of its own as the
+-- picker closes, sometimes after our call, so check for a moment and focus again if so
+local function go_to_tab(session_id, window_id, block_id)
+  local function focus()
+    local done = call("session.focus_window", { session_id = session_id, window_id = window_id })
+    if set(block_id) then
+      done = call("session.focus_block", { session_id = session_id, block_id = block_id }) or done
+    end
+    return done
+  end
+  local done = focus()
+  for _, wait in ipairs({ 0.05, 0.1, 0.2, 0.4 }) do
+    rex.sleep(wait)
+    local win, blk = showing(session_id)
+    log("showing " .. tostring(win) .. " / " .. tostring(blk))
+    if win == window_id and (not set(block_id) or blk == block_id) then
+      return true
+    end
+    log("not on the tab; focusing it again")
+    done = focus() or done
+  end
+  return done
+end
+
 local function zoom(block)
   if a.zoomed and set(block) then
     call("session.zoom_block", { session_id = a.session_id, block_id = block, zoom = true })
@@ -215,13 +254,9 @@ elseif c.type == "select" and c.session_id == a.session_id and set(c.window_id) 
   back = put_back()
   close_picker()
   -- Give the close a moment to land before the window changes: focusing the window while
-  -- the picker's layer was still there (v10 - v13) carried it along to the other tab. Focusing
-  -- only the tab's block (v14) kept the picker off it, but didn't change tab
+  -- the picker's layer was still there (v10 - v13) carried it along to the other tab
   rex.sleep(0.1)
-  local done = call("session.focus_window", { session_id = c.session_id, window_id = c.window_id })
-  if set(c.block_id) then
-    done = call("session.focus_block", { session_id = c.session_id, block_id = c.block_id }) or done
-  end
+  local done = go_to_tab(c.session_id, c.window_id, c.block_id)
   if not done then
     app("session.select", { session_id = c.session_id, window_id = c.window_id })
   end
