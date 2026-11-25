@@ -257,9 +257,10 @@ elseif c.type == "select" and c.session_id == a.session_id and set(c.window_id) 
   -- the picker's layer was still there (v10 - v13) carried it along to the other tab
   rex.sleep(0.1)
   local done = go_to_tab(c.session_id, c.window_id, c.block_id)
-  if not done then
-    app("session.select", { session_id = c.session_id, window_id = c.window_id })
-  end
+  -- The server showing the tab isn't enough: the app keeps the tab it displays itself
+  -- (v14's log had the server on the chosen tab while the app stayed put), so it's asked too
+  local asked = app("session.select", { session_id = c.session_id, window_id = c.window_id })
+  log("tab on the server: " .. tostring(done) .. ", app asked: " .. tostring(asked))
 elseif c.type == "select" then
   local opts = { session_id = c.session_id }
   if set(c.window_id) then
