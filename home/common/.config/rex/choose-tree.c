@@ -44,7 +44,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define VERSION "12"
+#define VERSION "13"
 #define RS '\x1e'
 #define US '\x1f'
 
@@ -61,10 +61,18 @@ static const char *REMOTE_LUA =
     "local bad = '[' .. RS .. US .. ']'\n"
     "local function clean(s) return (tostring(s or ''):gsub(bad, ' ')) end\n"
     "local parts = {}\n"
-    "local list = rex.call('session.list')\n"
-    "for _, s in ipairs(type(list) == 'table' and list.sessions or {}) do\n"
-    "  local ok, v = pcall(rex.call, 'session.view', { session_id = s.session_id })\n"
-    "  if ok and type(v) == 'table' and v.windows then\n"
+    "local ok, list, err = pcall(rex.call, 'session.list')\n"
+    "if not ok or type(list) ~= 'table' or type(list.sessions) ~= 'table' then\n"
+    "  local why = clean(not ok and list or err or ('session.list gave ' .. tostring(list)))\n"
+    "  io.write(string.char(2) .. RS .. 'E' .. US .. why .. string.char(3))\n"
+    "  return\n"
+    "end\n"
+    "local view_error\n"
+    "for _, s in ipairs(list.sessions) do\n"
+    "  local ok, v, verr = pcall(rex.call, 'session.view', { session_id = s.session_id })\n"
+    "  if not (ok and type(v) == 'table' and v.windows) then\n"
+    "    view_error = view_error or (not ok and v or verr or 'session.view gave nothing')\n"
+    "  else\n"
     "    parts[#parts + 1] = RS .. table.concat({ 'S', clean(s.session_id), clean(s.label), clean(v.active_window_id), '0', '', '0' }, US)\n"
     "    for i, w in ipairs(v.windows) do\n"
     "      local name = w.label\n"
@@ -72,6 +80,10 @@ static const char *REMOTE_LUA =
     "      parts[#parts + 1] = RS .. table.concat({ 'T', clean(w.window_id), clean(name), clean(w.focused_block_id) }, US)\n"
     "    end\n"
     "  end\n"
+    "end\n"
+    "if #parts == 0 and #list.sessions > 0 then\n"
+    "  io.write(string.char(2) .. RS .. 'E' .. US .. clean(view_error) .. string.char(3))\n"
+    "  return\n"
     "end\n"
     "local text = table.concat(parts)\n"
     "if a.cache and a.cache ~= '' then\n"
@@ -562,6 +574,8 @@ static void start_fetch(const char *host) {
     if (NF >= 16 || cloexec_pipe(fds)) return;
     char dir[4096], path[4096];
     snprintf(dir, sizeof dir, "%s/.cache/rex/hosts", getenv("HOME") ? getenv("HOME") : "");
+    for (char *p = dir + 1; *p; p++) /* and its parents */
+        if (*p == '/') { *p = 0; mkdir(dir, 0755); *p = '/'; }
     mkdir(dir, 0755);
     cache_path(host, path, sizeof path);
     Buf args = {0};
@@ -612,8 +626,11 @@ static int NDONE;
 static void apply_answers(void) {
     for (int i = 0; i < NDONE; i++) {
         Answer *d = &DONE[i];
+        const char *err = d->ok ? strstr(d->text, "\x1e" "E\x1f") : NULL;
         if (!d->ok) {
             note("couldn't read %s's sessions (%.0fms)", d->host, d->took);
+        } else if (err) {
+            note("couldn't read %s's sessions: %s (%.0fms)", d->host, err + 3, d->took);
         } else {
             replace_host(d->host, d->text, d->len);
             int n = 0;

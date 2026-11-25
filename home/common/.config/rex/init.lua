@@ -1,15 +1,15 @@
 -- Migrated from ~/.tmux.conf (prefix ctrl+b), plus tmux's own default bindings
 
--- Every action defined here first sends my settings, when this device doesn't have them yet
--- (see "My settings" near the end). settings_once is set there; if Rex won't let rex.action
--- be wrapped, the actions are defined as they are and only that is lost
+-- The first action defined here to run after this file loads sends my settings first (see
+-- "My settings" near the end). settings_once is set there; if Rex won't let rex.action be
+-- wrapped, the actions are defined as they are and only that is lost
 local settings_once
 do
   local define = rex.action
   pcall(function()
     rex.action = function(t)
       local run = t.run
-      if type(run) == "function" and t.name ~= "apply_my_settings" then
+      if type(run) == "function" and t.name ~= "apply_my_settings" and t.name ~= "tmux_reload_config" then
         t.run = function(ctx, args)
           if settings_once then
             pcall(settings_once, ctx)
@@ -134,8 +134,8 @@ rex.bind("repeat/shift+.", "client.tab.move", { direction = "forward" })
 -- go to the broken-out tab and press C-b @ to send it back
 rex.bind("ctrl+b>shift+2", "pane.move_to_tab")
 
--- Reload config (~/.tmux.conf:69)
-rex.bind("ctrl+b>r", "client.config.reload")
+-- Reload config (~/.tmux.conf:69): tmux_reload_config, near the end, which also puts my
+-- settings back
 
 -- tmux defaults: sessions
 rex.bind("ctrl+b>s", "session.switch")
@@ -479,11 +479,13 @@ do
   end
 end
 
--- My settings. Rex can't hold app settings in init.lua or run anything when it loads, and
--- only an action can send settings to the app. So the first of my actions to run on a
--- device after these change (C-b w, C-b f, C-b ; ...) sends them first, once: what each
--- device was last sent is kept in ~/.cache/rex/settings-DEVICE. A change made in the app
--- stays until these change again; "apply-my-settings" (C-b :) sends them all regardless.
+-- My settings. Rex can't hold app settings in init.lua or run anything when it loads, only an
+-- action can send settings to the app, and reloading the config puts some of them, such as
+-- the font size, back to Rex's defaults. So they're sent again by C-b r itself, right after
+-- the reload, and by the first of my actions after any load of this file (C-b w, C-b f,
+-- C-b ; ...), which also covers a new machine and a reload made some other way. The theme is
+-- imported only when this device hasn't had this theme file yet (kept in
+-- ~/.cache/rex/theme-DEVICE). "apply-my-settings" (C-b :) sends everything, theme included.
 -- The theme file and shell are paths on this server's machine, which only the Mac app can
 -- use when the server is the Mac itself; a Linux server starts the account's login shell,
 -- so set that with chsh there.
@@ -500,12 +502,8 @@ local my_settings = {}
 local function setting(action, args)
   my_settings[#my_settings + 1] = { action, args }
 end
-local theme_path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha"
-if on_macos() then
-  setting("client.theme.import", { path = theme_path })
-  if machine.fish then
-    setting("client.setting.terminal.shell.command", { value = machine.fish })
-  end
+if on_macos() and machine.fish then
+  setting("client.setting.terminal.shell.command", { value = machine.fish })
 end
 setting("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
 setting("client.setting.developer.experimental.new_quick_switcher", { value = true })
@@ -523,32 +521,18 @@ setting("client.setting.interface.active_panes.active_border_animation", { value
 setting("client.setting.interface.active_panes.fade", { value = "off" })
 setting("client.setting.interface.active_panes.inactive_window", { value = false })
 
--- The settings as text, to tell whether a device has them already. The theme counts by
--- its contents, so editing the theme file sends it again
-local settings_signature
+local theme_path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha"
+local theme_text
 do
-  local parts = {}
-  for _, s in ipairs(my_settings) do
-    local keys, fields = {}, {}
-    for k in pairs(s[2]) do
-      keys[#keys + 1] = k
-    end
-    table.sort(keys)
-    for _, k in ipairs(keys) do
-      fields[#fields + 1] = k .. "=" .. tostring(s[2][k])
-    end
-    parts[#parts + 1] = s[1] .. " " .. table.concat(fields, " ")
+  local f = on_macos() and io.open(theme_path, "r")
+  if f then
+    theme_text = f:read("*a")
+    f:close()
   end
-  local theme = io.open(theme_path, "r")
-  if theme then
-    parts[#parts + 1] = "theme " .. theme:read("*a")
-    theme:close()
-  end
-  settings_signature = table.concat(parts, "\n")
 end
 
--- Where a device's last-sent settings are kept: by the app's label, so each device has its own
-local function settings_file(ctx)
+-- Where a device's last imported theme is kept: by the app's label, so each device has its own
+local function theme_file(ctx)
   local device = "app"
   local ok, list = pcall(rex.call, "client.list")
   if ok and type(list) == "table" then
@@ -558,48 +542,63 @@ local function settings_file(ctx)
       end
     end
   end
-  return os.getenv("HOME") .. "/.cache/rex/settings-" .. device:gsub("[^%w%-]", "_")
+  return os.getenv("HOME") .. "/.cache/rex/theme-" .. device:gsub("[^%w%-]", "_")
 end
 
-local function send_settings(ctx)
+local function send_settings(ctx, with_theme)
+  if theme_text then
+    local path = theme_file(ctx)
+    local f = io.open(path, "r")
+    local last = f and f:read("*a")
+    if f then
+      f:close()
+    end
+    if with_theme or last ~= theme_text then
+      rex.client.queue("client.theme.import", { path = theme_path })
+      f = io.open(path, "w")
+      if not f then
+        pcall(rex.exec, { "/bin/mkdir", "-p", os.getenv("HOME") .. "/.cache/rex" })
+        f = io.open(path, "w")
+      end
+      if f then
+        f:write(theme_text)
+        f:close()
+      end
+    end
+  end
   for _, s in ipairs(my_settings) do
     rex.client.queue(s[1], s[2])
   end
-  local path = settings_file(ctx)
-  local f = io.open(path, "w")
-  if not f then
-    pcall(rex.exec, { "/bin/mkdir", "-p", os.getenv("HOME") .. "/.cache/rex" })
-    f = io.open(path, "w")
-  end
-  if f then
-    f:write(settings_signature)
-    f:close()
-  end
 end
 
--- Called by every action of mine (see the top of this file): sends the settings when this
--- device doesn't have these yet. Each client is looked at once per load of this file
-local settings_checked = {}
+-- Called by every action of mine (see the top of this file): the first one for each client
+-- after this file loads sends the settings
+local settings_sent = {}
 settings_once = function(ctx)
-  if not (ctx and ctx.client_id) or settings_checked[ctx.client_id] then
+  if not (ctx and ctx.client_id) or settings_sent[ctx.client_id] then
     return
   end
-  settings_checked[ctx.client_id] = true
-  local f = io.open(settings_file(ctx), "r")
-  local last = f and f:read("*a")
-  if f then
-    f:close()
-  end
-  if last ~= settings_signature then
-    send_settings(ctx)
-  end
+  settings_sent[ctx.client_id] = true
+  send_settings(ctx, false)
 end
 
 rex.action{
   name = "apply_my_settings",
   title = "apply-my-settings",
   run = function(ctx, args)
-    send_settings(ctx)
+    send_settings(ctx, true)
   end,
 }
+
+-- Reload the config (tmux's C-b r, ~/.tmux.conf:69), then put the settings back, as the
+-- reload resets some of them. The app does the queued actions in order
+rex.action{
+  name = "tmux_reload_config",
+  title = "reload-config",
+  run = function(ctx, args)
+    rex.client.queue("client.config.reload", {})
+    send_settings(ctx, false)
+  end,
+}
+rex.bind("ctrl+b>r", "tmux_reload_config")
 
