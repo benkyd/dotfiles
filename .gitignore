@@ -1,11 +1,7 @@
-packer_compiled.lua
-lazy-lock.json
-flameshot.ini
-.config/nvim/lazy-lock.json
+# what `nix build` leaves behind
+result
+result-*
+
+.DS_Store
 node_modules/
 /target
-.DS_Store
-__pycache__/
-
-# per-machine: which trust profile this machine uses (set on first run)
-/.machine

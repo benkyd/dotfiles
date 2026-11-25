@@ -1,77 +1,87 @@
 # dotfiles
 
-How my machines should be set up. Two variables, handled differently:
-
-- **Trust** is a *ladder*. `work` ⊂ `personal`: each level adds a layer on top of the one below.
-- **OS** is a *filter*. It adds OS-specific variants on top.
-
-```
-dotfiles/
-  dot                   launcher — symlink to ~/.local/bin/dot and run `dot` anywhere
-  dot.py                the manager
-  profiles.toml         the trust ladder and the profiles
-  home/<layer>/         mirrors $HOME
-  etc/<layer>/          mirrors /etc (Linux only, applied with sudo)
-  packages/             brew.txt, brew-casks.txt, arch.txt — new-machine setup, split by OS only
-  setup.toml            fish + tmux plugins
-  themes/               submodules
-```
-
-## layers
-
-A layer is a directory named `<level>` or `<level>@<os>` (os = `macos`, `linux`, `arch`). A machine applies, for every level it's trusted with, `<level>` then `<level>@<os>`. Later layers override earlier ones.
-
-| machine      | layers applied                                                          |
-|--------------|-------------------------------------------------------------------------|
-| work Mac     | `common`, `common@macos`                                                |
-| personal Mac | `common`, `common@macos`, `personal`, `personal@macos`                  |
-| Arch PC      | `common`, `common@linux`, `common@arch`, `personal`, `personal@linux`, `personal@arch` |
+The same editor, shell and terminal on every machine: Neovim, fish, tmux,
+vim, Ghostty and Rex, set up with Nix (flakes + home-manager). The old `dot`
+setup, and i3, polybar, kitty and friends, live on the `legacy` branch.
 
 ```
-home/common/            nvim, fish, ghostty, zed, tmux, vim, rex → every machine
-home/personal/          zshrc, btop, kitty, wallpapers, ssh      → personal machines
-home/personal@linux/    i3, polybar, awesome, rofi, wezterm ...  → my Linux PC
-home/personal@macos/    iTerm2 prefs                             → personal Mac
-etc/personal@linux/     fstab, nginx                             → my Linux PC
+flake.nix                      inputs, plus one entry per machine
+systems/<host>/home.nix        only what differs on that machine (user, home folder)
+common/home/default.nix        what every machine gets
+common/home/packages.nix       everyday tools
+common/home/programs/<app>/    one folder per app: default.nix installs it and links
+                               its config files, which sit next to it
+common/home/bin/clip
 ```
 
-Only layers that exist matter. A file in a layer your machine doesn't apply **never reaches it**, so new files fail closed. Typo'd layer names are ignored with a warning.
+Configs are **linked** to this checkout, not copied, so it must live at
+`~/dotfiles`. Edit them here and they apply at once; rebuild only when packages
+or links change. Nix only sees files git knows about, so `git add` new ones.
 
-**Per-OS differences without templates:** prefer configs that adapt at runtime (tmux `if-shell`, wezterm Lua, ghostty's fish-finding `command`). Otherwise put the OS bit in an OS layer — as a `conf.d/` drop-in, an include file (ghostty's `config-file = ?config.local`), or the same path overriding the generic one.
-
-## setup
-
-```bash
-git clone --recurse-submodules git@github.com:benkyd/dotfiles.git ~/dotfiles
-ln -s ~/dotfiles/dot ~/.local/bin/dot
-dot
+```sh
+home-manager switch --flake ~/dotfiles                          # after changing packages or links
+nix flake update --flake ~/dotfiles && home-manager switch --flake ~/dotfiles   # update everything
 ```
 
-`dot` keeps a private venv (`~/.local/share/dotfiles/venv`), so it works regardless of the system Python or an active venv. First run asks what kind of machine this is (`work` / `personal`) and saves it to `~/dotfiles/.machine` — gitignored, so each machine keeps its own. Change it any time with `dot profile`; switching never deletes files.
+Machine-only settings never go in git: fish reads `~/.config/fish/local.fish`.
 
-## usage
+## Plan
 
-```bash
-dot                         # interactive menu
-dot sync                    # git pull, then sync both ways — the everyday command
-dot status                  # what differs (changes nothing)
-dot diff [path...]          # exactly what differs
-dot apply                   # repo → machine only   (alias: copy)
-dot save                    # machine → repo only   (alias: pull)
-dot install                 # new machine: packages → dotfiles → shell tooling
-dot profile [work|personal]
-dot add [--to LAYER] ~/.config/foo     # start tracking; default layer = highest trust (fail closed)
-dot move ~/.config/foo common          # promote/demote between layers (git mv)
-```
+Status: skeleton written on the work Mac (`benk-studio`); nothing built yet.
 
-`~/.dotignore` adds per-machine exclusions (gitignore-style, paths relative to `$HOME`).
+Every step can be undone. Building changes nothing on the machine; only
+`switch` does, and `-b backup` moves existing files aside as `*.backup`.
+`home-manager uninstall` removes the links again, and
+`/nix/nix-installer uninstall` removes Nix completely.
 
-## how sync decides what's newer
+### 1. This Mac (benk-studio)
 
-Not by timestamps — git stamps everything "now". Files are compared by content against the version last synced on this machine (`~/.local/state/dotfiles/state.json`):
+1. Install Nix and open a new shell:
+   `curl -fsSL https://install.determinate.systems/nix | sh -s -- install`
+2. `git -C ~/dotfiles switch nix`. The configs here are dot's copies, so
+   nothing changes yet.
+3. Build, then look in `result/home-files/` to see every link it would make:
+   `nix build ~/dotfiles#homeConfigurations.benk@benk-studio.activationPackage`
+   Fix any package names that fail (see the TODO in `programs/neovim`), then
+   commit the new `flake.lock`.
+4. Put the work lines from today's `~/.config/fish/config.fish` (agxgittools
+   on PATH, the agx venv) in `~/.config/fish/local.fish`.
+5. Switch: `nix run home-manager/master -- switch --flake ~/dotfiles -b backup`.
+   `~/.config/nvim` moves to `~/.config/nvim.backup`; its `.claude/` folder is
+   in there.
+6. Check, in a new shell: `which nvim tmux rg` should be in `~/.nix-profile/bin`;
+   then Neovim, tmux, Ghostty and Rex.
+7. Remove the Homebrew formulae Nix now provides (keep the casks) and the
+   `~/.local/bin/dot` link.
 
-- only the repo changed → deployed
-- only this machine changed → saved into the repo (into whichever layer provides the file)
-- both changed → you choose: view the diff, take either side, or merge in `nvim -d`
+### 2. Linux PC (another agent can do this)
 
-On a machine with no sync state, a file matching any version in its git history counts as "repo is newer"; anything else asks. Non-interactive runs never guess — they skip and list what needs a decision. Anything overwritten is backed up to `~/dotfiles.bak/<timestamp>/`.
+1. Install Nix with the same command, clone this repo to `~/dotfiles`, `git switch nix`.
+2. Add `systems/<hostname>/home.nix` (copy benk-studio's: username,
+   `/home/<user>`) and a line in `flake.nix`:
+   `"<user>@<hostname>" = machine "x86_64-linux" ./systems/<hostname>/home.nix;`
+   `git add` both.
+3. Build as in step 1.3.
+4. Try it on a throwaway user first: `sudo useradd -m nixtest`, clone into its
+   home and switch there. Then switch your own user with `-b backup`.
+5. Ghostty from nixpkgs needs nixGL on Arch; either set that up or keep
+   pacman's Ghostty and leave it out for this host. Remove the pacman packages
+   Nix now provides.
+
+### Later
+
+- Personal Mac: same as step 1.
+- nix-darwin on the Macs, for Homebrew casks, macOS settings and the login
+  shell (fish stays Homebrew's until then). With Nix from the Determinate
+  installer, nix-darwin needs `nix.enable = false`.
+- NixOS on the Linux PC; try it first with `nixos-rebuild build-vm`.
+- Nix installs the Neovim plugins instead of lazy.nvim. hardline, fsplash and
+  fyler aren't in nixpkgs and would need building from GitHub.
+
+### Notes
+
+- fish: `config.fish` moves Nix's folders ahead of Homebrew and the universal
+  `fish_user_paths`, so Nix's tools win.
+- clang-tools from Nix replaces Homebrew's `clangd` and `clang-format` on PATH.
+  Neovim still prefers the work clangd wrapper in `~/bin`; update its path in
+  `nvim/lua/lsp.lua` when that moves to the workbin.

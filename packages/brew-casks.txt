@@ -1,4 +1,0 @@
-# casks — installed via `brew install --cask`
-iterm2
-obsidian
-thunderbird
