@@ -363,7 +363,21 @@ end
 
 -- tmux defaults: panes
 rex.bind("ctrl+b>o", "pane.focus_next")
-rex.bind("ctrl+b>;", "pane.focus_back.in_tab")
+-- Last pane (tmux's C-b ;): the pane of this tab that had focus before this one, from the
+-- server's focus history, which records every focus move. Pressed again, it goes back, as
+-- tmux's does. (Rex's own pane.focus_back.in_tab went in build 2116.)
+rex.action{
+  name = "tmux_last_pane",
+  title = "last-pane",
+  run = function(ctx, args)
+    local ok, view = pcall(rex.call, "session.view", { session_id = ctx.session_id })
+    local window = ok and type(view) == "table" and view.active_window_id
+    if window then
+      pcall(rex.call, "focus_history.reverse", { window_id = window })
+    end
+  end,
+}
+rex.bind("ctrl+b>;", "tmux_last_pane")
 rex.bind("ctrl+b>z", "pane.zoom")
 rex.bind("ctrl+b>shift+1", "pane.move_to_new_tab")
 rex.bind("ctrl+b>shift+e", "pane.balance")
