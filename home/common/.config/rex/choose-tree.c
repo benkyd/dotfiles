@@ -1,10 +1,9 @@
 /* choose-tree.c: tmux-style choose-tree for Rex, compiled so it opens instantly.
  *
- * init.lua's tmux_choose_tree runs this in a floating pane once it's built. It draws its
- * first frame a millisecond or two after it starts, where Python takes 50 to 100, which
- * was most of the time between C-b w and the tree. choose-tree.py is the same picker in
- * Python: it stands in until this is built, and builds it in the background the first
- * time it runs, into ~/.cache/rex under a name init.lua takes from this file's contents.
+ * init.lua's tmux_choose_tree runs this in a floating pane. It draws its first frame a
+ * few milliseconds after it starts. init.lua builds it into ~/.cache/rex under a name
+ * taken from this file's contents, in the pane the first time it's needed, so a change
+ * here is built again on the next C-b w.
  *
  * Arguments, in any order:
  *   client:ID            the app client that pressed C-b w
@@ -16,9 +15,16 @@
  *   S id label active_window current(0/1) focused_block zoomed(0/1)
  *   T id name focused_block          (a tab of the session before it)
  *
- * Keys, and the hand-over to choose-tree-watcher.lua, are as in choose-tree.py. Each frame
- * rewrites only the lines that changed, so a key costs a few bytes, which matters when the
- * tree runs on another host.
+ * Keys: j/k or arrows move (wrapping round), 1-9 go straight to that session, enter goes to
+ * the row, h/l fold and unfold, g/G top and bottom, J/K reorder, r rename, x kill (y/n),
+ * n new session, H switch host, q or escape close. Losing focus closes it, as tmux's does.
+ *
+ * The switch itself is made by choose-tree-watcher.lua, a `rex do` script started here
+ * before anything is drawn, so it's connected by the time a choice is made. This writes the
+ * choice to a file and keeps the tree on screen until the watcher closes the pane.
+ *
+ * Each frame rewrites only the lines that changed, so a key costs a few bytes, which
+ * matters when the tree runs on another host.
  */
 #define _GNU_SOURCE
 #include <errno.h>
@@ -37,7 +43,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define VERSION "10"
+#define VERSION "11"
 #define RS '\x1e'
 #define US '\x1f'
 

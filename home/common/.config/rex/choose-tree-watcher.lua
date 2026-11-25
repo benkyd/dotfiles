@@ -1,5 +1,4 @@
--- choose-tree-watcher.lua: carries out what the picker (choose-tree.c, or choose-tree.py
--- until that's built) chose.
+-- choose-tree-watcher.lua: carries out what the choose-tree.c picker chose.
 --
 -- It's a `rex do` script, because its rex.client.queue reaches the app the way a key
 -- binding does. The picker starts it with

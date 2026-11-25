@@ -124,7 +124,7 @@ rex.bind("ctrl+b>s", "session.switch")
 -- it's open; jumping to one needs the app to agree, which it does only through its home
 -- host, and the tree says so when it doesn't.
 --
--- choose-tree is choose-tree.py in a floating pane, so it takes vim keys: j/k move, 1-9 go to
+-- choose-tree is choose-tree.c in a floating pane, so it takes vim keys: j/k move, 1-9 go to
 -- that session, enter goes, h/l fold, J/K reorder, r rename, x kill, n new, H switch host,
 -- q closes. The switch is made by choose-tree-watcher.lua, which also puts focus and zoom back.
 -- find-window is this server's list in Rex's picker, to filter by typing.
@@ -182,27 +182,16 @@ local function session_tree(ctx)
   return tree
 end
 
--- The quickest Python on this machine: Homebrew's starts in about half the time of the
--- system one. It runs choose-tree.py only until choose-tree.c is built
-local choose_tree_python = "/usr/bin/python3"
-for _, p in ipairs({ "/opt/homebrew/bin/python3", "/usr/local/bin/python3" }) do
-  local f = io.open(p, "r")
-  if f then
-    f:close()
-    choose_tree_python = p
-    break
-  end
-end
 local choose_tree_dir = os.getenv("HOME") .. "/.config/rex"
-local choose_tree_script = choose_tree_dir .. "/choose-tree.py"
+local choose_tree_source = choose_tree_dir .. "/choose-tree.c"
 local choose_tree_watcher = choose_tree_dir .. "/choose-tree-watcher.lua"
 
--- The compiled picker, choose-tree.c, opens in a millisecond or two where Python takes 50
--- to 100. choose-tree.py builds it into ~/.cache/rex the first time, under a name taken
--- from the source, so a changed source is built again rather than an old build run
+-- The picker is choose-tree.c, built per machine into ~/.cache/rex under a name taken from
+-- the source, so a changed source is built again rather than an old build run. When the
+-- build isn't there yet, the pane builds it first (a second or two, once), then runs it
 local choose_tree_bin
 do
-  local f = io.open(choose_tree_dir .. "/choose-tree.c", "r")
+  local f = io.open(choose_tree_source, "r")
   if f then
     local src = f:read("*a")
     f:close()
@@ -221,6 +210,34 @@ local function exists(path)
   end
   return false
 end
+
+-- sh -c this SOURCE BINARY ARGS...: build BINARY from SOURCE, then run it with ARGS. On
+-- macOS only with the developer tools installed, as without them cc offers to install them
+local choose_tree_build = [[
+src=$1 bin=$2
+shift 2
+stop() { printf '%s\r\n(press enter)' "$1"; read -r _; exit 1; }
+if [ ! -x "$bin" ]; then
+  printf 'building choose-tree...\r\n'
+  if [ "$(uname)" = Darwin ]; then
+    tools=$(xcode-select -p 2>/dev/null) && [ -d "$tools" ] || stop "choose-tree needs the developer tools: run xcode-select --install"
+  fi
+  command -v cc >/dev/null 2>&1 || stop "choose-tree needs a C compiler (cc)"
+  dir=$(dirname "$bin")
+  mkdir -p "$dir" || stop "can't make $dir"
+  if cc -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log"; then
+    mv -f "$bin.tmp.$$" "$bin"
+    for old in "$dir"/choose-tree-*; do
+      case $old in "$bin"|"$bin".*) ;; *) rm -rf "$old" ;; esac
+    done
+  else
+    rm -f "$bin.tmp.$$"
+    cat "$bin.log"
+    stop "choose-tree didn't build: the errors are above, and in $bin.log"
+  fi
+fi
+exec "$bin" "$@"
+]]
 
 -- choose-tree.c reads the tree as records: RS (30) before each, US (31) between fields
 local RS, US = string.char(30), string.char(31)
@@ -247,20 +264,24 @@ rex.action{
     -- background, as waiting on them here would hold up every key until they answered
     local ok_hosts, hosts = pcall(rex.servers)
     hosts = ok_hosts and type(hosts) == "table" and hosts or {}
-    local tree = session_tree(ctx)
+    local labels = {}
+    for i, h in ipairs(hosts) do
+      labels[i] = clean(h)
+    end
+    local args = { ctx.client_id or "", tree_records(session_tree(ctx)),
+                   "hosts:" .. table.concat(labels, US), "server:" .. clean(ctx.server),
+                   "watcher:" .. choose_tree_watcher }
     local command
     if exists(choose_tree_bin) then
-      local labels = {}
-      for i, h in ipairs(hosts) do
-        labels[i] = clean(h)
-      end
-      command = { choose_tree_bin, ctx.client_id or "", tree_records(tree),
-                  "hosts:" .. table.concat(labels, US), "server:" .. clean(ctx.server),
-                  "watcher:" .. choose_tree_watcher }
+      command = { choose_tree_bin }
+    elseif choose_tree_bin then
+      command = { "/bin/sh", "-c", choose_tree_build, "sh", choose_tree_source, choose_tree_bin }
     else
-      command = { choose_tree_python, "-I", "-S", choose_tree_script, ctx.client_id or "",
-                  rex.json.encode(tree), rex.json.encode({ hosts = hosts, server = ctx.server or "" }),
-                  "build:" .. (choose_tree_bin or "") }
+      command = { "/bin/sh", "-c", "printf 'choose-tree.c is missing from ~/.config/rex\\r\\n(press enter)'; read -r _" }
+      args = {}
+    end
+    for _, a in ipairs(args) do
+      command[#command + 1] = a
     end
     rex.session.new_layer{
       bounds = { 0.2, 0.15, 0.6, 0.6 },
