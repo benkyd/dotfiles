@@ -491,7 +491,7 @@ rex.action{
     -- pane-active-border-style fg=#f5bde6 (magenta is Catppuccin pink in the theme)
     rex.client.queue("client.setting.interface.active_panes.active_border", { value = true })
     rex.client.queue("client.setting.interface.active_panes.active_border_color", { value = "magenta" })
-    rex.client.queue("client.setting.interface.active_panes.active_border_opacity", { value = 1 })
+    rex.client.queue("client.setting.interface.active_panes.active_border_opacity", { value = 100 }) -- a percentage
     rex.client.queue("client.setting.interface.active_panes.active_border_animation", { value = "off" })
     rex.client.queue("client.setting.interface.active_panes.fade", { value = "off" })
     rex.client.queue("client.setting.interface.active_panes.inactive_window", { value = false })
