@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""tmux-style choose-tree for Rex, run in a floating pane by init.lua's tmux_choose_tree.
+"""tmux-style choose-tree for Rex, run in a floating pane by init.lua's tmux_choose_tree
+until choose-tree.c is built: that's the same picker compiled, which opens in a millisecond
+or two where this takes 50 to 100. This builds it in the background (build:PATH, from
+init.lua, names where), and init.lua runs it from then on.
 
-argv: CLIENT_ID TREE_JSON [HOSTS_JSON], in any order
+argv: CLIENT_ID TREE_JSON [HOSTS_JSON] [build:PATH], in any order
 TREE_JSON lists this server's sessions: {id, label, current, active, tabs: [{id, name, block}]}.
 The current session also has block, the block that had focus, and zoomed, whether its
 window was zoomed. HOSTS_JSON is {hosts: [label], server: label}: the other hosts, whose
@@ -24,7 +27,7 @@ import signal
 import sys
 import time
 
-VERSION = 9
+VERSION = 10
 WATCHER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "choose-tree-watcher.lua")
 LOG = os.environ.get("REX_CHOOSE_TREE_LOG") or "/tmp/choose-tree-watcher.log"
 REX = os.path.join(os.environ["REX_BIN_DIR"], "rex") if os.environ.get("REX_BIN_DIR") else "rex"
@@ -50,6 +53,56 @@ def run(*argv, host=None):
     if r.returncode:
         log(f"{' '.join(argv)} failed: {r.stderr.strip()}")
     return r.returncode == 0
+
+
+# --- the compiled picker -------------------------------------------------------------
+
+# Builds choose-tree.c into $2 from $1. Only with developer tools installed: without them,
+# macOS's cc offers to install them instead. One build at a time; a source that fails to
+# build isn't tried again; older builds go once a new one is in place.
+BUILD_SH = r"""
+src=$1 bin=$2
+[ -e "$bin" ] || [ -e "$bin.failed" ] && exit 0
+dir=$(dirname "$bin")
+mkdir -p "$dir" || exit 0
+lock=$bin.building
+find "$lock" -maxdepth 0 -mmin +2 -exec rmdir {} \; 2>/dev/null
+mkdir "$lock" 2>/dev/null || exit 0
+trap 'rmdir "$lock" 2>/dev/null' EXIT
+if [ "$(uname)" = Darwin ]; then
+  tools=$(xcode-select -p 2>/dev/null) && [ -d "$tools" ] || exit 0
+fi
+command -v cc >/dev/null 2>&1 || exit 0
+if cc -O2 -o "$bin.tmp.$$" "$src"; then
+  mv -f "$bin.tmp.$$" "$bin"
+  for old in "$dir"/choose-tree-*; do
+    case $old in "$bin"|"$bin".*) ;; *) rm -rf "$old" ;; esac
+  done
+  echo "built $bin"
+else
+  rm -f "$bin.tmp.$$"
+  : > "$bin.failed"
+  echo "building $bin failed"
+fi
+"""
+
+
+def build_compiled(target):
+    """Build choose-tree.c into TARGET in the background, for init.lua to run next time."""
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "choose-tree.c")
+    if not target or os.path.exists(target) or not os.path.exists(src):
+        return
+    actions = [
+        (os.POSIX_SPAWN_OPEN, 0, os.devnull, os.O_RDONLY, 0),
+        (os.POSIX_SPAWN_OPEN, 1, LOG, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644),
+        (os.POSIX_SPAWN_DUP2, 1, 2),
+    ]
+    try:
+        os.posix_spawn("/bin/sh", ["sh", "-c", BUILD_SH, "sh", src, target], os.environ,
+                       file_actions=actions, setsid=True)
+        log(f"building {target}")
+    except Exception as e:
+        log(f"couldn't start building {target}: {e!r}")
 
 
 # --- the watcher ---------------------------------------------------------------------
@@ -565,6 +618,7 @@ def main():
     sessions = json.loads(next((a for a in args if a.lstrip().startswith("[")), "[]"))
     others = json.loads(next((a for a in args if a.lstrip().startswith("{")), "{}"))
     hosts = [h for h in others.get("hosts") or [] if h and h != others.get("server")]
+    build = next((a[len("build:"):] for a in args if a.startswith("build:")), "")
     orig = next((s for s in sessions if s.get("current")), {})
     try:
         if os.path.getsize(LOG) > 512 * 1024:
@@ -576,7 +630,7 @@ def main():
     import curses as curses_module
     curses = curses_module
     log(f"--- v{VERSION} client={client} session={orig.get('id', '')} "
-        f"block={orig.get('block', '')} zoomed={bool(orig.get('zoomed'))}")
+        f"block={orig.get('block', '')} zoomed={bool(orig.get('zoomed'))} hosts={','.join(hosts)}")
 
     # Rex closing this pane (the watcher does, once it has the choice) sends SIGHUP
     def leave(*_):
@@ -593,6 +647,7 @@ def main():
         draw(scr, sessions, ui["folded"], ui["cursor"])
         # Other hosts only now, so starting them doesn't slow the first draw
         ui["fetches"] = [f for f in map(spawn_fetch, hosts) if f]
+        build_compiled(build)
         while True:
             try:
                 choice = browse(scr, sessions, ui)

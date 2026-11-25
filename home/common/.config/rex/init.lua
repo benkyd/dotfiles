@@ -183,7 +183,7 @@ local function session_tree(ctx)
 end
 
 -- The quickest Python on this machine: Homebrew's starts in about half the time of the
--- system one, which matters for a picker opened many times a day
+-- system one. It runs choose-tree.py only until choose-tree.c is built
 local choose_tree_python = "/usr/bin/python3"
 for _, p in ipairs({ "/opt/homebrew/bin/python3", "/usr/local/bin/python3" }) do
   local f = io.open(p, "r")
@@ -193,7 +193,51 @@ for _, p in ipairs({ "/opt/homebrew/bin/python3", "/usr/local/bin/python3" }) do
     break
   end
 end
-local choose_tree_script = os.getenv("HOME") .. "/.config/rex/choose-tree.py"
+local choose_tree_dir = os.getenv("HOME") .. "/.config/rex"
+local choose_tree_script = choose_tree_dir .. "/choose-tree.py"
+local choose_tree_watcher = choose_tree_dir .. "/choose-tree-watcher.lua"
+
+-- The compiled picker, choose-tree.c, opens in a millisecond or two where Python takes 50
+-- to 100. choose-tree.py builds it into ~/.cache/rex the first time, under a name taken
+-- from the source, so a changed source is built again rather than an old build run
+local choose_tree_bin
+do
+  local f = io.open(choose_tree_dir .. "/choose-tree.c", "r")
+  if f then
+    local src = f:read("*a")
+    f:close()
+    local h = 5381
+    for i = 1, #src do
+      h = (h * 33 + src:byte(i)) % 4294967296
+    end
+    choose_tree_bin = os.getenv("HOME") .. "/.cache/rex/choose-tree-" .. string.format("%.0f", h)
+  end
+end
+local function exists(path)
+  local f = path and io.open(path, "r")
+  if f then
+    f:close()
+    return true
+  end
+  return false
+end
+
+-- choose-tree.c reads the tree as records: RS (30) before each, US (31) between fields
+local RS, US = string.char(30), string.char(31)
+local function clean(s)
+  return (tostring(s or ""):gsub("[" .. RS .. US .. "]", " "))
+end
+local function tree_records(tree)
+  local out = {}
+  for _, s in ipairs(tree) do
+    out[#out + 1] = RS .. table.concat({ "S", clean(s.id), clean(s.label), clean(s.active),
+      s.current and "1" or "0", clean(s.block), s.zoomed and "1" or "0" }, US)
+    for _, t in ipairs(s.tabs) do
+      out[#out + 1] = RS .. table.concat({ "T", clean(t.id), clean(t.name), clean(t.block) }, US)
+    end
+  end
+  return RS .. table.concat(out)
+end
 
 rex.action{
   name = "tmux_choose_tree",
@@ -202,19 +246,29 @@ rex.action{
     -- The other hosts' labels only: the picker reads their sessions itself, in the
     -- background, as waiting on them here would hold up every key until they answered
     local ok_hosts, hosts = pcall(rex.servers)
-    local others = { hosts = ok_hosts and hosts or {}, server = ctx.server or "" }
+    hosts = ok_hosts and type(hosts) == "table" and hosts or {}
+    local tree = session_tree(ctx)
+    local command
+    if exists(choose_tree_bin) then
+      local labels = {}
+      for i, h in ipairs(hosts) do
+        labels[i] = clean(h)
+      end
+      command = { choose_tree_bin, ctx.client_id or "", tree_records(tree),
+                  "hosts:" .. table.concat(labels, US), "server:" .. clean(ctx.server),
+                  "watcher:" .. choose_tree_watcher }
+    else
+      command = { choose_tree_python, "-I", "-S", choose_tree_script, ctx.client_id or "",
+                  rex.json.encode(tree), rex.json.encode({ hosts = hosts, server = ctx.server or "" }),
+                  "build:" .. (choose_tree_bin or "") }
+    end
     rex.session.new_layer{
       bounds = { 0.2, 0.15, 0.6, 0.6 },
       focus = true,
       layout = rex.layout.block{
         flavor = "com.superlogical.terminal.shell",
         label = "choose-tree",
-        options = {
-          shell = "none",
-          login = false,
-          command = { choose_tree_python, "-I", "-S", choose_tree_script,
-                      ctx.client_id or "", rex.json.encode(session_tree(ctx)), rex.json.encode(others) },
-        },
+        options = { shell = "none", login = false, command = command },
       },
     }
   end,
