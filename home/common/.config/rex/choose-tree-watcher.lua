@@ -13,8 +13,8 @@
 -- Focusing the picker ended any zoom in that window, so the block is zoomed again too.
 -- After an escape, focus is checked for a moment and put back if something moved it.
 --
--- Another tab in the same session is focused on the server (session.focus_window), so it
--- works however the app is connected. Another session, a new session and switching host
+-- Another tab in the same session is focused on the server (session.focus_window, then its
+-- block), so it works however the app is connected. Another session, a new session and switching host
 -- need the app, which takes actions only through its home host: when it refuses, focus
 -- goes back to the picker and the picker shows why.
 local a = rex.args or {}
@@ -90,6 +90,45 @@ local function focused_in(session_id, window_id)
       return w.focused_block_id
     end
   end
+end
+
+-- The window a session shows and the block that window has focused, read from the server
+local function showing(session_id)
+  local okv, view = call("session.view", { session_id = session_id }, true)
+  if not okv or type(view) ~= "table" then
+    return nil
+  end
+  local block
+  for _, w in ipairs(view.windows or {}) do
+    if w.window_id == view.active_window_id then
+      block = w.focused_block_id
+    end
+  end
+  return view.active_window_id, block
+end
+
+-- Focus a tab of this session and keep it there: the app moves focus of its own as the
+-- picker closes, sometimes after our call, so check for a moment and focus again if so
+local function go_to_tab(session_id, window_id, block_id)
+  local function focus()
+    local done = call("session.focus_window", { session_id = session_id, window_id = window_id })
+    if set(block_id) then
+      done = call("session.focus_block", { session_id = session_id, block_id = block_id }) or done
+    end
+    return done
+  end
+  local done = focus()
+  for _, wait in ipairs({ 0.05, 0.1, 0.2, 0.4 }) do
+    rex.sleep(wait)
+    local win, blk = showing(session_id)
+    log("showing " .. tostring(win) .. " / " .. tostring(blk))
+    if win == window_id and (not set(block_id) or blk == block_id) then
+      return true
+    end
+    log("not on the tab; focusing it again")
+    done = focus() or done
+  end
+  return done
 end
 
 local function zoom(block)
@@ -214,13 +253,14 @@ elseif c.type == "lost" then
 elseif c.type == "select" and c.session_id == a.session_id and set(c.window_id) then
   back = put_back()
   close_picker()
-  local done = call("session.focus_window", { session_id = c.session_id, window_id = c.window_id })
-  if not done and set(c.block_id) then
-    done = call("session.focus_block", { session_id = c.session_id, block_id = c.block_id })
-  end
-  if not done then
-    app("session.select", { session_id = c.session_id, window_id = c.window_id })
-  end
+  -- Give the close a moment to land before the window changes: focusing the window while
+  -- the picker's layer was still there (v10 - v13) carried it along to the other tab
+  rex.sleep(0.1)
+  local done = go_to_tab(c.session_id, c.window_id, c.block_id)
+  -- The server showing the tab isn't enough: the app keeps the tab it displays itself
+  -- (v14's log had the server on the chosen tab while the app stayed put), so it's asked too
+  local asked = app("session.select", { session_id = c.session_id, window_id = c.window_id })
+  log("tab on the server: " .. tostring(done) .. ", app asked: " .. tostring(asked))
 elseif c.type == "select" then
   local opts = { session_id = c.session_id }
   if set(c.window_id) then

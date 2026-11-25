@@ -244,10 +244,29 @@ if [ ! -x "$bin" ]; then
   if [ "$(uname)" = Darwin ]; then
     tools=$(xcode-select -p 2>/dev/null) && [ -d "$tools" ] || stop "choose-tree needs the developer tools: run xcode-select --install"
   fi
-  command -v cc >/dev/null 2>&1 || stop "choose-tree needs a C compiler (cc)"
+  findcc() { cc=; for c in cc gcc clang tcc; do command -v "$c" >/dev/null 2>&1 && { cc=$c; return 0; }; done; return 1; }
+  if ! findcc && [ "$(uname)" = Linux ]; then
+    # no compiler: offer to install one with whatever package manager this host has
+    inst=
+    if command -v pacman >/dev/null 2>&1; then inst="pacman -S --needed --noconfirm gcc"
+    elif command -v apt-get >/dev/null 2>&1; then inst="sh -c 'apt-get update && apt-get install -y gcc libc6-dev'"
+    elif command -v dnf >/dev/null 2>&1; then inst="dnf install -y gcc"
+    elif command -v zypper >/dev/null 2>&1; then inst="zypper --non-interactive install gcc"
+    elif command -v apk >/dev/null 2>&1; then inst="apk add gcc musl-dev"
+    fi
+    [ -n "$inst" ] || stop "choose-tree needs a C compiler (cc, gcc or clang), and no known package manager was found"
+    [ "$(id -u)" = 0 ] || inst="sudo $inst"
+    printf 'choose-tree needs a C compiler. Install with: %s ? [y/N] ' "$inst"
+    read -r ans
+    case $ans in y|Y) eval "$inst" ;; esac
+    findcc || stop "choose-tree needs a C compiler (cc, gcc or clang)"
+  fi
+  [ -n "$cc" ] || findcc || stop "choose-tree needs a C compiler (cc, gcc or clang)"
   dir=$(dirname "$bin")
   mkdir -p "$dir" || stop "can't make $dir"
-  if cc -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log"; then
+  # cc can pick a Command Line Tools SDK newer than its linker reads ("unknown architecture"
+  # in libSystem.tbd), so on macOS a failed build is tried again with xcrun's macosx SDK
+  if "$cc" -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log" || { [ "$(uname)" = Darwin ] && sdk=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null) && SDKROOT=$sdk "$cc" -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log"; }; then
     mv -f "$bin.tmp.$$" "$bin"
     for old in "$dir"/choose-tree-*; do
       case $old in "$bin"|"$bin".*) ;; *) rm -rf "$old" ;; esac
