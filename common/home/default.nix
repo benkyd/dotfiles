@@ -1,6 +1,6 @@
 # The setup every machine shares. Each app has a folder in programs/ holding
 # its config files and a default.nix that installs it and links them.
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 {
   imports = [
     ./packages.nix
@@ -19,6 +19,8 @@
   };
 
   config = {
+    # home.username comes from flake.nix
+    home.homeDirectory = (if pkgs.stdenv.isDarwin then "/Users/" else "/home/") + config.home.username;
     # `link "common/home/..."` points a file in $HOME straight at the file in
     # the repo checkout (not a copy in /nix/store), so edits apply without a rebuild
     _module.args.link = path: config.lib.file.mkOutOfStoreSymlink "${config.dotfiles.root}/${path}";

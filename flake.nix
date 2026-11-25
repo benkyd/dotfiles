@@ -11,19 +11,19 @@
 
   outputs = { nixpkgs, home-manager, ... }:
     let
-      # A machine = the shared setup in common/home + its own systems/<host>/home.nix
-      machine = system: hostModule:
+      # Every machine gets the same setup (common/home); only the CPU/OS and
+      # the username differ
+      machine = system: user:
         home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.${system};
-          modules = [ ./common/home hostModule ];
+          modules = [ ./common/home { home.username = user; } ];
         };
     in
     {
-      # Named "user@hostname", so `home-manager switch --flake .` picks the right one
+      # home-manager switch --flake ~/dotfiles#mac   (or #linux)
       homeConfigurations = {
-        "benk@benk-studio" = machine "aarch64-darwin" ./systems/benk-studio/home.nix; # work Mac Studio
-        # The Linux PC and personal Mac go here, e.g.
-        # "ben@arch" = machine "x86_64-linux" ./systems/arch/home.nix;
+        mac = machine "aarch64-darwin" "benk";
+        linux = machine "x86_64-linux" "benk"; # TODO: the Linux PC's username
       };
     };
 }
