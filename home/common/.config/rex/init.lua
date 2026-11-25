@@ -1,5 +1,27 @@
 -- Migrated from ~/.tmux.conf (prefix ctrl+b), plus tmux's own default bindings
 
+-- Every action defined here first sends my settings, when this device doesn't have them yet
+-- (see "My settings" near the end). settings_once is set there; if Rex won't let rex.action
+-- be wrapped, the actions are defined as they are and only that is lost
+local settings_once
+do
+  local define = rex.action
+  pcall(function()
+    rex.action = function(t)
+      local run = t.run
+      if type(run) == "function" and t.name ~= "apply_my_settings" then
+        t.run = function(ctx, args)
+          if settings_once then
+            pcall(settings_once, ctx)
+          end
+          return run(ctx, args)
+        end
+      end
+      return define(t)
+    end
+  end)
+end
+
 -- Let programs that use the prefix themselves still receive it
 rex.bind("ctrl+b>ctrl+b", "pane.send_key", { key = "ctrl+b" })
 
@@ -457,10 +479,14 @@ do
   end
 end
 
--- One-off setup for settings init.lua cannot hold: run "apply-my-settings" from the
--- command palette (C-b :) on a new machine. The theme file and shell are paths on this
--- server's machine, which only the Mac app can use when the server is the Mac itself; a
--- Linux server starts the account's login shell, so set that with chsh there.
+-- My settings. Rex can't hold app settings in init.lua or run anything when it loads, and
+-- only an action can send settings to the app. So the first of my actions to run on a
+-- device after these change (C-b w, C-b f, C-b ; ...) sends them first, once: what each
+-- device was last sent is kept in ~/.cache/rex/settings-DEVICE. A change made in the app
+-- stays until these change again; "apply-my-settings" (C-b :) sends them all regardless.
+-- The theme file and shell are paths on this server's machine, which only the Mac app can
+-- use when the server is the Mac itself; a Linux server starts the account's login shell,
+-- so set that with chsh there.
 local function on_macos()
   local f = io.open("/System/Library/CoreServices/SystemVersion.plist", "r")
   if f then
@@ -470,31 +496,110 @@ local function on_macos()
   return false
 end
 
+local my_settings = {}
+local function setting(action, args)
+  my_settings[#my_settings + 1] = { action, args }
+end
+local theme_path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha"
+if on_macos() then
+  setting("client.theme.import", { path = theme_path })
+  if machine.fish then
+    setting("client.setting.terminal.shell.command", { value = machine.fish })
+  end
+end
+setting("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
+setting("client.setting.developer.experimental.new_quick_switcher", { value = true })
+setting("client.setting.terminal.typography.size", { value = 10.5 })
+-- Text pinned to the bottom of each pane, so nvim's statusline sits on the edge, with the
+-- leftover strip in the program's background colour
+setting("client.setting.developer.experimental.terminal_anchor", { value = "bottom" })
+setting("client.setting.interface.pane_padding.color", { value = "always" })
+-- A pink border on the focused pane instead of dimming the others, as tmux's
+-- pane-active-border-style fg=#f5bde6 (magenta is Catppuccin pink in the theme)
+setting("client.setting.interface.active_panes.active_border", { value = true })
+setting("client.setting.interface.active_panes.active_border_color", { value = "magenta" })
+setting("client.setting.interface.active_panes.active_border_opacity", { value = 100 }) -- a percentage
+setting("client.setting.interface.active_panes.active_border_animation", { value = "off" })
+setting("client.setting.interface.active_panes.fade", { value = "off" })
+setting("client.setting.interface.active_panes.inactive_window", { value = false })
+
+-- The settings as text, to tell whether a device has them already. The theme counts by
+-- its contents, so editing the theme file sends it again
+local settings_signature
+do
+  local parts = {}
+  for _, s in ipairs(my_settings) do
+    local keys, fields = {}, {}
+    for k in pairs(s[2]) do
+      keys[#keys + 1] = k
+    end
+    table.sort(keys)
+    for _, k in ipairs(keys) do
+      fields[#fields + 1] = k .. "=" .. tostring(s[2][k])
+    end
+    parts[#parts + 1] = s[1] .. " " .. table.concat(fields, " ")
+  end
+  local theme = io.open(theme_path, "r")
+  if theme then
+    parts[#parts + 1] = "theme " .. theme:read("*a")
+    theme:close()
+  end
+  settings_signature = table.concat(parts, "\n")
+end
+
+-- Where a device's last-sent settings are kept: by the app's label, so each device has its own
+local function settings_file(ctx)
+  local device = "app"
+  local ok, list = pcall(rex.call, "client.list")
+  if ok and type(list) == "table" then
+    for _, c in ipairs(list.clients or {}) do
+      if c.client_id == ctx.client_id and c.info and c.info.label then
+        device = c.info.label
+      end
+    end
+  end
+  return os.getenv("HOME") .. "/.cache/rex/settings-" .. device:gsub("[^%w%-]", "_")
+end
+
+local function send_settings(ctx)
+  for _, s in ipairs(my_settings) do
+    rex.client.queue(s[1], s[2])
+  end
+  local path = settings_file(ctx)
+  local f = io.open(path, "w")
+  if not f then
+    pcall(rex.exec, { "/bin/mkdir", "-p", os.getenv("HOME") .. "/.cache/rex" })
+    f = io.open(path, "w")
+  end
+  if f then
+    f:write(settings_signature)
+    f:close()
+  end
+end
+
+-- Called by every action of mine (see the top of this file): sends the settings when this
+-- device doesn't have these yet. Each client is looked at once per load of this file
+local settings_checked = {}
+settings_once = function(ctx)
+  if not (ctx and ctx.client_id) or settings_checked[ctx.client_id] then
+    return
+  end
+  settings_checked[ctx.client_id] = true
+  local f = io.open(settings_file(ctx), "r")
+  local last = f and f:read("*a")
+  if f then
+    f:close()
+  end
+  if last ~= settings_signature then
+    send_settings(ctx)
+  end
+end
+
 rex.action{
   name = "apply_my_settings",
   title = "apply-my-settings",
   run = function(ctx, args)
-    if on_macos() then
-      rex.client.queue("client.theme.import", { path = os.getenv("HOME") .. "/.config/rex/themes/Catppuccin Mocha" })
-      if machine.fish then
-        rex.client.queue("client.setting.terminal.shell.command", { value = machine.fish })
-      end
-    end
-    rex.client.queue("client.setting.interface.toolbar.auto_hide_toolbar", { value = "always_show" })
-    rex.client.queue("client.setting.developer.experimental.new_quick_switcher", { value = true })
-    rex.client.queue("client.setting.terminal.typography.size", { value = 10.5 })
-    -- Text pinned to the bottom of each pane, so nvim's statusline sits on the edge, with
-    -- the leftover strip in the program's background colour
-    rex.client.queue("client.setting.developer.experimental.terminal_anchor", { value = "bottom" })
-    rex.client.queue("client.setting.interface.pane_padding.color", { value = "always" })
-    -- A pink border on the focused pane instead of dimming the others, as tmux's
-    -- pane-active-border-style fg=#f5bde6 (magenta is Catppuccin pink in the theme)
-    rex.client.queue("client.setting.interface.active_panes.active_border", { value = true })
-    rex.client.queue("client.setting.interface.active_panes.active_border_color", { value = "magenta" })
-    rex.client.queue("client.setting.interface.active_panes.active_border_opacity", { value = 100 }) -- a percentage
-    rex.client.queue("client.setting.interface.active_panes.active_border_animation", { value = "off" })
-    rex.client.queue("client.setting.interface.active_panes.fade", { value = "off" })
-    rex.client.queue("client.setting.interface.active_panes.inactive_window", { value = false })
+    send_settings(ctx)
   end,
 }
 
