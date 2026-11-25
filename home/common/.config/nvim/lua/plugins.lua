@@ -115,25 +115,24 @@ return {
         config = true,
     },
     {
-        -- Tree you can edit like oil. Enter unfolds a folder in place; files
-        -- open in the main window, never in the tree
+        -- Tree you can edit like oil, in a float. Enter unfolds a folder in
+        -- place; picking a file closes the float and opens it in your window
         'FylerOrg/fyler.nvim',
         lazy = false, -- it opens directories, e.g. `nvim .`
         dependencies = { 'nvim-tree/nvim-web-devicons' },
         keys = {
-            { '<C-b>', function() require('fyler').toggle({ kind = 'split_left_most' }) end, desc = 'File tree' },
+            { '<C-b>', function() require('fyler').toggle({ kind = 'floating' }) end, desc = 'File tree' },
         },
         opts = {
             follow_root_dir = false, -- don't change the working directory
             integrations = { icon = 'nvim_web_devicons' },
             extensions = { git = { enabled = true } },
             kind_presets = {
-                split_left_most = {
-                    width = 35,
+                floating = {
+                    border = 'rounded',
                     mappings = {
                         n = {
-                            ['<CR>'] = { action = 'select', args = { pick = false } },
-                            ['<2-LeftMouse>'] = { action = 'select', args = { pick = false } },
+                            ['<2-LeftMouse>'] = { action = 'select', args = { close = true, pick = false } },
                         },
                     },
                 },

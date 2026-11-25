@@ -20,8 +20,14 @@ require('lazy').setup(require('plugins'))
 vim.keymap.set({ 'n', 'x' }, '<leader>c', 'gc', { remap = true, desc = 'Comment' })
 vim.keymap.set('n', '<leader>cc', 'gcc', { remap = true, desc = 'Comment line' })
 
--- Resize splits
-vim.keymap.set('n', '<A-C-h>', '<Cmd>vertical resize -3<CR>', { desc = 'Narrower' })
-vim.keymap.set('n', '<A-C-l>', '<Cmd>vertical resize +3<CR>', { desc = 'Wider' })
-vim.keymap.set('n', '<A-C-j>', '<Cmd>resize -3<CR>', { desc = 'Shorter' })
-vim.keymap.set('n', '<A-C-k>', '<Cmd>resize +3<CR>', { desc = 'Taller' })
+-- Resize splits: the border moves in the direction of the key, whichever
+-- side of it you're on
+local function resize(key)
+    local sideways = key == 'h' or key == 'l'
+    local has_next = vim.fn.winnr(sideways and 'l' or 'j') ~= vim.fn.winnr()
+    local grow = (key == 'l' or key == 'j') == has_next
+    vim.cmd((sideways and 'vertical ' or '') .. 'resize ' .. (grow and '+3' or '-3'))
+end
+for _, key in ipairs({ 'h', 'j', 'k', 'l' }) do
+    vim.keymap.set('n', '<A-C-' .. key .. '>', function() resize(key) end, { desc = 'Move split border' })
+end
