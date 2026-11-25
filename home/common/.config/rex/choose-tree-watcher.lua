@@ -13,7 +13,7 @@
 -- Focusing the picker ended any zoom in that window, so the block is zoomed again too.
 -- After an escape, focus is checked for a moment and put back if something moved it.
 --
--- Another tab in the same session is focused on the server (session.focus_block on its
+-- Another tab in the same session is focused on the server (session.focus_window, then its
 -- block), so it works however the app is connected. Another session, a new session and switching host
 -- need the app, which takes actions only through its home host: when it refuses, focus
 -- goes back to the picker and the picker shows why.
@@ -214,11 +214,13 @@ elseif c.type == "lost" then
 elseif c.type == "select" and c.session_id == a.session_id and set(c.window_id) then
   back = put_back()
   close_picker()
-  -- The tab's block first: focusing the window itself carried the picker's layer along to
-  -- the other tab (v10 - v13), where focusing a block in it doesn't
-  local done = set(c.block_id) and call("session.focus_block", { session_id = c.session_id, block_id = c.block_id })
-  if not done then
-    done = call("session.focus_window", { session_id = c.session_id, window_id = c.window_id })
+  -- Give the close a moment to land before the window changes: focusing the window while
+  -- the picker's layer was still there (v10 - v13) carried it along to the other tab. Focusing
+  -- only the tab's block (v14) kept the picker off it, but didn't change tab
+  rex.sleep(0.1)
+  local done = call("session.focus_window", { session_id = c.session_id, window_id = c.window_id })
+  if set(c.block_id) then
+    done = call("session.focus_block", { session_id = c.session_id, block_id = c.block_id }) or done
   end
   if not done then
     app("session.select", { session_id = c.session_id, window_id = c.window_id })
