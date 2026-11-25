@@ -244,10 +244,14 @@ if [ ! -x "$bin" ]; then
   if [ "$(uname)" = Darwin ]; then
     tools=$(xcode-select -p 2>/dev/null) && [ -d "$tools" ] || stop "choose-tree needs the developer tools: run xcode-select --install"
   fi
-  command -v cc >/dev/null 2>&1 || stop "choose-tree needs a C compiler (cc)"
+  cc=
+  for c in cc gcc clang tcc; do command -v "$c" >/dev/null 2>&1 && { cc=$c; break; }; done
+  [ -n "$cc" ] || stop "choose-tree needs a C compiler (cc, gcc or clang)"
   dir=$(dirname "$bin")
   mkdir -p "$dir" || stop "can't make $dir"
-  if cc -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log"; then
+  # cc can pick a Command Line Tools SDK newer than its linker reads ("unknown architecture"
+  # in libSystem.tbd), so on macOS a failed build is tried again with xcrun's macosx SDK
+  if "$cc" -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log" || { [ "$(uname)" = Darwin ] && sdk=$(xcrun --sdk macosx --show-sdk-path 2>/dev/null) && SDKROOT=$sdk "$cc" -O2 -o "$bin.tmp.$$" "$src" 2>"$bin.log"; }; then
     mv -f "$bin.tmp.$$" "$bin"
     for old in "$dir"/choose-tree-*; do
       case $old in "$bin"|"$bin".*) ;; *) rm -rf "$old" ;; esac
