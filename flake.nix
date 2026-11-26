@@ -23,7 +23,7 @@
       # home-manager switch --flake ~/dotfiles#mac   (or #linux)
       homeConfigurations = {
         mac = machine "aarch64-darwin" "benk";
-        linux = machine "x86_64-linux" "benk"; # TODO: the Linux PC's username
+        linux = machine "x86_64-linux" "benk";
       };
     };
 }

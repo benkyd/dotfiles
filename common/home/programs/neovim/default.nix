@@ -24,7 +24,7 @@
       # formatters, used by conform (<leader>F)
       stylua
       black
-      # TODO prettier: check its current nixpkgs name
+      prettier
     ]
     ++ lib.optionals stdenv.isLinux [ gcc ]; # parsers need a C compiler; macOS uses Xcode's
 
