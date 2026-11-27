@@ -1,6 +1,19 @@
 -- Settings and keymaps shared with plain Vim live in ~/.vimrc
 vim.cmd.source('~/.vimrc')
 
+-- Yanks reach the clipboard of the machine you are looking at, even over ssh or in a Rex
+-- session on another host: the terminal carries them (OSC 52). Pasting reads nvim's own
+-- register, since the terminal can't be asked for its clipboard.
+if vim.env.TERM_PROGRAM == 'rex' or vim.env.SSH_TTY then
+    local osc52 = require('vim.ui.clipboard.osc52')
+    local function paste() return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') } end
+    vim.g.clipboard = {
+        name = 'OSC 52',
+        copy = { ['+'] = osc52.copy('+'), ['*'] = osc52.copy('*') },
+        paste = { ['+'] = paste, ['*'] = paste },
+    }
+end
+
 vim.g.loaded_netrw = 1 -- fyler and oil replace netrw
 vim.g.loaded_netrwPlugin = 1
 vim.o.colorcolumn = '80'
